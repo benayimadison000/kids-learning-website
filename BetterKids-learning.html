@@ -25,7 +25,7 @@
 
         /* --- 2. HEADER --- */
         header {
-            background-color: #333;
+            background-color: #333333a0;
             color: white;
             padding: 2rem 1rem;
             text-align: center;
@@ -87,7 +87,7 @@
 
         /* --- 4. GAME GRID --- */
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 0 1rem 4rem;
         }
@@ -99,7 +99,7 @@
         }
 
         .game-card {
-            background: white;
+            background: rgb(222, 230, 248);
             border-radius: 15px;
             overflow: hidden;
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
@@ -117,8 +117,8 @@
         .game-card[data-subject="fun"] { border-top-color: var(--fun); }
 
         .game-thumb {
-            height: 160px;
-            background-color: #eee;
+            height: 60px;
+            background-color: #f4eaea;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -179,6 +179,16 @@
         }
         .no-results.visible { display: block; }
 
+        .site-footer {
+            background: #b9e8f8;
+            padding: 1.2rem 0;
+            text-align: center;
+            margin-top: 3rem;
+            border-top: 2px solid #e0e0e0;
+            font-size: 0.95rem;
+            color: #555;
+        }
+
     </style>
 </head>
 <body>
@@ -186,7 +196,26 @@
     <header>
         <h1>🚀 Super Smart Arcade  🚀</h1>
         <p class="subtitle">Math, Reading & Fun for K-4</p>
+        <p class="subtitle">Where Play Meets Learnin</p>
     </header>
+
+        <section style="
+    max-width: 900px;
+    margin: 1.5rem auto 1rem;
+    padding: 1.2rem 1.5rem;
+    background: rgb(248, 231, 231);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.04);
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: #444;
+    ">
+        <strong>About BetterKids Learning</strong><br>
+        BetterKids Learning is a collection of fun, interactive, and educational games
+        built for children using AI‑assisted development. Explore math adventures, reading
+        challenges, English activities, logic puzzles, and creative arcade‑style games —
+        all designed to make learning joyful, accessible, and engaging for kids of all ages.
+    </section>
 
     <div class="filter-container">
         <div class="filter-group" id="gradeFilters">
@@ -733,8 +762,8 @@
         </div>
     </div>
 
-    <footer>
-        <p>Created by Parent Developer &copy; 2023</p>
+    <footer class="site-footer">
+        <strong>&copy; 2023 Bernard Ayikpa‑Madison</strong>
     </footer>
 
     <script>
