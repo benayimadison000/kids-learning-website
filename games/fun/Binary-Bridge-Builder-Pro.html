@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Binary Bridge Builder: Pro</title>
+    <style>
+        :root { --neon: #00f2ff; --warn: #ff0055; --portal: #bc13fe; }
+        body { background: #050a10; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        
+        #game-box { width: 700px; padding: 30px; border: 2px solid var(--neon); border-radius: 20px; background: #0b111a; text-align: center; box-shadow: 0 0 30px rgba(0, 242, 255, 0.1); }
+        
+        .bridge-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 25px 0; }
+        .tile { height: 90px; border: 2px dashed #333; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); transition: 0.3s; }
+        .tile.active { border-color: var(--neon); background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 15px var(--neon); }
+        .tile.solved { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
+        .target-num { font-size: 26px; font-weight: bold; color: var(--neon); }
+
+        .action-container { display: flex; justify-content: center; gap: 20px; margin: 20px 0; }
+        
+        .block-area, .portal-area { padding: 15px; border-radius: 12px; background: #151b26; display: flex; gap: 10px; align-items: center; }
+        
+        .num-card { width: 55px; height: 55px; background: #2a3441; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 22px; transition: 0.2s; border-bottom: 4px solid #111; }
+        .num-card:hover { transform: translateY(-2px); background: #3d4b5e; }
+        
+        .portal { width: 80px; height: 80px; background: var(--portal); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 12px; font-weight: bold; box-shadow: 0 0 15px var(--portal); border: 2px solid white; transition: 0.3s; }
+        .portal:hover { transform: scale(1.1); box-shadow: 0 0 25px var(--portal); }
+        .portal span { font-size: 20px; }
+
+        #fuel-bar { width: 100%; height: 25px; background: #000; border-radius: 15px; margin-bottom: 20px; border: 1px solid #333; overflow: hidden; }
+        #fuel-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #00d4ff); transition: width 0.4s; }
+        
+        #msg { height: 30px; font-weight: bold; color: var(--neon); margin-bottom: 10px; }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <div style="display:flex; justify-content: space-between; align-items: center;">
+        <h2 style="margin:0; font-style: italic;">BRIDGE-LOGIC V2</h2>
+        <div style="font-weight:bold;">LEVEL: <span id="lvl">1</span></div>
+    </div>
+
+    <div id="fuel-bar"><div id="fuel-fill"></div></div>
+    
+    <div id="msg">Initializing System...</div>
+
+    <div class="bridge-grid" id="bridge"></div>
+
+    <div class="action-container">
+        <div class="block-area" id="inventory"></div>
+        
+        <div class="portal-area">
+            <div class="portal" onclick="activatePortal()">
+                <span>X2</span>
+                PORTAL
+                <small style="font-size:8px">-10 FUEL</small>
+            </div>
+        </div>
+    </div>
+
+    <div style="background: #000; padding: 15px; border-radius: 10px; font-size: 20px;">
+        CURRENT SUM: <span id="sum-val" style="color:var(--neon)">0</span>
+    </div>
+</div>
+
+<script>
+    let level = 1;
+    let fuel = 100;
+    let runningSum = 0;
+    let bridgeIndex = 0;
+    let multiplierActive = false;
+    let currentTargets = [];
+
+    const msg = document.getElementById('msg');
+    const fuelFill = document.getElementById('fuel-fill');
+    const inv = document.getElementById('inventory');
+    const bridge = document.getElementById('bridge');
+
+    function beep(f, t="sine") {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = t; o.frequency.value = f;
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.2);
+        o.stop(ctx.currentTime + 0.2);
+    }
+
+    function initLevel() {
+        bridge.innerHTML = '';
+        inv.innerHTML = '';
+        bridgeIndex = 0;
+        runningSum = 0;
+        multiplierActive = false;
+        document.getElementById('sum-val').innerText = "0";
+        document.getElementById('lvl').innerText = level;
+        
+        // Generate 6 random targets based on level difficulty
+        currentTargets = Array.from({length: 6}, () => Math.floor(Math.random() * (10 + level * 5)) + 10);
+
+        currentTargets.forEach((t, i) => {
+            const div = document.createElement('div');
+            div.className = 'tile' + (i === 0 ? ' active' : '');
+            div.innerHTML = `<span class="target-num">${t}</span>`;
+            bridge.appendChild(div);
+        });
+
+        // Smart Block Generation
+        const blocks = [2, 3, 5, 10];
+        blocks.forEach(num => {
+            const b = document.createElement('div');
+            b.className = 'num-card';
+            b.innerText = num;
+            b.onclick = () => useBlock(num);
+            inv.appendChild(b);
+        });
+
+        msg.innerText = "Bridge path generated. Calculate the sums!";
+    }
+
+    function activatePortal() {
+        if (fuel < 10) { msg.innerText = "NOT ENOUGH FUEL FOR PORTAL!"; return; }
+        if (multiplierActive) return;
+        
+        fuel -= 10;
+        multiplierActive = true;
+        beep(800, "square");
+        updateFuel();
+        msg.innerText = "PORTAL ACTIVE: Next block is DOUBLED!";
+    }
+
+    function useBlock(val) {
+        if (fuel <= 0) return;
+        
+        let finalVal = multiplierActive ? val * 2 : val;
+        runningSum += finalVal;
+        fuel -= 4; // Cost per block use
+        
+        multiplierActive = false;
+        document.getElementById('sum-val').innerText = runningSum;
+        updateFuel();
+        beep(400);
+
+        if (runningSum === currentTargets[bridgeIndex]) {
+            solveTile();
+        } else if (runningSum > currentTargets[bridgeIndex]) {
+            msg.innerText = "OVERLOAD! Restarting tile...";
+            beep(100, "sawtooth");
+            runningSum = 0;
+            document.getElementById('sum-val').innerText = "0";
+        }
+    }
+
+    function solveTile() {
+        const tiles = document.querySelectorAll('.tile');
+        tiles[bridgeIndex].className = 'tile solved';
+        tiles[bridgeIndex].innerHTML = "✅";
+        
+        bridgeIndex++;
+        runningSum = 0;
+        document.getElementById('sum-val').innerText = "0";
+        beep(600);
+
+        if (bridgeIndex < 6) {
+            tiles[bridgeIndex].classList.add('active');
+            msg.innerText = "Stability Confirmed. Next target lock on!";
+        } else {
+            level++;
+            fuel = Math.min(100, fuel + 30);
+            msg.innerText = "LEVEL COMPLETE! Recharging systems...";
+            setTimeout(initLevel, 2000);
+        }
+    }
+
+    function updateFuel() {
+        fuelFill.style.width = fuel + "%";
+        if (fuel <= 0) {
+            msg.innerText = "ENGINE FAILURE! Mission Reset.";
+            setTimeout(() => { level = 1; fuel = 100; initLevel(); }, 3000);
+        }
+    }
+
+    initLevel();
+</script>
+</body>
+</html>

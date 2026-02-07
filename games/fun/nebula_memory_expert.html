@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nebula Memory: Expert Edition</title>
+    <style>
+        :root {
+            --bg: #05070a;
+            --panel: #11141a;
+            --accent: #00f2ff;
+            --gold: #ffcc00;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        /* Animated Nebula Background */
+        .nebula {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 20% 30%, #1b2735 0%, #090a0f 100%);
+            z-index: -1;
+        }
+
+        #game-container {
+            background: var(--panel);
+            padding: 25px;
+            border-radius: 24px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 40px rgba(0, 242, 255, 0.15);
+            text-align: center;
+            width: 480px;
+        }
+
+        /* The 4x4 Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 12px;
+            margin: 20px auto;
+        }
+
+        .tile {
+            aspect-ratio: 1/1;
+            background: #222;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: transform 0.2s, border 0.2s;
+            border: 2px solid rgba(255,255,255,0.05);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            user-select: none;
+        }
+
+        .tile:active { transform: scale(0.9); }
+
+        #timer-container {
+            width: 100%;
+            height: 12px;
+            background: #1a1a1a;
+            border-radius: 6px;
+            margin: 15px 0;
+            border: 1px solid #333;
+        }
+
+        #timer-fill {
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            border-radius: 6px;
+            transition: width 1s linear, background-color 0.5s;
+        }
+
+        .btn-group { display: flex; gap: 10px; justify-content: center; }
+
+        .btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            padding: 12px 20px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+        }
+
+        .btn:hover { filter: brightness(1.2); }
+        .hidden { display: none; }
+        
+        #message { height: 40px; font-size: 1.1rem; margin: 10px 0; color: var(--gold); }
+    </style>
+</head>
+<body>
+
+<div class="nebula"></div>
+
+<div id="game-container">
+    <h2 id="title" style="margin: 0; letter-spacing: 2px;">NEBULA MEMORY</h2>
+    <div id="message">Syncing Neural Link...</div>
+    
+    <div id="timer-container"><div id="timer-fill"></div></div>
+    
+    <div class="grid" id="grid"></div>
+
+    <div class="btn-group">
+        <button id="check-btn" class="btn hidden" onclick="verify()">Check Pattern</button>
+        <button id="next-btn" class="btn hidden" onclick="initLevel()">Next Mission</button>
+    </div>
+</div>
+
+<script>
+    const colors = ['#333', '#FF5F6D', '#2193b0', '#FFCF71', '#9D50BB', '#00F260'];
+    const icons = ['', '🚀', '⭐', '🪐', '💎', '🛸'];
+    
+    let target = [];
+    let player = [];
+    let phase = 'look'; // 'look' or 'solve'
+    let timerInterval;
+
+    const grid = document.getElementById('grid');
+    const timerFill = document.getElementById('timer-fill');
+    const msg = document.getElementById('message');
+
+    // Simple beep function for audio feedback
+    function beep(f, d = 100) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const g = ctx.createGain();
+        osc.connect(g); g.connect(ctx.destination);
+        osc.frequency.value = f;
+        osc.start();
+        g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + d/1000);
+        osc.stop(ctx.currentTime + d/1000);
+    }
+
+    function initLevel() {
+        phase = 'look';
+        target = Array.from({length: 16}, () => Math.floor(Math.random() * 5) + 1);
+        player = Array(16).fill(0);
+        
+        document.getElementById('check-btn').classList.add('hidden');
+        document.getElementById('next-btn').classList.add('hidden');
+        msg.innerText = "EXPERT MODE: Memorize the 16 icons!";
+        msg.style.color = "var(--accent)";
+        
+        render();
+        startTimer(10, () => phaseSolve());
+    }
+
+    function render() {
+        grid.innerHTML = '';
+        for (let i = 0; i < 16; i++) {
+            const t = document.createElement('div');
+            t.className = 'tile';
+            const val = (phase === 'look' || phase === 'reveal') ? target[i] : player[i];
+            t.style.backgroundColor = colors[val];
+            t.innerHTML = icons[val];
+            t.onclick = () => {
+                if (phase === 'solve') {
+                    player[i] = (player[i] % 5) + 1;
+                    beep(300 + (player[i] * 50), 50);
+                    render();
+                }
+            };
+            grid.appendChild(t);
+        }
+    }
+
+    function startTimer(seconds, callback) {
+        let remaining = seconds;
+        const total = seconds;
+        clearInterval(timerInterval);
+        
+        timerFill.style.backgroundColor = seconds > 10 ? "#00f2ff" : "#ff5f6d";
+
+        timerInterval = setInterval(() => {
+            remaining--;
+            timerFill.style.width = (remaining / total * 100) + '%';
+            
+            if (phase === 'look') msg.innerText = `Memorizing: ${remaining}s`;
+            else msg.innerText = `Remaining Time: ${remaining}s`;
+
+            if (remaining <= 0) {
+                clearInterval(timerInterval);
+                callback();
+            }
+        }, 1000);
+    }
+
+    function phaseSolve() {
+        phase = 'solve';
+        timerFill.style.width = '100%';
+        document.getElementById('check-btn').classList.remove('hidden');
+        render();
+        startTimer(120, () => phaseReveal());
+    }
+
+    function verify() {
+        const correct = player.every((v, i) => v === target[i]);
+        if (correct) {
+            clearInterval(timerInterval);
+            beep(600, 200); beep(800, 300);
+            msg.innerText = "MISSION SUCCESS! Link Established.";
+            msg.style.color = "#00F260";
+            document.getElementById('check-btn').classList.add('hidden');
+            setTimeout(initLevel, 3000);
+        } else {
+            beep(150, 400);
+            msg.innerText = "Pattern Error! Check again.";
+            msg.style.color = "#ff5f6d";
+        }
+    }
+
+    function phaseReveal() {
+        phase = 'reveal';
+        render();
+        msg.innerText = "Time Expired. Study the correct sequence.";
+        msg.style.color = "var(--gold)";
+        document.getElementById('check-btn').classList.add('hidden');
+        document.getElementById('next-btn').classList.remove('hidden');
+    }
+
+    initLevel();
+</script>
+</body>
+</html>

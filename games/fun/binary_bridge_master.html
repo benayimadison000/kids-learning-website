@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Binary Bridge Master: Logic & Reasoning</title>
+    <style>
+        :root { --neon: #00f2ff; --warn: #ff0055; --portal: #bc13fe; --sub: #ff9d00; }
+        body { background: #050a10; color: white; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }
+        
+        #game-box { width: 750px; padding: 25px; border: 2px solid var(--neon); border-radius: 20px; background: #0b111a; text-align: center; box-shadow: 0 0 40px rgba(0, 242, 255, 0.1); }
+        
+        .bridge-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin: 20px 0; }
+        .tile { height: 90px; border: 2px dashed #333; border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; background: rgba(255,255,255,0.02); transition: 0.3s; }
+        .tile.active { border-color: var(--neon); background: rgba(0, 242, 255, 0.15); box-shadow: 0 0 15px var(--neon); }
+        .tile.solved { border-color: #00ff88; background: rgba(0, 255, 136, 0.1); }
+        .target-num { font-size: 26px; font-weight: bold; color: var(--neon); }
+
+        .action-container { display: flex; justify-content: center; gap: 15px; margin: 20px 0; }
+        .control-group { padding: 12px; border-radius: 12px; background: #151b26; display: flex; gap: 10px; align-items: center; border: 1px solid #333; }
+        
+        .num-card { width: 55px; height: 55px; background: #2a3441; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 22px; transition: 0.2s; border-bottom: 4px solid #111; }
+        .num-card.sub { background: var(--sub); color: black; border-bottom-color: #8a5500; }
+        .num-card:hover { transform: translateY(-3px); filter: brightness(1.2); }
+        
+        .portal { width: 85px; height: 85px; background: var(--portal); border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; font-size: 11px; font-weight: bold; box-shadow: 0 0 15px var(--portal); border: 2px solid white; transition: 0.3s; }
+        .portal:active { transform: scale(0.9); }
+
+        #fuel-bar { width: 100%; height: 20px; background: #000; border-radius: 10px; margin-bottom: 15px; overflow: hidden; border: 1px solid #333; }
+        #fuel-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #00d4ff); transition: width 0.4s; }
+        
+        #history-log { background: #000; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 14px; color: #888; margin-top: 10px; min-height: 20px; }
+        .current-sum-box { font-size: 32px; font-weight: bold; margin: 10px 0; color: var(--neon); }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h2 style="margin:0; letter-spacing: 1px; color: var(--neon);">MATH BRIDGE BUILDER: MASTER</h2>
+        <div style="font-weight:bold; background: #222; padding: 5px 15px; border-radius: 20px;">LVL: <span id="lvl">1</span></div>
+    </div>
+
+    <div id="fuel-bar"><div id="fuel-fill"></div></div>
+    
+    <div id="msg" style="height: 20px; margin-bottom: 10px; font-weight: bold;">Loading Logic Gates...</div>
+
+    <div class="bridge-grid" id="bridge"></div>
+
+    <div class="action-container">
+        <div class="control-group">
+            <div style="font-size: 10px; writing-mode: vertical-rl; opacity: 0.5;">ADD</div>
+            <div class="num-card" onclick="useBlock(2, 'add')">2</div>
+            <div class="num-card" onclick="useBlock(5, 'add')">5</div>
+            <div class="num-card" onclick="useBlock(10, 'add')">10</div>
+        </div>
+
+        <div class="portal" onclick="activatePortal()">
+            <span style="font-size: 24px;">×2</span>
+            PORTAL
+            <small style="font-size:9px">COST: 10</small>
+        </div>
+
+        <div class="control-group">
+            <div style="font-size: 10px; writing-mode: vertical-rl; opacity: 0.5;">SUB</div>
+            <div class="num-card sub" onclick="useBlock(3, 'sub')">-3</div>
+            <div class="num-card sub" onclick="useBlock(7, 'sub')">-7</div>
+        </div>
+    </div>
+
+    <div class="current-sum-box">SUM: <span id="sum-val">0</span></div>
+    <div id="history-log">Log: Start of Level</div>
+</div>
+
+<script>
+    let level = 1, fuel = 100, runningSum = 0, bridgeIndex = 0, multiplierActive = false;
+    let targets = [], history = [];
+
+    const msg = document.getElementById('msg');
+    const fuelFill = document.getElementById('fuel-fill');
+    const bridge = document.getElementById('bridge');
+    const log = document.getElementById('history-log');
+
+    function beep(f, t="sine", d=0.2) {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = t; o.frequency.value = f;
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + d);
+        o.stop(ctx.currentTime + d);
+    }
+
+    function initLevel() {
+        bridge.innerHTML = '';
+        bridgeIndex = 0; runningSum = 0; multiplierActive = false; history = [];
+        document.getElementById('sum-val').innerText = "0";
+        document.getElementById('lvl').innerText = level;
+        log.innerText = "Log: System Ready";
+
+        // Targets increase in difficulty
+        targets = Array.from({length: 6}, () => Math.floor(Math.random() * (15 + level * 5)) + 12);
+        targets.forEach((t, i) => {
+            const div = document.createElement('div');
+            div.className = 'tile' + (i === 0 ? ' active' : '');
+            div.innerHTML = `<span class="target-num">${t}</span>`;
+            bridge.appendChild(div);
+        });
+        msg.innerText = "Build the bridge to cross the void!";
+    }
+
+    function activatePortal() {
+        if (fuel < 10) { msg.innerText = "OUT OF ENERGY!"; beep(100, "sawtooth"); return; }
+        if (multiplierActive) return;
+        fuel -= 10; multiplierActive = true;
+        beep(800, "square", 0.3); updateFuel();
+        msg.innerText = "PORTAL OPEN: Next block is doubled!";
+    }
+
+    function useBlock(val, type) {
+        if (fuel <= 0) return;
+        
+        let finalVal = multiplierActive ? val * 2 : val;
+        let displayVal = type === 'add' ? finalVal : -finalVal;
+        
+        runningSum += displayVal;
+        fuel -= 4;
+        
+        history.push(displayVal > 0 ? `+${displayVal}` : displayVal);
+        log.innerText = "Log: " + history.join(" ");
+        
+        multiplierActive = false;
+        document.getElementById('sum-val').innerText = runningSum;
+        updateFuel();
+        beep(displayVal > 0 ? 400 : 300);
+
+        if (runningSum === targets[bridgeIndex]) {
+            solveTile();
+        } else if (runningSum > targets[bridgeIndex] + 10) {
+            msg.innerText = "CRITICAL OVERLOAD: Use SUBTRACT to fix!";
+            msg.style.color = "var(--sub)";
+        }
+    }
+
+    function solveTile() {
+        const tiles = document.querySelectorAll('.tile');
+        tiles[bridgeIndex].className = 'tile solved';
+        tiles[bridgeIndex].innerHTML = "✅";
+        bridgeIndex++; runningSum = 0; history = [];
+        document.getElementById('sum-val').innerText = "0";
+        beep(600, "sine", 0.4);
+        msg.style.color = "var(--neon)";
+
+        if (bridgeIndex < 6) {
+            tiles[bridgeIndex].classList.add('active');
+            msg.innerText = "Target Reached! Scanning next node...";
+        } else {
+            level++; fuel = Math.min(100, fuel + 35);
+            msg.innerText = "BRIDGE STABILIZED! Level Up!";
+            setTimeout(initLevel, 2000);
+        }
+    }
+
+    function updateFuel() {
+        fuelFill.style.width = fuel + "%";
+        if (fuel <= 0) {
+            msg.innerText = "SYSTEM CRASH: Fuel Depleted!";
+            setTimeout(() => { level = 1; fuel = 100; initLevel(); }, 3000);
+        }
+    }
+
+    initLevel();
+</script>
+</body>
+</html>

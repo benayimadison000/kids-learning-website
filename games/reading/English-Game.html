@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Quest: The Magic Library</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1512820790803-83ca3b5b664b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container, #dashboard {
+            max-width: 600px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-in;
+        }
+        #dashboard {
+            display: none;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #0288D1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0277BD;
+            transform: scale(1.1);
+        }
+        #question-area, #puzzle-area {
+            margin: 20px 0;
+            animation: slideIn 0.5s ease-in;
+        }
+        #star-counter {
+            font-size: 1.5em;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #feedback {
+            font-size: 1.2em;
+            color: #D81B60;
+        }
+        .option {
+            display: block;
+            margin: 10px auto;
+            width: 250px;
+            font-size: 16px;
+        }
+        .draggable {
+            display: inline-block;
+            padding: 10px;
+            background: #7B1FA2;
+            color: white;
+            margin: 5px;
+            cursor: move;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+        .draggable:hover {
+            transform: scale(1.05);
+        }
+        .dropzone {
+            display: inline-block;
+            width: 120px;
+            height: 60px;
+            border: 2px dashed #333;
+            margin: 5px;
+            line-height: 60px;
+            background: #f0f0f0;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        #story {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #1B5E20;
+        }
+        #toggle-dashboard {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #F57C00;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Word Quest: The Magic Library</h1>
+        <h2>Level 1: The Storybook Shelf</h2>
+        <p id="star-counter">Stars: 0</p>
+        <div id="story">Emma enters the Magic Library, but the books are locked by enchanted seals. Answer these questions to unlock them!</div>
+        <div id="question-area"></div>
+        <div id="puzzle-area"></div>
+        <div id="feedback"></div>
+        <canvas id="stars-chart" width="400" height="200"></canvas>
+        <canvas id="performance-chart" width="400" height="200"></canvas>
+        <button id="toggle-dashboard">Parent Dashboard</button>
+    </div>
+    <div id="dashboard">
+        <h2>Parent Dashboard</h2>
+        <p id="dashboard-stats"></p>
+        <button onclick="toggleDashboard()">Back to Game</button>
+    </div>
+
+    <script>
+        let stars = 0;
+        let currentQuestion = 0;
+        let attempts = 0;
+        let maxAttempts = 2;
+        let difficulty = "easy"; // easy, medium, hard
+        let performance = { vocabCorrect: 0, vocabTotal: 3, readingCorrect: 0, readingTotal: 2, spellingCorrect: 0, spellingTotal: 1, puzzleCorrect: 0, puzzleTotal: 1 };
+
+        // Question set (7 tasks: 3 vocab, 2 reading, 1 spelling, 1 puzzle)
+        const questions = [
+            {
+                type: "vocab",
+                question: "Passage: 'The book glowed with a brilliant light.' What does 'brilliant' mean?",
+                answer: "Very bright",
+                options: ["Very dark", "Very bright", "Very heavy", "Very quiet"],
+                hint: "The book was glowing, so what kind of light would it have?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Passage: 'The librarian was confident in her skills.' What does 'confident' mean?",
+                        answer: "Sure of oneself",
+                        options: ["Afraid", "Sure of oneself", "Tired", "Lost"]
+                    },
+                    hard: {
+                        question: "Passage: 'The story was captivating to all readers.' What does 'captivating' mean?",
+                        answer: "Very interesting",
+                        options: ["Boring", "Very interesting", "Confusing", "Short"]
+                    }
+                }
+            },
+            {
+                type: "reading",
+                question: "Passage: 'Emma found a dusty book on a high shelf. She climbed a ladder to reach it.' Why did Emma climb the ladder?",
+                answer: "To get the book",
+                options: ["To clean the shelf", "To get the book", "To fix the ladder", "To look outside"],
+                hint: "The passage says Emma found a book. What did she do next?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Passage: 'Emma discovered a hidden door behind a bookcase. She pushed it open.' Why did Emma push the door?",
+                        answer: "To open it",
+                        options: ["To close it", "To open it", "To clean it", "To hide it"]
+                    },
+                    hard: {
+                        question: "Passage: 'Emma uncovered a secret passage behind a heavy tome. She moved the book to explore.' Why did Emma move the book?",
+                        answer: "To explore the passage",
+                        options: ["To read the book", "To explore the passage", "To dust the shelf", "To lock the door"]
+                    }
+                }
+            },
+            {
+                type: "vocab",
+                question: "What does 'predict' mean? Example: 'Emma tried to predict the story’s ending.'",
+                answer: "Guess what will happen",
+                options: ["Write a story", "Guess what will happen", "Read a book", "Hide something"],
+                hint: "Emma was thinking about the story’s ending. What was she trying to do?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "What does 'observe' mean? Example: 'Emma observed the room carefully.'",
+                        answer: "Watch closely",
+                        options: ["Run away", "Watch closely", "Clean up", "Ignore"]
+                    },
+                    hard: {
+                        question: "What does 'anticipate' mean? Example: 'Emma anticipated a surprise in the book.'",
+                        answer: "Expect something",
+                        options: ["Forget something", "Expect something", "Lose something", "Break something"]
+                    }
+                }
+            },
+            {
+                type: "spelling",
+                question: "Which word is spelled correctly?",
+                answer: "Library",
+                options: ["Librery", "Libary", "Library", "Librarry"],
+                hint: "The word has 7 letters and ends with 'ary.'",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Which word is spelled correctly?",
+                        answer: "Adventure",
+                        options: ["Adventur", "Adventure", "Advencher", "Advinture"]
+                    },
+                    hard: {
+                        question: "Which word is spelled correctly?",
+                        answer: "Mysterious",
+                        options: ["Misterious", "Mysterious", "Mystereous", "Misteryous"]
+                    }
+                }
+            },
+            {
+                type: "vocab",
+                question: "Passage: 'The book was enormous and heavy.' What does 'enormous' mean?",
+                answer: "Very large",
+                options: ["Very small", "Very large", "Very old", "Very light"],
+                hint: "The book was also heavy, so what size might it be?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Passage: 'The library was tranquil and quiet.' What does 'tranquil' mean?",
+                        answer: "Peaceful",
+                        options: ["Noisy", "Peaceful", "Dark", "Crowded"]
+                    },
+                    hard: {
+                        question: "Passage: 'The library was serene and calm.' What does 'serene' mean?",
+                        answer: "Calm",
+                        options: ["Busy", "Calm", "Bright", "Cold"]
+                    }
+                }
+            },
+            {
+                type: "reading",
+                question: "Passage: 'Emma read a story about a brave knight. The knight fought a dragon to save a village.' What was the main idea?",
+                answer: "The knight was brave",
+                options: ["The dragon was big", "The knight was brave", "The village was old", "The story was long"],
+                hint: "Think about what the story was mostly about. Who was the main character?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Passage: 'Emma found a tale about a clever fox. The fox tricked a bear to get food.' What was the main idea?",
+                        answer: "The fox was clever",
+                        options: ["The bear was strong", "The fox was clever", "The food was gone", "The tale was short"]
+                    },
+                    hard: {
+                        question: "Passage: 'Emma read about a resourceful explorer. The explorer solved puzzles to find treasure.' What was the main idea?",
+                        answer: "The explorer was resourceful",
+                        options: ["The treasure was hidden", "The explorer was resourceful", "The puzzles were easy", "The book was old"]
+                    }
+                }
+            }
+        ];
+
+        // Puzzle data (grammar: sort words into parts of speech)
+        const puzzle = {
+            words: ["Book", "Run", "Big", "Library", "Jump", "Tall"],
+            categories: ["Noun", "Verb", "Adjective"],
+            correctMatches: {
+                "Book": "Noun",
+                "Run": "Verb",
+                "Big": "Adjective",
+                "Library": "Noun",
+                "Jump": "Verb",
+                "Tall": "Adjective"
+            }
+        };
+
+        // Stars chart
+        let starsChartData = {
+            labels: ["Level 0", "Level 1"],
+            datasets: [{
+                label: "Stars Earned",
+                data: [5, 0], // Level 0 = 5 (preset), Level 1 updated dynamically
+                backgroundColor: ["#0288D1", "#7B1FA2"],
+                borderColor: ["#0277BD", "#6A1B9A"],
+                borderWidth: 1
+            }]
+        };
+
+        // Performance chart (vocab vs. reading accuracy)
+        let performanceChartData = {
+            labels: ["Vocabulary", "Reading"],
+            datasets: [{
+                label: "Accuracy (%)",
+                data: [0, 0], // Updated dynamically
+                backgroundColor: ["#F57C00", "#388E3C"],
+                borderColor: ["#EF6C00", "#2E7D32"],
+                borderWidth: 1
+            }]
+        };
+
+        // Initialize charts
+        const starsCtx = document.getElementById('stars-chart').getContext('2d');
+        const starsChart = new Chart(starsCtx, {
+            type: 'bar',
+            data: starsChartData,
+            options: {
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: "Stars Earned" } },
+                    x: { title: { display: true, text: "Level" } }
+                },
+                plugins: { title: { display: true, text: "Stars Earned in Magic Library" } }
+            }
+        });
+
+        const perfCtx = document.getElementById('performance-chart').getContext('2d');
+        const performanceChart = new Chart(perfCtx, {
+            type: 'bar',
+            data: performanceChartData,
+            options: {
+                scales: {
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: "Accuracy (%)" } },
+                    x: { title: { display: true, text: "Subject" } }
+                },
+                plugins: { title: { display: true, text: "Vocabulary vs. Reading Performance" } }
+            }
+        });
+
+        // Display question
+        function showQuestion() {
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                let html = `<p>${q.question}</p>`;
+                q.options.forEach(opt => {
+                    html += `<button class="option" onclick="checkAnswer('${opt}')">${opt}</button>`;
+                });
+                document.getElementById('question-area').innerHTML = html;
+            } else {
+                showPuzzle();
+            }
+        }
+
+        // Check answer
+        function checkAnswer(selected) {
+            const q = questions[currentQuestion];
+            if (selected === q.answer) {
+                stars += 1;
+                document.getElementById('star-counter').textContent = `Stars: ${stars}`;
+                document.getElementById('feedback').textContent = "Great job, Emma! You earned a star!";
+                if (q.type === "vocab") performance.vocabCorrect++;
+                else if (q.type === "reading") performance.readingCorrect++;
+                else if (q.type === "spelling") performance.spellingCorrect++;
+                currentQuestion++;
+                attempts = 0;
+                adjustDifficulty(true);
+                updateCharts();
+                updateDashboard();
+                showQuestion();
+            } else {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    document.getElementById('feedback').textContent = `Try again! Hint: ${q.hint}`;
+                } else {
+                    document.getElementById('feedback').textContent = `The answer was ${q.answer}. Let's move on!`;
+                    currentQuestion++;
+                    attempts = 0;
+                    adjustDifficulty(false);
+                    showQuestion();
+                }
+            }
+        }
+
+        // Adjust difficulty
+        function adjustDifficulty(correct) {
+            if (correct && difficulty === "easy") {
+                difficulty = "medium";
+                questions.forEach(q => {
+                    if (q.altQuestions.medium) {
+                        Object.assign(q, q.altQuestions.medium);
+                        q.difficulty = "medium";
+                    }
+                });
+            } else if (!correct && difficulty === "medium") {
+                difficulty = "easy";
+                questions.forEach(q => {
+                    if (q.altQuestions.easy) {
+                        Object.assign(q, q.altQuestions.easy);
+                        q.difficulty = "easy";
+                    }
+                });
+            } else if (correct && difficulty === "medium") {
+                difficulty = "hard";
+                questions.forEach(q => {
+                    if (q.altQuestions.hard) {
+                        Object.assign(q, q.altQuestions.hard);
+                        q.difficulty = "hard";
+                    }
+                });
+            }
+        }
+
+        // Show puzzle
+        function showPuzzle() {
+            document.getElementById('question-area').innerHTML = "";
+            let html = `<p>Sort each word into its part of speech!</p>`;
+            html += `<div>Words: `;
+            puzzle.words.forEach(word => {
+                html += `<span class="draggable" draggable="true" ondragstart="drag(event)" id="${word}">${word}</span>`;
+            });
+            html += `</div><div>Categories: `;
+            puzzle.categories.forEach(category => {
+                html += `<div class="dropzone" ondrop="drop(event, '${category}')" ondragover="allowDrop(event)">${category}</div>`;
+            });
+            html += `</div>`;
+            document.getElementById('puzzle-area').innerHTML = html;
+        }
+
+        // Drag and drop
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev, category) {
+            ev.preventDefault();
+            const word = ev.dataTransfer.getData("text");
+            if (puzzle.correctMatches[word] === category) {
+                stars += 2;
+                performance.puzzleCorrect++;
+                document.getElementById('star-counter').textContent = `Stars: ${stars}`;
+                document.getElementById('feedback').textContent = "Perfect match! You earned 2 stars!";
+                updateCharts();
+                updateDashboard();
+                document.getElementById('puzzle-area').innerHTML = "<p>Level Complete! You unlocked the Storybook Shelf!</p>";
+                document.getElementById('question-area').innerHTML = "<button onclick='restartGame()'>Play Again</button>";
+            } else {
+                document.getElementById('feedback').textContent = "Try again! Hint: 'Book' is a thing, so it’s a noun.";
+            }
+        }
+
+        // Update charts
+        function updateCharts() {
+            starsChartData.datasets[0].data[1] = stars;
+            starsChart.update();
+            performanceChartData.datasets[0].data[0] = (performance.vocabCorrect / performance.vocabTotal * 100).toFixed(1);
+            performanceChartData.datasets[0].data[1] = (performance.readingCorrect / performance.readingTotal * 100).toFixed(1);
+            performanceChart.update();
+        }
+
+        // Parent dashboard
+        function updateDashboard() {
+            const vocabAccuracy = (performance.vocabCorrect / performance.vocabTotal * 100).toFixed(1);
+            const readingAccuracy = (performance.readingCorrect / performance.readingTotal * 100).toFixed(1);
+            const spellingAccuracy = (performance.spellingCorrect / performance.spellingTotal * 100).toFixed(1);
+            const puzzleAccuracy = (performance.puzzleCorrect / performance.puzzleTotal * 100).toFixed(1);
+            document.getElementById('dashboard-stats').innerHTML = `
+                <p>Total Stars: ${stars}</p>
+                <p>Vocabulary Accuracy: ${vocabAccuracy}% (${performance.vocabCorrect}/${performance.vocabTotal})</p>
+                <p>Reading Accuracy: ${readingAccuracy}% (${performance.readingCorrect}/${performance.readingTotal})</p>
+                <p>Spelling Accuracy: ${spellingAccuracy}% (${performance.spellingCorrect}/${performance.spellingTotal})</p>
+                <p>Puzzle Accuracy: ${puzzleAccuracy}% (${performance.puzzleCorrect}/${performance.puzzleTotal})</p>
+                <p>Current Difficulty: ${difficulty}</p>
+            `;
+        }
+
+        function toggleDashboard() {
+            const game = document.getElementById('game-container');
+            const dashboard = document.getElementById('dashboard');
+            if (game.style.display === 'none') {
+                game.style.display = 'block';
+                dashboard.style.display = 'none';
+            } else {
+                game.style.display = 'none';
+                dashboard.style.display = 'block';
+            }
+        }
+
+        function restartGame() {
+            stars = 0;
+            currentQuestion = 0;
+            attempts = 0;
+            difficulty = "easy";
+            performance = { vocabCorrect: 0, vocabTotal: 3, readingCorrect: 0, readingTotal: 2, spellingCorrect: 0, spellingTotal: 1, puzzleCorrect: 0, puzzleTotal: 1 };
+            questions.forEach(q => {
+                if (q.altQuestions.easy) {
+                    Object.assign(q, q.altQuestions.easy || {});
+                    q.difficulty = "easy";
+                }
+            });
+            document.getElementById('star-counter').textContent = `Stars: ${stars}`;
+            document.getElementById('feedback').textContent = "";
+            document.getElementById('puzzle-area').innerHTML = "";
+            showQuestion();
+            updateCharts();
+            updateDashboard();
+        }
+
+        // Initialize
+        document.getElementById('toggle-dashboard').onclick = toggleDashboard;
+        showQuestion();
+        updateDashboard();
+    </script>
+</body>
+</html>

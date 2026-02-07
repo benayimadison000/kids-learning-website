@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 4 Math Challenge: Fractions & Roots</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Use Inter font family -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Math Font Styling Hint (since LaTeX rendering is not native) -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.5s;
+        }
+        /* Custom styles for the input and focus state */
+        .math-input {
+            border: 3px solid #6366f1; /* Indigo-500 border */
+            text-align: center;
+            font-size: 2rem; /* Adjusted for longer answers like fractions */
+            width: 150px;
+            height: 60px;
+        }
+        .math-input:focus {
+            outline: none;
+            border-color: #4f46e5; /* Indigo-600 focus */
+            box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.5); /* Custom focus ring */
+        }
+        .correct-feedback {
+            transform: scale(1.1);
+            transition: transform 0.3s;
+        }
+        .incorrect-feedback {
+            animation: shake 0.5s;
+        }
+        @keyframes shake {
+            0%, 100% {transform: translateX(0);}
+            20%, 60% {transform: translateX(-10px);}
+            40%, 80% {transform: translateX(10px);}
+        }
+        /* Style for LaTeX-style math text for better visibility */
+        #question-text {
+            font-family: 'Courier New', monospace; /* Use monospace for better display of / and \ */
+            font-size: 1.5rem;
+            line-height: 2.0rem;
+        }
+        @media (min-width: 768px) {
+            #question-text {
+                font-size: 2rem;
+                line-height: 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-blue-50 flex items-center justify-center min-h-screen p-4">
+
+    <div id="game-container" class="w-full max-w-3xl bg-white p-8 md:p-12 rounded-3xl shadow-2xl transition-all duration-500">
+        
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-indigo-700">Fraction & Root Challenge! 🎓</h1>
+            <p class="text-xl text-gray-500 mt-2">Grade 4 Practice | Group <span id="group-number">1</span> of 10</p>
+            <p class="text-sm text-gray-400 italic">Enter answers as integers (e.g., 5), simplified fractions (e.g., 1/2), or mixed numbers (e.g., 3 1/2).</p>
+        </header>
+
+        <!-- Scoreboard & Progress -->
+        <div class="flex justify-between items-center mb-8 text-xl font-semibold text-gray-700">
+            <div class="flex items-center space-x-2">
+                <span class="text-green-600">Score:</span>
+                <span id="current-score" class="text-2xl text-green-700">0</span> / 50
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="text-indigo-600">Question:</span>
+                <span id="q-counter" class="text-2xl text-indigo-700">1</span> / 50
+            </div>
+        </div>
+
+        <!-- Main Game Area -->
+        <div id="quiz-area" class="text-center">
+
+            <!-- Math Problem Display (Updated for Text Questions) -->
+            <div id="question-display" class="mb-8">
+                <p id="question-text" class="text-4xl md:text-5xl font-bold text-gray-800 mb-6 px-4">
+                    <!-- Question text goes here -->
+                </p>
+                <div class="flex justify-center items-center space-x-4">
+                    <span class="text-6xl font-extrabold text-pink-600">=</span>
+                    <input type="text" id="answer-input" class="math-input rounded-xl focus:ring-indigo-500 focus:border-indigo-500" placeholder="Your Answer" inputmode="text">
+                </div>
+            </div>
+
+            <!-- Feedback Message -->
+            <div id="feedback-message" class="h-10 text-xl font-semibold mb-4"></div>
+
+            <!-- Explanation Box (New) -->
+            <div id="explanation-box" class="mt-4 p-4 rounded-xl bg-indigo-50 text-indigo-800 text-lg font-medium hidden text-left shadow-inner">
+                <h3 class="font-bold mb-1 text-indigo-700">💡 Explanation:</h3>
+                <p id="explanation-text"></p>
+            </div>
+
+            <!-- Action Button -->
+            <button id="check-button" onclick="checkAnswer()" class="w-full md:w-auto px-10 py-4 mt-8 bg-indigo-600 text-white text-2xl font-bold rounded-xl shadow-lg hover:bg-indigo-700 transition duration-150 transform hover:scale-105">
+                Check Answer!
+            </button>
+
+        </div>
+
+        <!-- Finish/Reset Area (Hidden initially) -->
+        <div id="finish-area" class="text-center hidden">
+            <h2 id="final-message" class="text-5xl font-black text-indigo-700 mb-6"></h2>
+            <p class="text-3xl text-gray-700 mb-8">
+                Your final score is: <span id="final-score" class="text-green-600 font-extrabold text-4xl">0</span> / 50
+            </p>
+            <button onclick="initGame()" class="w-full md:w-auto px-10 py-4 bg-green-600 text-white text-2xl font-bold rounded-xl shadow-lg hover:bg-green-700 transition duration-150 transform hover:scale-105">
+                Play Again!
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // --- 1. GAME DATA (50 Questions in 10 Groups) ---
+        // Grade 4: Simple Fractions and Square Roots (Answers should be simplified fraction, mixed number, or integer)
+        const QUESTIONS = [
+            // Group 1: Simple Addition/Subtraction (Same Denominators)
+            [
+                { q: "What is $\\frac{1}{4} + \\frac{2}{4}$?", ans: "3/4", expl: "When denominators are the same, you just add the top numbers (numerators): $1 + 2 = 3$. The denominator stays 4." },
+                { q: "What is $\\frac{5}{6} - \\frac{2}{6}$? (Simplify your answer)", ans: "1/2", expl: "$\\frac{5}{6} - \\frac{2}{6} = \\frac{3}{6}$. To simplify $\\frac{3}{6}$, divide both the top and bottom by 3, which equals $\\frac{1}{2}$." },
+                { q: "What is $\\frac{3}{5} + \\frac{1}{5}$?", ans: "4/5", expl: "Add the numerators: $3 + 1 = 4$. The denominator is 5." },
+                { q: "What is $\\frac{7}{8} - \\frac{3}{8}$? (Simplify your answer)", ans: "1/2", expl: "$\\frac{7}{8} - \\frac{3}{8} = \\frac{4}{8}$. Divide both 4 and 8 by 4 to simplify to $\\frac{1}{2}$." },
+                { q: "What is $\\frac{1}{10} + \\frac{3}{10}$? (Simplify your answer)", ans: "2/5", expl: "$\\frac{1}{10} + \\frac{3}{10} = \\frac{4}{10}$. Divide both 4 and 10 by 2 to simplify to $\\frac{2}{5}$." },
+            ],
+            // Group 2: Equivalent Fractions
+            [
+                { q: "What fraction is equivalent to $\\frac{1}{3}$ if the new denominator is 9?", ans: "3/9", expl: "Since $3 \\times 3 = 9$, we multiply the top number by 3: $1 \\times 3 = 3$. So, $\\frac{3}{9}$ is equivalent to $\\frac{1}{3}$." },
+                { q: "Complete the equivalent fraction: $\\frac{2}{5} = \\frac{?}{10}$", ans: "4/10", expl: "Since $5 \\times 2 = 10$, we multiply the numerator by 2: $2 \\times 2 = 4$. The complete fraction is $\\frac{4}{10}$." },
+                { q: "Simplify $\\frac{8}{10}$ to its lowest terms.", ans: "4/5", expl: "Divide both the numerator (8) and the denominator (10) by their greatest common factor, which is 2. $\\frac{8 \\div 2}{10 \\div 2} = \\frac{4}{5}$." },
+                { q: "Is $\\frac{1}{2}$ equal to $\\frac{5}{10}$? (Answer 'yes' or 'no')", ans: "yes", expl: "Yes, $\\frac{1}{2}$ is equivalent to $\\frac{5}{10}$. You multiply the top and bottom of $\\frac{1}{2}$ by 5 to get $\\frac{5}{10}$." },
+                { q: "Complete the equivalent fraction: $\\frac{6}{12} = \\frac{1}{?}$", ans: "1/2", expl: "To go from 6 to 1, you divide by 6. So, divide 12 by 6, which is 2. The fraction is $\\frac{1}{2}$." },
+            ],
+            // Group 3: Mixed Numbers to Improper Fractions
+            [
+                { q: "Convert the mixed number $1 \\frac{1}{2}$ into an improper fraction.", ans: "3/2", expl: "Multiply the whole number (1) by the denominator (2), then add the numerator (1). $1 \\times 2 + 1 = 3$. The denominator stays 2. The answer is $\\frac{3}{2}$." },
+                { q: "Convert the mixed number $2 \\frac{3}{4}$ into an improper fraction.", ans: "11/4", expl: "$2 \\times 4 + 3 = 11$. The denominator stays 4. The improper fraction is $\\frac{11}{4}$." },
+                { q: "Convert the improper fraction $\\frac{7}{3}$ into a mixed number.", ans: "2 1/3", expl: "Divide 7 by 3. $7 \\div 3 = 2$ with a remainder of 1. The whole number is 2, the numerator is 1, and the denominator is 3." },
+                { q: "Convert the improper fraction $\\frac{9}{5}$ into a mixed number.", ans: "1 4/5", expl: "Divide 9 by 5. $9 \\div 5 = 1$ with a remainder of 4. The mixed number is $1 \\frac{4}{5}$." },
+                { q: "Convert $3 \\frac{1}{4}$ into an improper fraction.", ans: "13/4", expl: "$3 \\times 4 + 1 = 13$. The improper fraction is $\\frac{13}{4}$." },
+            ],
+            // Group 4: Comparing Fractions (using > or <)
+            [
+                { q: "Compare: $\\frac{1}{2}$ ___ $\\frac{3}{4}$. (Answer with $>$ or $<$.)", ans: "<", expl: "To compare, use a common denominator (4). $\\frac{1}{2}$ is $\\frac{2}{4}$. Since $\\frac{2}{4}$ is less than $\\frac{3}{4}$, the answer is $<$. " },
+                { q: "Compare: $\\frac{5}{8}$ ___ $\\frac{1}{4}$. (Answer with $>$ or $<$.)", ans: ">", expl: "To compare, use a common denominator (8). $\\frac{1}{4}$ is $\\frac{2}{8}$. Since $\\frac{5}{8}$ is greater than $\\frac{2}{8}$, the answer is $>$. " },
+                { q: "Compare: $\\frac{2}{3}$ ___ $\\frac{2}{5}$. (Answer with $>$ or $<$.)", ans: ">", expl: "When the numerators are the same, the fraction with the smaller denominator is larger. Thirds are bigger pieces than fifths, so $\\frac{2}{3}$ is greater than $\\frac{2}{5}$." },
+                { q: "Which fraction is bigger: $\\frac{1}{10}$ or $\\frac{9}{10}$?", ans: "9/10", expl: "Since both have the same denominator (10), we just compare the numerators: 9 is greater than 1." },
+                { q: "Compare: $1$ ___ $\\frac{7}{6}$. (Answer with $>$ or $<$.)", ans: "<", expl: "The fraction $\\frac{7}{6}$ is an improper fraction, which means it is greater than 1." },
+            ],
+            // Group 5: Simple Square Roots (Perfect Squares 1-36)
+            [
+                { q: "What is the square root of 9? ($\\sqrt{9}$)", ans: "3", expl: "The square root of 9 is 3 because $3 \\times 3 = 9$." },
+                { q: "What is the square root of 25? ($\\sqrt{25}$)", ans: "5", expl: "The square root of 25 is 5 because $5 \\times 5 = 25$." },
+                { q: "What is the square root of 4? ($\\sqrt{4}$)", ans: "2", expl: "The square root of 4 is 2 because $2 \\times 2 = 4$." },
+                { q: "What is 6 squared? ($6^2$)", ans: "36", expl: "6 squared means $6 \\times 6$, which equals 36." },
+                { q: "What is the square root of 1? ($\\sqrt{1}$)", ans: "1", expl: "The square root of 1 is 1 because $1 \\times 1 = 1$." },
+            ],
+            // Group 6: Simple Square Roots (Perfect Squares 49-100)
+            [
+                { q: "What is the square root of 49? ($\\sqrt{49}$)", ans: "7", expl: "The square root of 49 is 7 because $7 \\times 7 = 49$." },
+                { q: "What is the square root of 100? ($\\sqrt{100}$)", ans: "10", expl: "The square root of 100 is 10 because $10 \\times 10 = 100$." },
+                { q: "What is 9 squared? ($9^2$)", ans: "81", expl: "9 squared means $9 \\times 9$, which equals 81." },
+                { q: "What is the square root of 64? ($\\sqrt{64}$)", ans: "8", expl: "The square root of 64 is 8 because $8 \\times 8 = 64$." },
+                { q: "What is the square root of 81? ($\\sqrt{81}$)", ans: "9", expl: "The square root of 81 is 9 because $9 \\times 9 = 81$." },
+            ],
+            // Group 7: Simple Fraction of a Number
+            [
+                { q: "What is $\\frac{1}{2}$ of 10?", ans: "5", expl: "To find $\\frac{1}{2}$ of a number, divide the number by 2. $10 \\div 2 = 5$." },
+                { q: "What is $\\frac{1}{3}$ of 15?", ans: "5", expl: "To find $\\frac{1}{3}$ of a number, divide the number by 3. $15 \\div 3 = 5$." },
+                { q: "What is $\\frac{2}{4}$ of 8? (Simplify the fraction first!)", ans: "4", expl: "The fraction $\\frac{2}{4}$ simplifies to $\\frac{1}{2}$. $\\frac{1}{2}$ of 8 is $8 \\div 2 = 4$." },
+                { q: "What is $\\frac{1}{4}$ of 20?", ans: "5", expl: "To find $\\frac{1}{4}$ of a number, divide the number by 4. $20 \\div 4 = 5$." },
+                { q: "What is $\\frac{3}{5}$ of 15?", ans: "9", expl: "First find $\\frac{1}{5}$ of 15 ($15 \\div 5 = 3$). Then multiply by the numerator ($3 \\times 3 = 9$)." },
+            ],
+            // Group 8: Fractions and Whole Numbers
+            [
+                { q: "How many halves are in 3 whole units?", ans: "6", expl: "Each whole unit has 2 halves, so $3 \\times 2 = 6$ halves." },
+                { q: "How many thirds are in 2 whole units?", ans: "6", expl: "Each whole unit has 3 thirds, so $2 \\times 3 = 6$ thirds." },
+                { q: "What is $4 - \\frac{1}{4}$?", ans: "3 3/4", expl: "Convert 4 into fourths: $3 \\frac{4}{4}$. Then subtract: $\\frac{4}{4} - \\frac{1}{4} = \\frac{3}{4}$. The answer is $3 \\frac{3}{4}$." },
+                { q: "What is $1 + \\frac{5}{8}$?", ans: "1 5/8", expl: "When you add a whole number and a fraction, you get a mixed number." },
+                { q: "What is $\\frac{10}{2}$?", ans: "5", expl: "A fraction bar means division: $10 \\div 2 = 5$." },
+            ],
+            // Group 9: Mixed Challenge (Fractions)
+            [
+                { q: "Simplify $\\frac{12}{16}$.", ans: "3/4", expl: "Divide the numerator (12) and the denominator (16) by 4. $\\frac{12 \\div 4}{16 \\div 4} = \\frac{3}{4}$." },
+                { q: "What is $1 \\frac{1}{5} + 2 \\frac{3}{5}$?", ans: "3 4/5", expl: "Add the whole numbers ($1+2=3$) and the fractions ($\\frac{1}{5} + \\frac{3}{5} = \\frac{4}{5}$). The result is $3 \\frac{4}{5}$." },
+                { q: "How many $1/4$ cups of flour make $2$ cups?", ans: "8", expl: "You need 4 quarter cups for 1 cup, so for 2 cups you need $2 \\times 4 = 8$ quarter cups." },
+                { q: "Convert $\\frac{14}{4}$ to a mixed number and simplify.", ans: "3 1/2", expl: "$\\frac{14}{4} = 3$ remainder 2, so $3 \\frac{2}{4}$. Simplifying $\\frac{2}{4}$ gives $\\frac{1}{2}$.  $3 \\frac{1}{2}$." },
+                { q: "Order from smallest to largest: $\\frac{1}{2}, \\frac{1}{4}, \\frac{3}{4}$. (Separate with commas)", ans: "1/4, 1/2, 3/4", expl: "Convert $\\frac{1}{2}$ to $\\frac{2}{4}$. The order is $\\frac{1}{4}, \\frac{2}{4}, \\frac{3}{4}$." },
+            ],
+            // Group 10: Mixed Challenge (Square Roots & Fractions)
+            [
+                { q: "What is $\\sqrt{36}$?", ans: "6", expl: "$\\sqrt{36}$ is 6 because $6 \\times 6 = 36$." },
+                { q: "Simplify $\\frac{15}{20}$.", ans: "3/4", expl: "Divide both 15 and 20 by 5. $\\frac{15 \\div 5}{20 \\div 5} = \\frac{3}{4}$." },
+                { q: "What is $4^2$?", ans: "16", expl: "$4^2$ means $4 \\times 4$, which is 16." },
+                { q: "Convert $1 \\frac{1}{3}$ to an improper fraction.", ans: "4/3", expl: "$1 \\times 3 + 1 = 4$. The improper fraction is $\\frac{4}{3}$." },
+                { q: "What is $\\frac{1}{5}$ of 25?", ans: "5", expl: "Divide 25 by 5, which equals 5." },
+            ]
+        ];
+        
+        const TOTAL_GROUPS = QUESTIONS.length;
+        const Q_PER_GROUP = QUESTIONS[0].length;
+        const TOTAL_QUESTIONS = TOTAL_GROUPS * Q_PER_GROUP;
+
+        // --- 2. GAME STATE ---
+        let currentGroup = 0;
+        let currentQIndex = 0;
+        let score = 0;
+        let currentQData = null; // Store current question object
+
+        // --- 3. DOM ELEMENTS ---
+        const $groupNum = document.getElementById('group-number');
+        const $qCounter = document.getElementById('q-counter');
+        const $score = document.getElementById('current-score');
+        const $questionText = document.getElementById('question-text');
+        const $answerInput = document.getElementById('answer-input');
+        const $feedback = document.getElementById('feedback-message');
+        const $checkButton = document.getElementById('check-button');
+        const $quizArea = document.getElementById('quiz-area');
+        const $finishArea = document.getElementById('finish-area');
+        const $finalScore = document.getElementById('final-score');
+        const $finalMessage = document.getElementById('final-message');
+        const $gameContainer = document.getElementById('game-container');
+        const $explanationBox = document.getElementById('explanation-box');
+        const $explanationText = document.getElementById('explanation-text');
+
+
+        // --- 4. GAME FUNCTIONS ---
+        
+        /** Normalizes string answer for robust comparison (e.g., handles spaces, case). */
+        function normalizeAnswer(ans) {
+            if (typeof ans !== 'string') return '';
+            // Trim whitespace
+            ans = ans.trim().toLowerCase();
+            // Replace ' ' with a single space, specifically targeting mixed numbers like '3 1/2'
+            ans = ans.replace(/\s+/g, ' ');
+            // Handle specific comparison characters if needed (like > or <)
+            ans = ans.replace(/[^a-z0-9\/\. > <]/g, '');
+            return ans;
+        }
+
+
+        /** Updates the display with the current question details. */
+        function loadQuestion() {
+            // Guard clause to prevent loading if game is over
+            if (currentGroup >= TOTAL_GROUPS) return endGame();
+
+            currentQData = QUESTIONS[currentGroup][currentQIndex];
+            
+            // Update DOM elements
+            $questionText.textContent = currentQData.q;
+            
+            $groupNum.textContent = currentGroup + 1;
+            $qCounter.textContent = (currentGroup * Q_PER_GROUP) + currentQIndex + 1;
+            $answerInput.value = '';
+            $answerInput.focus();
+            
+            // Hide and reset feedback/explanation
+            $feedback.textContent = '';
+            $feedback.className = 'h-10 text-xl font-semibold mb-4';
+            $explanationBox.classList.add('hidden');
+            $explanationText.textContent = '';
+
+            // Reset button
+            $checkButton.textContent = 'Check Answer!';
+            $checkButton.onclick = checkAnswer;
+            $checkButton.classList.remove('bg-green-600', 'hover:bg-green-700', 'bg-red-600', 'hover:bg-red-700');
+            $checkButton.classList.add('bg-indigo-600', 'hover:bg-indigo-700');
+        }
+
+        /** Checks the user's input against the correct answer. */
+        function checkAnswer() {
+            // Check if game is running
+            if (!currentQData) return;
+
+            const normalizedUserAnswer = normalizeAnswer($answerInput.value);
+            const normalizedCorrectAnswer = normalizeAnswer(currentQData.ans);
+            
+            // Show the explanation regardless of correctness
+            $explanationText.textContent = currentQData.expl;
+            $explanationBox.classList.remove('hidden');
+
+            if (normalizedUserAnswer === normalizedCorrectAnswer) {
+                // Correct Answer
+                score++;
+                $score.textContent = score;
+                $feedback.textContent = '✅ Awesome! That is correct!';
+                $feedback.className = 'h-10 text-2xl font-black mb-4 text-green-600 correct-feedback';
+                
+                // Change button to 'Next Question'
+                $checkButton.textContent = 'Next Question ▶️';
+                $checkButton.onclick = nextQuestion;
+                $checkButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-red-600', 'hover:bg-red-700');
+                $checkButton.classList.add('bg-green-600', 'hover:bg-green-700');
+                
+            } else {
+                // Incorrect Answer
+                if (normalizedUserAnswer === '') {
+                     $feedback.textContent = 'Please enter an answer before checking!';
+                } else {
+                     $feedback.textContent = '❌ Not quite right. Review the explanation!';
+                }
+                
+                $feedback.className = 'h-10 text-xl font-semibold mb-4 text-red-600 incorrect-feedback';
+                $answerInput.classList.add('incorrect-feedback');
+                setTimeout(() => $answerInput.classList.remove('incorrect-feedback'), 500);
+                
+                // Change button to 'Continue' to prevent retries
+                $checkButton.textContent = 'Continue ▶️';
+                $checkButton.onclick = nextQuestion;
+                $checkButton.classList.remove('bg-indigo-600', 'hover:bg-indigo-700', 'bg-green-600', 'hover:bg-green-700');
+                $checkButton.classList.add('bg-red-600', 'hover:bg-red-700');
+            }
+        }
+
+        /** Advances to the next question or the next group. */
+        function nextQuestion() {
+            // Check if we are at the end of the current group
+            if (currentQIndex < Q_PER_GROUP - 1) {
+                currentQIndex++; // Move to next question in the group
+            } else {
+                currentGroup++; // Move to next group
+                currentQIndex = 0; // Reset question index
+            }
+
+            // Check if all groups are completed
+            if (currentGroup >= TOTAL_GROUPS) {
+                endGame();
+            } else {
+                loadQuestion();
+            }
+        }
+        
+        /** Displays the final score and message. */
+        function endGame() {
+            $quizArea.classList.add('hidden');
+            $finishArea.classList.remove('hidden');
+            $finalScore.textContent = score;
+            
+            let message = '';
+            if (score === TOTAL_QUESTIONS) {
+                message = "🏆 Perfect Score! Math Master! 🌟";
+            } else if (score >= TOTAL_QUESTIONS * 0.8) {
+                message = "🎉 Excellent Work! You crushed the fractions and roots! 🧠";
+            } else if (score >= TOTAL_QUESTIONS * 0.5) {
+                message = "👍 Good Effort! Keep practicing those trickier problems! 💪";
+            } else {
+                message = "Try Again! Review the explanations to get stronger! ✏️";
+            }
+            $finalMessage.textContent = message;
+
+            // Update page background for a celebration feel
+            document.body.classList.remove('bg-blue-50');
+            document.body.classList.add('bg-green-100');
+            $gameContainer.classList.remove('shadow-2xl');
+            $gameContainer.classList.add('shadow-3xl', 'bg-yellow-50');
+        }
+
+        /** Resets the game state and starts the first question. */
+        function initGame() {
+            currentGroup = 0;
+            currentQIndex = 0;
+            score = 0;
+            $score.textContent = score;
+            
+            $finishArea.classList.add('hidden');
+            $quizArea.classList.remove('hidden');
+            document.body.classList.remove('bg-green-100');
+            document.body.classList.add('bg-blue-50');
+            $gameContainer.classList.remove('shadow-3xl', 'bg-yellow-50');
+            $gameContainer.classList.add('shadow-2xl');
+
+            loadQuestion();
+        }
+
+        // Handle Enter key press on the input field
+        $answerInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                // Check if the button is 'Check Answer!' or 'Next Question'/'Continue'
+                if ($checkButton.onclick.name === 'checkAnswer') {
+                    checkAnswer();
+                } else if ($checkButton.onclick.name === 'nextQuestion') {
+                    nextQuestion();
+                }
+            }
+        });
+
+
+        // Initialize the game when the page loads
+        window.onload = initGame;
+    </script>
+</body>
+</html>

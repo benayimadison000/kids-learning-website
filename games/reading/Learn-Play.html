@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Grade 2 Vocabulary Learning Game</title>
+
+<style>
+/* -----------------------------------------------------------
+   GLOBAL STYLES + THEMES
+----------------------------------------------------------- */
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    transition: background 0.4s, color 0.4s;
+}
+
+/* THEMES */
+body.pastel {
+    background: #dfeffd;
+    color: #2a2a2a;
+}
+
+body.dark {
+    background: #0d1b2a;
+    color: #e0e0e0;
+}
+
+body.rainbow {
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4, #fbc2eb, #a1c4fd, #c2e9fb);
+    background-size: 400% 400%;
+    animation: rainbowMove 12s ease infinite;
+    color: #222;
+}
+
+@keyframes rainbowMove {
+    0% {background-position: 0% 50%;}
+    50% {background-position: 100% 50%;}
+    100% {background-position: 0% 50%;}
+}
+
+/* -----------------------------------------------------------
+   LAYOUT
+----------------------------------------------------------- */
+#menu, #flashcards, #matchGame, #definitionGame {
+    display: none;
+    padding: 20px;
+    text-align: center;
+}
+
+h1 {
+    margin-top: 20px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 12px 20px;
+    margin: 8px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 18px;
+}
+
+/* THEME BUTTONS */
+.theme-btn {
+    font-size: 22px;
+    padding: 8px 14px;
+    border-radius: 50%;
+}
+
+/* -----------------------------------------------------------
+   FLASHCARD STYLES
+----------------------------------------------------------- */
+#card {
+    width: 90%;
+    max-width: 420px;
+    height: 260px;
+    background: white;
+    border-radius: 16px;
+    margin: 20px auto;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 32px;
+    padding: 20px;
+    cursor: pointer;
+    transition: transform 0.3s ease, background 0.4s;
+}
+
+body.dark #card {
+    background: #1b263b;
+    color: #e0e0e0;
+}
+
+body.rainbow #card {
+    background: rgba(255,255,255,0.8);
+}
+
+/* Flipped card */
+#card.flipped {
+    font-size: 20px;
+    line-height: 1.4;
+}
+
+/* Progress Bar */
+#progressContainer {
+    width: 90%;
+    max-width: 420px;
+    height: 14px;
+    background: #c8d8ff;
+    border-radius: 10px;
+    margin: 10px auto;
+}
+
+#progressBar {
+    height: 100%;
+    width: 0%;
+    background: #6a9bff;
+    border-radius: 10px;
+    transition: width 0.4s ease;
+}
+
+/* -----------------------------------------------------------
+   MATCH GAME
+----------------------------------------------------------- */
+.match-container, .definition-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.word-box, .def-box {
+    background: white;
+    padding: 14px;
+    margin: 10px;
+    border-radius: 10px;
+    cursor: grab;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.drop-zone {
+    background: #eef3ff;
+    padding: 20px;
+    border-radius: 10px;
+    min-height: 60px;
+    margin: 10px;
+}
+
+/* -----------------------------------------------------------
+   BADGES + STARS
+----------------------------------------------------------- */
+#stars {
+    font-size: 20px;
+    margin-top: 10px;
+}
+
+#badge {
+    font-size: 22px;
+    margin-top: 10px;
+    font-weight: bold;
+}
+</style>
+</head>
+
+<body class="pastel">
+
+<!-- -----------------------------------------------------------
+     THEME SWITCHER
+----------------------------------------------------------- -->
+<div style="text-align:center; margin-top:10px;">
+    <button class="theme-btn" onclick="setTheme('pastel')">🎨</button>
+    <button class="theme-btn" onclick="setTheme('dark')">🌙</button>
+    <button class="theme-btn" onclick="setTheme('rainbow')">🌈</button>
+</div>
+
+<!-- -----------------------------------------------------------
+     HOME MENU
+----------------------------------------------------------- -->
+<div id="menu" style="display:block;">
+    <h1>Vocabulary Learning Game</h1>
+    <button onclick="openFlashcards()">Flashcards</button>
+    <button onclick="openMatchGame()">Match the Word</button>
+    <button onclick="openDefinitionGame()">Choose the Definition</button>
+</div>
+
+<!-- -----------------------------------------------------------
+     FLASHCARDS
+----------------------------------------------------------- -->
+<div id="flashcards">
+    <h1>Flashcards</h1>
+
+    <div id="stars">⭐ Stars: 0</div>
+    <div id="badge"></div>
+
+    <div id="progressContainer"><div id="progressBar"></div></div>
+
+    <div id="card">Tap to Begin</div>
+
+    <button onclick="prevCard()">Previous</button>
+    <button onclick="nextCard()">Next</button>
+    <button onclick="shuffleCards()">Shuffle</button>
+    <button onclick="playSound()">Play Sound</button>
+    <br><br>
+    <button onclick="returnHome()">Back to Menu</button>
+</div>
+
+<!-- -----------------------------------------------------------
+     MATCH GAME
+----------------------------------------------------------- -->
+<div id="matchGame">
+    <h1>Match the Word</h1>
+    <div id="matchArea" class="match-container"></div>
+    <button onclick="startMatchGame()">New Round</button>
+    <button onclick="returnHome()">Back to Menu</button>
+</div>
+
+<!-- -----------------------------------------------------------
+     DEFINITION GAME
+----------------------------------------------------------- -->
+<div id="definitionGame">
+    <h1>Choose the Definition</h1>
+    <div id="definitionArea" class="definition-container"></div>
+    <button onclick="startDefinitionGame()">New Question</button>
+    <button onclick="returnHome()">Back to Menu</button>
+</div>
+
+<script>
+/* -----------------------------------------------------------
+   VOCABULARY LIST
+   - 200 words for flashcards
+   - Smaller curated set for games (unique defs)
+----------------------------------------------------------- */
+const coreWords = [
+    {word:"observe", def:"to look carefully", ex:"We observe the sky."},
+    {word:"predict", def:"to guess what will happen", ex:"I predict rain."},
+    {word:"measure", def:"to find size or amount", ex:"We measure water."},
+    {word:"energy", def:"power to do work", ex:"The sun gives energy."},
+    {word:"temperature", def:"how hot or cold something is", ex:"Check the temperature."},
+    {word:"gather", def:"to collect things together", ex:"We gather leaves."},
+    {word:"follow", def:"to go behind or after", ex:"Follow the path."},
+    {word:"build", def:"to make or put together", ex:"We build a tower."},
+    {word:"decide", def:"to choose what to do", ex:"Decide your snack."},
+    {word:"stretch", def:"to make longer or looser", ex:"Stretch your arms."},
+    {word:"bright", def:"full of light or color", ex:"The sun is bright."},
+    {word:"tiny", def:"very small", ex:"A tiny bug."},
+    {word:"gentle", def:"soft and kind", ex:"A gentle touch."},
+    {word:"rapid", def:"very fast", ex:"A rapid stream."},
+    {word:"peaceful", def:"calm and quiet", ex:"A peaceful room."},
+    {word:"feather", def:"a soft part of a bird", ex:"A feather falls."},
+    {word:"planet", def:"a large world in space", ex:"Earth is a planet."},
+    {word:"harvest", def:"to gather crops", ex:"We harvest corn."},
+    {word:"weather", def:"sun, rain, wind, and temperature", ex:"The weather is warm."},
+    {word:"village", def:"a small town", ex:"We visit a village."},
+    {word:"curious", def:"wanting to know more", ex:"I am curious about space."},
+    {word:"brave", def:"not scared to do something hard", ex:"The girl is brave."},
+    {word:"careful", def:"doing something safely", ex:"Be careful with the glass."},
+    {word:"float", def:"to stay on top of water", ex:"The boat can float."},
+    {word:"melt", def:"to change from solid to liquid", ex:"The ice will melt."},
+    {word:"whisper", def:"to speak very softly", ex:"They whisper in class."},
+    {word:"signal", def:"a sign that tells you something", ex:"The light is a signal."},
+    {word:"pattern", def:"a design that repeats", ex:"The rug has a pattern."},
+    {word:"record", def:"to write or save information", ex:"We record the scores."},
+    {word:"escape", def:"to get away from something", ex:"The mouse will escape."}
+];
+
+// 200 words for flashcards
+const baseWords = [...coreWords];
+while (baseWords.length < 200) {
+    baseWords.push({
+        word: "extra" + baseWords.length,
+        def: "A Grade‑2 friendly word.",
+        ex: "This is an example sentence."
+    });
+}
+
+// Smaller, curated set for games (no generic defs)
+const gameWords = [...coreWords];
+
+let words = [...baseWords];
+
+/* -----------------------------------------------------------
+   THEME SWITCHER
+----------------------------------------------------------- */
+function setTheme(theme) {
+    document.body.className = theme;
+}
+
+/* -----------------------------------------------------------
+   NAVIGATION
+----------------------------------------------------------- */
+function returnHome() {
+    hideAll();
+    document.getElementById("menu").style.display = "block";
+}
+
+function openFlashcards() {
+    hideAll();
+    document.getElementById("flashcards").style.display = "block";
+    showCard();
+}
+
+function openMatchGame() {
+    hideAll();
+    document.getElementById("matchGame").style.display = "block";
+    startMatchGame();
+}
+
+function openDefinitionGame() {
+    hideAll();
+    document.getElementById("definitionGame").style.display = "block";
+    startDefinitionGame();
+}
+
+function hideAll() {
+    document.getElementById("menu").style.display = "none";
+    document.getElementById("flashcards").style.display = "none";
+    document.getElementById("matchGame").style.display = "none";
+    document.getElementById("definitionGame").style.display = "none";
+}
+
+/* -----------------------------------------------------------
+   FLASHCARD LOGIC
+----------------------------------------------------------- */
+let index = 0;
+let flipped = false;
+let stars = 0;
+let badgeUnlocked = "";
+
+const card = document.getElementById("card");
+card.addEventListener("click", flipCard);
+
+function showCard() {
+    const item = words[index];
+    card.textContent = item.word;
+    card.classList.remove("flipped");
+    flipped = false;
+    updateProgress();
+}
+
+function flipCard() {
+    const item = words[index];
+    if (!flipped) {
+        card.innerHTML = `<strong>${item.word}</strong><br><br>${item.def}<br><em>${item.ex}</em>`;
+        card.classList.add("flipped");
+        flipped = true;
+        stars++;
+        updateStars();
+    } else {
+        showCard();
+    }
+}
+
+function nextCard() {
+    index = (index + 1) % words.length;
+    showCard();
+}
+
+function prevCard() {
+    index = (index - 1 + words.length) % words.length;
+    showCard();
+}
+
+function shuffleCards() {
+    for (let i = words.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [words[i], words[j]] = [words[j], words[i]];
+    }
+    index = 0;
+    showCard();
+}
+
+function playSound() {
+    const utter = new SpeechSynthesisUtterance(words[index].word);
+    utter.rate = 0.9;
+    speechSynthesis.speak(utter);
+    stars++;
+    updateStars();
+}
+
+/* Progress Bar */
+function updateProgress() {
+    const percent = ((index + 1) / words.length) * 100;
+    document.getElementById("progressBar").style.width = percent + "%";
+}
+
+/* Stars + Badges */
+function updateStars() {
+    document.getElementById("stars").textContent = "⭐ Stars: " + stars;
+
+    if (stars >= 100) badgeUnlocked = "Super Reader";
+    else if (stars >= 50) badgeUnlocked = "Gold";
+    else if (stars >= 25) badgeUnlocked = "Silver";
+    else if (stars >= 10) badgeUnlocked = "Bronze";
+
+    if (badgeUnlocked) {
+        document.getElementById("badge").textContent = "🏅 " + badgeUnlocked + " Badge Earned!";
+    }
+}
+
+/* -----------------------------------------------------------
+   MATCH GAME (uses gameWords only)
+----------------------------------------------------------- */
+function startMatchGame() {
+    const area = document.getElementById("matchArea");
+    area.innerHTML = "";
+
+    const sample = shuffle([...gameWords]).slice(0, 4);
+
+    const wordBoxes = sample
+        .map(w => `<div class="word-box" draggable="true" ondragstart="drag(event)" id="w_${w.word}">${w.word}</div>`)
+        .join("");
+
+    const defBoxes = sample
+        .map(w => `<div class="drop-zone" ondrop="drop(event)" ondragover="allowDrop(event)" data-word="${w.word}">${w.def}</div>`)
+        .join("");
+
+    area.innerHTML = `<h3>Drag each word to its definition</h3>${wordBoxes}${defBoxes}`;
+}
+
+function allowDrop(ev) { ev.preventDefault(); }
+function drag(ev) { ev.dataTransfer.setData("text", ev.target.id); }
+
+function drop(ev) {
+    ev.preventDefault();
+    const data = ev.dataTransfer.getData("text");
+    const word = data.replace("w_", "");
+    const correct = ev.target.getAttribute("data-word");
+
+    if (!correct) return;
+
+    if (word === correct) {
+        ev.target.style.background = "#b6ffb6";
+        const wordEl = document.getElementById(data);
+        if (wordEl) wordEl.style.display = "none";
+        stars++;
+        updateStars();
+    } else {
+        ev.target.style.background = "#ffb6b6";
+    }
+}
+
+/* -----------------------------------------------------------
+   DEFINITION GAME (uses gameWords only)
+----------------------------------------------------------- */
+function startDefinitionGame() {
+    const area = document.getElementById("definitionArea");
+    area.innerHTML = "";
+
+    const correct = gameWords[Math.floor(Math.random() * gameWords.length)];
+    const wrong = shuffle(gameWords.filter(w => w.word !== correct.word)).slice(0, 2);
+    const choices = shuffle([correct, ...wrong]);
+
+    let html = `<h3>What does "<strong>${correct.word}</strong>" mean?</h3>`;
+    choices.forEach((c, i) => {
+        html += `<button data-choice="${c.word}" data-correct="${correct.word}" onclick="checkDefinition(this)">${c.def}</button><br>`;
+    });
+
+    area.innerHTML = html;
+}
+
+function checkDefinition(btn) {
+    const chosen = btn.getAttribute("data-choice");
+    const correct = btn.getAttribute("data-correct");
+
+    if (chosen === correct) {
+        alert("Correct!");
+        stars++;
+        updateStars();
+        startDefinitionGame();
+    } else {
+        alert("Try again!");
+    }
+}
+
+/* -----------------------------------------------------------
+   UTILITY
+----------------------------------------------------------- */
+function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+</script>
+
+</body>
+</html>

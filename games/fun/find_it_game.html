@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Floating Find It! - Junior Explorer</title>
+    <style>
+        body {
+            margin: 0;
+            background: radial-gradient(circle, #e0f7fa 0%, #80deea 100%);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        #header {
+            background: white;
+            width: 100%;
+            padding: 15px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        #target-text {
+            font-size: 36px;
+            font-weight: bold;
+            color: #ff5722;
+            text-align: center;
+        }
+
+        .stat-box {
+            font-size: 22px;
+            background: #fff3e0;
+            padding: 8px 15px;
+            border-radius: 15px;
+            border: 2px solid #ffcc80;
+        }
+
+        #timer-container {
+            width: 100%;
+            height: 12px;
+            background: #eee;
+        }
+
+        #timer-bar {
+            width: 100%;
+            height: 100%;
+            background: #4caf50;
+            transition: width 1s linear;
+        }
+
+        #play-area {
+            position: relative;
+            width: 100vw;
+            flex-grow: 1;
+        }
+
+        .game-object {
+            position: absolute;
+            font-size: 70px; /* Big and easy to see */
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+
+        .game-object:active {
+            transform: scale(1.5);
+        }
+
+        @keyframes popOut {
+            to { transform: scale(3); opacity: 0; }
+        }
+        .popped { animation: popOut 0.5s forwards; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="header">
+        <div class="stat-box">⭐ Score: <span id="score">0</span></div>
+        <div id="target-text">Ready?</div>
+        <div class="stat-box">Round: <span id="round">1</span>/60</div>
+    </div>
+    <div id="timer-container">
+        <div id="timer-bar"></div>
+    </div>
+
+    <div id="play-area"></div>
+
+    <script>
+        const allObjects = [
+            {n: "Dog", e: "🐶"}, {n: "Cat", e: "🐱"}, {n: "Lion", e: "🦁"}, {n: "Pig", e: "🐷"},
+            {n: "Cow", e: "🐮"}, {n: "Bear", e: "🐻"}, {n: "Panda", e: "🐼"}, {n: "Frog", e: "🐸"},
+            {n: "Duck", e: "🦆"}, {n: "Bee", e: "🐝"}, {n: "Fish", e: "🐟"}, {n: "Whale", e: "🐳"},
+            {n: "Apple", e: "🍎"}, {n: "Banana", e: "🍌"}, {n: "Pizza", e: "🍕"}, {n: "Cake", e: "🎂"},
+            {n: "Car", e: "🚗"}, {n: "Train", e: "🚂"}, {n: "Rocket", e: "🚀"}, {n: "Bike", e: "🚲"},
+            {n: "Sun", e: "☀️"}, {n: "Moon", e: "🌙"}, {n: "Star", e: "⭐"}, {n: "Rainbow", e: "🌈"},
+            {n: "Ball", e: "⚽"}, {n: "Balloon", e: "🎈"}, {n: "Guitar", e: "🎸"}, {n: "Drum", e: "🥁"},
+            {n: "Robot", e: "🤖"}, {n: "Gift", e: "🎁"}, {n: "Book", e: "📖"}, {n: "Hat", e: "🎩"},
+            {n: "Ice Cream", e: "🍦"}, {n: "Donut", e: "🍩"}, {n: "Butterfly", e: "🦋"}, {n: "Flower", e: "🌸"},
+            {n: "Elephant", e: "🐘"}, {n: "Monkey", e: "🐒"}, {n: "Turtle", e: "🐢"}, {n: "Owl", e: "🦉"},
+            {n: "Snowman", e: "☃️"}, {n: "Cloud", e: "☁️"}, {n: "Umbrella", e: "☂️"}, {n: "Key", e: "🔑"},
+            {n: "Phone", e: "📱"}, {n: "Camera", e: "📷"}, {n: "Watch", e: "⌚"}, {n: "Lamp", e: "💡"},
+            {n: "Cup", e: "🥤"}, {n: "Strawberry", e: "🍓"}, {n: "Pineapple", e: "🍍"}, {n: "Grape", e: "🍇"},
+            {n: "Octopus", e: "🐙"}, {n: "Crab", e: "🦀"}, {n: "Horse", e: "🐴"}, {n: "Sheep", e: "🐑"},
+            {n: "Bird", e: "🐦"}, {n: "Plane", e: "✈️"}, {n: "Bus", e: "🚌"}, {n: "Truck", e: "🚛"}
+        ];
+
+        let score = 0, roundCount = 0, timeLeft = 30, timerInterval, animationId;
+        let movingObjects = [];
+        const playArea = document.getElementById('play-area');
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            msg.rate = 0.85;
+            window.speechSynthesis.speak(msg);
+        }
+
+        function startRound() {
+            if (roundCount >= 60) {
+                speak("Game finished! You found so many objects!");
+                alert("Final Score: " + score);
+                location.reload();
+                return;
+            }
+
+            roundCount++;
+            document.getElementById('round').innerText = roundCount;
+            playArea.innerHTML = '';
+            movingObjects = [];
+            cancelAnimationFrame(animationId);
+
+            let selected = [...allObjects].sort(() => 0.5 - Math.random()).slice(0, 20);
+            let target = selected[Math.floor(Math.random() * selected.length)];
+            
+            document.getElementById('target-text').innerText = `Find the ${target.n}!`;
+            speak(`Can you find the ${target.n}?`);
+
+            selected.forEach(obj => {
+                const el = document.createElement('div');
+                el.className = 'game-object';
+                el.innerText = obj.e;
+
+                // Physics state
+                const data = {
+                    element: el,
+                    name: obj.n,
+                    x: Math.random() * (window.innerWidth - 100),
+                    y: Math.random() * (window.innerHeight - 250),
+                    dx: (Math.random() - 0.5) * 1.5, // Slow horizontal drift
+                    dy: (Math.random() - 0.5) * 1.5  // Slow vertical drift
+                };
+
+                el.onclick = () => {
+                    if (obj.n === target.n) {
+                        score++;
+                        document.getElementById('score').innerText = score;
+                        el.classList.add('popped');
+                        speak("Yay! You found it!");
+                        clearInterval(timerInterval);
+                        setTimeout(startRound, 1200);
+                    } else {
+                        speak("That's the " + obj.n);
+                    }
+                };
+
+                playArea.appendChild(el);
+                movingObjects.push(data);
+            });
+
+            animate();
+            resetTimer();
+        }
+
+        function animate() {
+            movingObjects.forEach(obj => {
+                obj.x += obj.dx;
+                obj.y += obj.dy;
+
+                // Bounce off walls
+                if (obj.x <= 0 || obj.x >= window.innerWidth - 80) obj.dx *= -1;
+                if (obj.y <= 0 || obj.y >= playArea.offsetHeight - 80) obj.dy *= -1;
+
+                obj.element.style.transform = `translate(${obj.x}px, ${obj.y}px)`;
+            });
+            animationId = requestAnimationFrame(animate);
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            timeLeft = 30; // Increased to 30 seconds
+            const bar = document.getElementById('timer-bar');
+            
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                bar.style.width = (timeLeft / 30 * 100) + '%';
+                bar.style.backgroundColor = timeLeft < 10 ? '#f44336' : '#4caf50';
+
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    speak("Let's try a new one!");
+                    setTimeout(startRound, 1000);
+                }
+            }, 1000);
+        }
+
+        // Initialize on first click (needed for some browsers to allow audio)
+        document.body.onclick = function() {
+            if(roundCount === 0) startRound();
+        };
+        document.getElementById('target-text').innerText = "Click Screen to Start!";
+    </script>
+</body>
+</html>

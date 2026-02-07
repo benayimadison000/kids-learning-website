@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful Words Learning Game</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            transition: background 1.5s ease; /* Smooth background change */
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            overflow: hidden;
+        }
+
+        #game-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 40px;
+            border-radius: 40px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.15);
+            text-align: center;
+            transition: opacity 2s ease-in-out, transform 0.8s ease;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        #word-display {
+            font-size: 100px;
+            font-weight: 900;
+            color: #333;
+            margin: 20px 0;
+            letter-spacing: 10px;
+            text-transform: uppercase;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+
+        #image-display {
+            font-size: 180px;
+            margin: 20px 0;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.1));
+        }
+
+        .instruction {
+            position: absolute;
+            bottom: 30px;
+            color: #555;
+            font-size: 18px;
+            background: rgba(255,255,255,0.5);
+            padding: 10px 20px;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="game-card">
+        <div id="image-display">🎨</div>
+        <div id="word-display">READY?</div>
+    </div>
+
+    <div class="instruction">Game starts in 3 seconds...</div>
+
+    <script>
+        const objectList = [
+            {w: "BALL", i: "⚽"}, {w: "CAR", i: "🚗"}, {w: "DOG", i: "🐶"}, {w: "CAT", i: "🐱"}, 
+            {w: "SUN", i: "☀️"}, {w: "APPLE", i: "🍎"}, {w: "TREE", i: "🌳"}, {w: "FISH", i: "🐟"}, 
+            {w: "BOAT", i: "⛵"}, {w: "CAKE", i: "🎂"}, {w: "DUCK", i: "🦆"}, {w: "BIRD", i: "🐦"},
+            {w: "HAT", i: "🎩"}, {w: "MOON", i: "🌙"}, {w: "STAR", i: "⭐"}, {w: "EGG", i: "🥚"}, 
+            {w: "FROG", i: "🐸"}, {w: "MILK", i: "🥛"}, {w: "HOUSE", i: "🏠"}, {w: "BIKE", i: "🚲"},
+            {w: "BANANA", i: "🍌"}, {w: "COOKIE", i: "🍪"}, {w: "CHEESE", i: "🧀"}, {w: "CORN", i: "🌽"}, 
+            {w: "GRAPES", i: "🍇"}, {w: "JUICE", i: "🧃"}, {w: "PEAR", i: "🍐"}, {w: "PIZZA", i: "🍕"}, 
+            {w: "BREAD", i: "🍞"}, {w: "CARROT", i: "🥕"}, {w: "HONEY", i: "🍯"}, {w: "BEAR", i: "🐻"}, 
+            {w: "PIG", i: "🐷"}, {w: "COW", i: "🐮"}, {w: "LION", i: "🦁"}, {w: "TIGER", i: "🐯"}, 
+            {w: "BEE", i: "🐝"}, {w: "ANT", i: "🐜"}, {w: "SNAKE", i: "🐍"}, {w: "TURTLE", i: "🐢"}, 
+            {w: "OWL", i: "🦉"}, {w: "MONKEY", i: "🐒"}, {w: "HORSE", i: "🐴"}, {w: "RABBIT", i: "🐰"}, 
+            {w: "CHICK", i: "🐥"}, {w: "WHALE", i: "🐳"}, {w: "KITE", i: "🪁"}, {w: "DRUM", i: "🥁"}, 
+            {w: "BALLOON", i: "🎈"}, {w: "DOLL", i: "🪆"}, {w: "BLOCKS", i: "🧱"}, {w: "TRAIN", i: "🚂"}, 
+            {w: "PLANE", i: "✈️"}, {w: "ROBOT", i: "🤖"}, {w: "ROCKET", i: "🚀"}, {w: "GIFT", i: "🎁"}, 
+            {w: "TRUCK", i: "🛻"}, {w: "BELL", i: "🔔"}, {w: "BED", i: "🛏️"}, {w: "CHAIR", i: "🪑"}, 
+            {w: "CUP", i: "🥤"}, {w: "FORK", i: "🍴"}, {w: "SPOON", i: "🥄"}, {w: "KEY", i: "🔑"}, 
+            {w: "DOOR", i: "🚪"}, {w: "LAMP", i: "💡"}, {w: "CLOCK", i: "⏰"}, {w: "BOOK", i: "📖"}, 
+            {w: "PHONE", i: "📱"}, {w: "SOAP", i: "🧼"}, {w: "SHIRT", i: "👕"}, {w: "SHOES", i: "👟"}, 
+            {w: "SOCKS", i: "🧦"}, {w: "LEAF", i: "🍃"}, {w: "FLOWER", i: "🌸"}, {w: "RAIN", i: "🌧️"}, 
+            {w: "SNOW", i: "❄️"}, {w: "CLOUD", i: "☁️"}, {w: "ROCK", i: "🪨"}, {w: "FIRE", i: "🔥"}, 
+            {w: "WAVE", i: "🌊"}, {w: "RAINBOW", i: "🌈"}, {w: "EYE", i: "👁️"}, {w: "EAR", i: "👂"}, 
+            {w: "NOSE", i: "👃"}, {w: "MOUTH", i: "👄"}, {w: "HAND", i: "✋"}, {w: "FOOT", i: "🦶"}, 
+            {w: "BABY", i: "👶"}, {w: "SMILE", i: "😊"}, {w: "BOTTLE", i: "🍼"}, {w: "LEMON", i: "🍋"},
+            {w: "ICE", i: "🧊"}, {w: "DRAGON", i: "🐲"}, {w: "PANDA", i: "🐼"}, {w: "SNAIL", i: "🐌"},
+            {w: "MOUSE", i: "🐭"}, {w: "CRAYON", i: "🖍️"}, {w: "BRUSH", i: "🖌️"}, {w: "GUITAR", i: "🎸"}
+        ];
+
+        let currentIndex = 0;
+
+        function getRandomGradient() {
+            const colors = [
+                ['#a1c4fd', '#c2e9fb'], ['#ff9a9e', '#fecfef'], ['#f6d365', '#fda085'],
+                ['#84fab0', '#8fd3f4'], ['#cfd9df', '#e2ebf0'], ['#a8edea', '#fed6e3'],
+                ['#d4fc79', '#96e6a1'], ['#e0c3fc', '#8ec5fc'], ['#f093fb', '#f5576c']
+            ];
+            const choice = colors[Math.floor(Math.random() * colors.length)];
+            return `linear-gradient(135deg, ${choice[0]} 0%, ${choice[1]} 100%)`;
+        }
+
+        function speak(text, callback) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.7; // Very slow for learning
+            utterance.pitch = 1.1;
+            utterance.onend = callback;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function runGameCycle() {
+            const card = document.getElementById('game-card');
+            const wordEl = document.getElementById('word-display');
+            const imgEl = document.getElementById('image-display');
+
+            // 1. Prepare new word
+            let item = objectList[currentIndex];
+            wordEl.innerText = item.w;
+            imgEl.innerText = item.i;
+            
+            // 2. Beautiful Background & Reset Card
+            document.body.style.background = getRandomGradient();
+            card.style.opacity = 1;
+            card.style.transform = "scale(1)";
+
+            // 3. Voice Logic: Spell then Call
+            let letters = item.w.split('').join('... ');
+            speak(letters, () => {
+                // Short pause then say full word
+                setTimeout(() => speak(item.w), 500);
+            });
+
+            // 4. Start disappearing at 20 seconds
+            setTimeout(() => {
+                card.style.opacity = 0;
+                card.style.transform = "scale(0.9)";
+            }, 20000);
+
+            // 5. Move to next word after 23 seconds (20 showing + 3 fading/gap)
+            currentIndex = (currentIndex + 1) % objectList.length;
+            setTimeout(runGameCycle, 23000);
+        }
+
+        // Start the game after a short delay
+        setTimeout(runGameCycle, 3000);
+
+    </script>
+</body>
+</html>

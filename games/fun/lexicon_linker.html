@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Lexicon Linker: High Score Edition</title>
+    <style>
+        :root { --gold: #ffcc00; --space: #0f172a; --neon-green: #39ff14; --electric: #00d4ff; }
+        body { 
+            background: var(--space); 
+            color: white; 
+            font-family: 'Segoe UI', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            background-image: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+        }
+        
+        #game-box { 
+            width: 700px; 
+            padding: 40px; 
+            border: 3px solid var(--gold); 
+            border-radius: 30px; 
+            background: rgba(15, 23, 42, 0.9); 
+            text-align: center; 
+            box-shadow: 0 0 50px rgba(0,0,0,0.8), inset 0 0 20px rgba(255, 204, 0, 0.1); 
+        }
+        
+        .word-display { 
+            font-size: 55px; 
+            letter-spacing: 12px; 
+            margin: 25px 0; 
+            font-family: 'Consolas', 'Courier New', monospace; 
+            color: var(--electric); 
+            text-shadow: 0 0 15px rgba(0, 212, 255, 0.4);
+            min-height: 80px;
+        }
+        
+        input { 
+            background: #000; 
+            border: 2px solid var(--electric); 
+            color: var(--neon-green); 
+            font-size: 28px; 
+            padding: 15px; 
+            border-radius: 15px; 
+            text-align: center; 
+            width: 85%; 
+            outline: none; 
+            text-transform: uppercase;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        }
+
+        .stats-bar { 
+            display: flex; 
+            justify-content: space-between; 
+            width: 100%; 
+            margin-bottom: 25px; 
+            padding: 10px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        
+        .stat-item { display: flex; flex-direction: column; align-items: center; }
+        .stat-label { font-size: 10px; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; }
+        .stat-val { font-size: 22px; font-weight: bold; color: var(--gold); }
+        
+        .hint-container {
+            margin-top: 20px;
+            padding: 15px;
+            border-left: 4px solid var(--gold);
+            background: rgba(255,255,255,0.03);
+            font-style: italic;
+            color: #cbd5e1;
+            font-size: 18px;
+        }
+
+        #high-score-val { color: var(--neon-green); }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">Current Score</span>
+            <span id="score" class="stat-val">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Best Record</span>
+            <span id="high-score-val" class="stat-val">0</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">Skill Level</span>
+            <span id="lvl" class="stat-val">1</span>
+        </div>
+    </div>
+
+    <h3 style="margin:0; color: #94a3b8; font-weight: 400;">VOCABULARY DECRYPTION</h3>
+    
+    <div class="word-display" id="display">_ _ _ _ _</div>
+    
+    <input type="text" id="user-input" placeholder="Enter Full Word..." autofocus autocomplete="off">
+    
+    <div class="hint-container" id="hint-text">Waiting for data...</div>
+</div>
+
+<script>
+    // Expanded Database (Selection of difficult/academic words)
+    const dictionary = [
+        {w: "ALGORITHM", h: "A set of rules to be followed in calculations."},
+        {w: "FRACTION", h: "A numerical quantity that is not a whole number."},
+        {w: "EQUATION", h: "A mathematical statement that two things are equal."},
+        {w: "HYPOTHESIS", h: "A proposed explanation made on limited evidence."},
+        {w: "VARIABLE", h: "An element, feature, or factor that is liable to change."},
+        {w: "QUADRILATERAL", h: "A four-sided figure."},
+        {w: "EXPONENT", h: "A quantity representing the power to which a number is raised."},
+        {w: "PROBABILITY", h: "The extent to which something is likely to happen."},
+        {w: "GEOMETRY", h: "The branch of math concerned with properties of space."},
+        {w: "SYMMETRY", h: "The quality of being made up of exactly similar parts."},
+        {w: "ABUNDANCE", h: "A very large quantity of something."},
+        {w: "CHRONOLOGY", h: "The arrangement of events in order of occurrence."},
+        {w: "DECRYPT", h: "To convert code into a readable form."},
+        {w: "ENVELOPE", h: "A flat paper container used for letters."},
+        {w: "FLUENTLY", h: "Able to express oneself easily and articulately."},
+        {w: "GLOSSARY", h: "An alphabetical list of terms with definitions."},
+        {w: "HILARIOUS", h: "Extremely amusing."},
+        {w: "ILLUSTRATE", h: "To provide with pictures or examples."},
+        {w: "JUXTAPOSE", h: "To place side by side for comparison."},
+        {w: "KINETIC", h: "Relating to or resulting from motion."},
+        {w: "LABYRINTH", h: "A complicated irregular network of passages; a maze."},
+        {w: "METAPHOR", h: "A figure of speech applied to an object not literally applicable."},
+        {w: "NEBULOUS", h: "Hazy, vague, or indistinct."},
+        {w: "OPTIMISTIC", h: "Hopeful and confident about the future."},
+        {w: "PERPENDICULAR", h: "At an angle of 90 degrees to a given line."},
+        {w: "RENAISSANCE", h: "A revival of or renewed interest in something."},
+        {w: "SCAVENGER", h: "An animal that feeds on carrion or refuse."},
+        {w: "TERMINOLOGY", h: "The body of terms used in a particular subject."},
+        {w: "UBIQUITOUS", h: "Present, appearing, or found everywhere."},
+        {w: "VERSATILE", h: "Able to adapt to many different functions."},
+        {w: "WEATHER", h: "The state of the atmosphere at a place and time."},
+        {w: "XYLOPHONE", h: "A musical instrument played by striking metal bars."},
+        {w: "YIELDING", h: "Giving way under pressure."},
+        {w: "ZEALOUS", h: "Having or showing great energy or enthusiasm."}
+    ];
+
+    let score = 0;
+    let highScore = localStorage.getItem('vocabHighScore') || 0;
+    let currentWordObj = {};
+
+    document.getElementById('high-score-val').innerText = highScore;
+
+    function playSound(f, type="sine") {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const o = ctx.createOscillator(); const g = ctx.createGain();
+        o.type = type; o.frequency.value = f;
+        o.connect(g); g.connect(ctx.destination);
+        o.start(); g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.6);
+        o.stop(ctx.currentTime + 0.6);
+    }
+
+    function generateMaskedWord() {
+        currentWordObj = dictionary[Math.floor(Math.random() * dictionary.length)];
+        let w = currentWordObj.w;
+        
+        // Hide 1 letter at lvl 1, 2 at lvl 2, etc. maxing at half the word
+        let hideCount = Math.min(Math.floor(score / 3) + 1, Math.floor(w.length / 1.5));
+        let indices = [];
+        
+        while(indices.length < hideCount) {
+            let r = Math.floor(Math.random() * w.length);
+            if(!indices.includes(r)) indices.push(r);
+        }
+
+        let display = w.split('').map((char, i) => indices.includes(i) ? "_" : char).join(' ');
+        document.getElementById('display').innerText = display;
+        document.getElementById('hint-text').innerText = "DEFINITION: " + currentWordObj.h;
+        document.getElementById('user-input').value = "";
+    }
+
+    document.getElementById('user-input').addEventListener('keypress', function (e) {
+        if (e.key === 'Enter') {
+            if (this.value.toUpperCase().trim() === currentWordObj.w) {
+                score++;
+                document.getElementById('score').innerText = score;
+                document.getElementById('lvl').innerText = Math.floor(score / 3) + 1;
+                
+                if (score > highScore) {
+                    highScore = score;
+                    localStorage.setItem('vocabHighScore', highScore);
+                    document.getElementById('high-score-val').innerText = highScore;
+                }
+                
+                playSound(523.25); // Happy Ding
+                generateMaskedWord();
+            } else {
+                playSound(120, "sawtooth"); // Error Buzz
+                this.style.borderColor = "var(--warn)";
+                setTimeout(() => this.style.borderColor = "var(--electric)", 500);
+            }
+        }
+    });
+
+    generateMaskedWord();
+</script>
+</body>
+</html>

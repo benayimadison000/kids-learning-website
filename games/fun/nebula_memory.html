@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Nebula Memory - Pattern Quest</title>
+    <style>
+        :root {
+            --bg: #0b0e14;
+            --panel: #161b22;
+            --accent: #58a6ff;
+            --success: #238636;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: white;
+            font-family: 'Segoe UI', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            overflow: hidden;
+        }
+
+        /* Moving Space Background */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(ellipse at bottom, #1B2735 0%, #090A0F 100%);
+            z-index: -1;
+        }
+
+        #game-container {
+            background: var(--panel);
+            padding: 30px;
+            border-radius: 20px;
+            border: 2px solid var(--accent);
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.2);
+            text-align: center;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 100px);
+            grid-gap: 15px;
+            margin: 20px auto;
+        }
+
+        .tile {
+            width: 100px;
+            height: 100px;
+            border-radius: 15px; /* Hexagon-like feel */
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+        }
+
+        .tile:hover { transform: scale(1.05); border-color: var(--accent); }
+
+        #timer-bar {
+            width: 100%;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        #timer-fill {
+            width: 100%;
+            height: 100%;
+            background: var(--accent);
+            transition: width 1s linear;
+        }
+
+        .btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px 25px;
+            font-size: 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+
+        .btn:disabled { background: #444; cursor: not-allowed; }
+
+        .hidden { display: none; }
+        
+        #status-msg { height: 30px; margin: 10px 0; font-weight: bold; }
+    </style>
+</head>
+<body>
+
+<div class="stars"></div>
+
+<div id="game-container">
+    <h1 id="mode-title">Memorize the Pattern!</h1>
+    <div id="status-msg">Look closely...</div>
+    
+    <div id="timer-bar"><div id="timer-fill"></div></div>
+    
+    <div class="grid" id="grid"></div>
+
+    <button id="action-btn" class="btn hidden" onclick="checkPattern()">Check Pattern</button>
+    <button id="reveal-btn" class="btn hidden" onclick="startNewLevel()">Try Next Pattern</button>
+</div>
+
+<script>
+    const colors = ['#808080', '#e94560', '#48abe0', '#f9d371', '#8d44ad']; // Gray, Red, Blue, Yellow, Purple
+    const symbols = ['', '🔥', '💧', '☀️', '🌌'];
+    let targetPattern = [];
+    let playerPattern = [];
+    let isMemorizePhase = true;
+    let mainTimer;
+    let secondsLeft = 10;
+    let solveSeconds = 120;
+
+    const gridElement = document.getElementById('grid');
+    const timerFill = document.getElementById('timer-fill');
+    const modeTitle = document.getElementById('mode-title');
+    const statusMsg = document.getElementById('status-msg');
+    const actionBtn = document.getElementById('action-btn');
+
+    function playSound(freq) {
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        osc.start();
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + 0.5);
+        osc.stop(audioCtx.currentTime + 0.5);
+    }
+
+    function createGrid() {
+        gridElement.innerHTML = '';
+        for (let i = 0; i < 9; i++) {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.id = `tile-${i}`;
+            tile.onclick = () => handleTileClick(i);
+            gridElement.appendChild(tile);
+        }
+    }
+
+    function startNewLevel() {
+        isMemorizePhase = true;
+        targetPattern = Array.from({length: 9}, () => Math.floor(Math.random() * 4) + 1);
+        playerPattern = new Array(9).fill(0);
+        
+        modeTitle.innerText = "Memorize the Pattern!";
+        statusMsg.innerText = "Time to look: 10s";
+        statusMsg.style.color = "white";
+        actionBtn.classList.add('hidden');
+        document.getElementById('reveal-btn').classList.add('hidden');
+        
+        updateGridDisplay();
+        startMemorizeTimer();
+    }
+
+    function updateGridDisplay() {
+        for (let i = 0; i < 9; i++) {
+            const tile = document.getElementById(`tile-${i}`);
+            const colorIdx = isMemorizePhase ? targetPattern[i] : playerPattern[i];
+            tile.style.backgroundColor = colors[colorIdx];
+            tile.innerHTML = symbols[colorIdx];
+        }
+    }
+
+    function startMemorizeTimer() {
+        secondsLeft = 10;
+        timerFill.style.width = '100%';
+        timerFill.style.backgroundColor = 'var(--accent)';
+        
+        clearInterval(mainTimer);
+        mainTimer = setInterval(() => {
+            secondsLeft--;
+            timerFill.style.width = (secondsLeft * 10) + '%';
+            statusMsg.innerText = `Time to look: ${secondsLeft}s`;
+
+            if (secondsLeft <= 0) {
+                clearInterval(mainTimer);
+                startSolvingPhase();
+            }
+        }, 1000);
+    }
+
+    function startSolvingPhase() {
+        isMemorizePhase = false;
+        modeTitle.innerText = "Recreate the Pattern!";
+        statusMsg.innerText = "Hurry! 120s left";
+        actionBtn.classList.remove('hidden');
+        updateGridDisplay();
+        
+        solveSeconds = 120;
+        mainTimer = setInterval(() => {
+            solveSeconds--;
+            timerFill.style.width = (solveSeconds / 120 * 100) + '%';
+            timerFill.style.backgroundColor = '#e94560';
+            statusMsg.innerText = `Time left: ${solveSeconds}s`;
+
+            if (solveSeconds <= 0) {
+                clearInterval(mainTimer);
+                revealSolution();
+            }
+        }, 1000);
+    }
+
+    function handleTileClick(index) {
+        if (isMemorizePhase) return;
+        
+        playerPattern[index] = (playerPattern[index] + 1) % colors.length;
+        if (playerPattern[index] === 0) playerPattern[index] = 1; // Skip gray
+        
+        updateGridDisplay();
+        playSound(200 + (playerPattern[index] * 50));
+    }
+
+    function checkPattern() {
+        const isCorrect = playerPattern.every((val, i) => val === targetPattern[i]);
+        
+        if (isCorrect) {
+            clearInterval(mainTimer);
+            statusMsg.innerText = "PERFECT! Match Confirmed.";
+            statusMsg.style.color = "#238636";
+            playSound(600);
+            setTimeout(startNewLevel, 2000);
+        } else {
+            statusMsg.innerText = "Pattern mismatch! Try again.";
+            statusMsg.style.color = "#e94560";
+            playSound(100);
+        }
+    }
+
+    function revealSolution() {
+        isMemorizePhase = true;
+        updateGridDisplay();
+        modeTitle.innerText = "Time Up! Here was the answer.";
+        statusMsg.innerText = "Studying it... then click the button below.";
+        actionBtn.classList.add('hidden');
+        document.getElementById('reveal-btn').classList.remove('hidden');
+    }
+
+    createGrid();
+    startNewLevel();
+</script>
+</body>
+</html>

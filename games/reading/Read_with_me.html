@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Fun Reading Book</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f8ff;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1 {
+            color: #ff6b6b;
+            margin-bottom: 30px;
+        }
+        .story {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            display: none;
+        }
+        .story.active {
+            display: block;
+        }
+        .story img {
+            width: 100%;
+            max-height: 400px;
+            object-fit: contain;
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+        .story p {
+            font-size: 28px;
+            line-height: 1.8;
+            color: #333;
+            margin: 20px 0;
+        }
+        .buttons {
+            margin: 40px 0;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 24px;
+            margin: 10px;
+            background-color: #4ecdc4;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45b7aa;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        #home {
+            display: block;
+        }
+        #contents ul {
+            list-style: none;
+            padding: 0;
+        }
+        #contents li {
+            margin: 20px 0;
+        }
+        #contents button {
+            width: 80%;
+            background-color: #ffe66d;
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <h1>My Fun Reading Book 📚</h1>
+
+    <!-- Table of Contents -->
+    <div id="contents" class="story active">
+        <h2>Choose a story to read!</h2>
+        <ul>
+            <li><button onclick="goToStory(1)">1. The Red Cat</button></li>
+            <li><button onclick="goToStory(2)">2. My Big Dog</button></li>
+            <li><button onclick="goToStory(3)">3. The Little Bird</button></li>
+            <li><button onclick="goToStory(4)">4. Fun at the Park</button></li>
+            <li><button onclick="goToStory(5)">5. The Brave Frog</button></li>
+            <li><button onclick="goToStory(6)">6. A Sunny Day</button></li>
+            <li><button onclick="goToStory(7)">7. The Lost Kite</button></li>
+            <li><button onclick="goToStory(8)">8. The Shiny Shell</button></li>
+            <li><button onclick="goToStory(9)">9. Sam and the Jam</button></li>
+            <li><button onclick="goToStory(10)">10. The Magic Seed</button></li>
+        </ul>
+    </div>
+
+    <!-- Story 1 -->
+    <div id="story1" class="story">
+        <h2>1. The Red Cat</h2>
+        <img src="https://source.unsplash.com/random/800x600/?red,cat" alt="A cute red cat">
+        <p>The cat is red.</p>
+        <p>It sat on the mat.</p>
+        <p>The cat can run fast.</p>
+        <p>It has a big hat.</p>
+        <p>The hat is black.</p>
+        <p>The cat likes to nap.</p>
+        <p>It naps in the sun.</p>
+        <p>The sun is hot.</p>
+        <p>The cat is happy.</p>
+        <p>It purrs all day.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button id="back1" onclick="goToStory(10)" disabled>← Back</button>
+            <button id="next1" onclick="goToStory(2)">Next →</button>
+        </div>
+    </div>
+
+    <!-- Story 2 -->
+    <div id="story2" class="story">
+        <h2>2. My Big Dog</h2>
+        <img src="https://source.unsplash.com/random/800x600/?big,dog" alt="A big happy dog">
+        <p>I have a big dog.</p>
+        <p>His name is Max.</p>
+        <p>Max likes to dig.</p>
+        <p>He digs in the mud.</p>
+        <p>The mud is wet.</p>
+        <p>Max runs to me.</p>
+        <p>He shakes his fur.</p>
+        <p>Water goes splash!</p>
+        <p>I hug my dog.</p>
+        <p>Max is my best pal.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(1)">← Back</button>
+            <button onclick="goToStory(3)">Next →</button>
+        </div>
+    </div>
+
+    <!-- Story 3 to 9 (shortened for space - same pattern) -->
+    <div id="story3" class="story">
+        <h2>3. The Little Bird</h2>
+        <img src="https://source.unsplash.com/random/800x600/?blue,bird" alt="A little blue bird">
+        <p>A little bird sits on a twig.</p>
+        <p>The bird is blue.</p>
+        <p>It sings a song.</p>
+        <p>The song is sweet.</p>
+        <p>The bird sees a worm.</p>
+        <p>It hops down quick.</p>
+        <p>The bird gets the worm.</p>
+        <p>It flies up high.</p>
+        <p>The sky is bright.</p>
+        <p>The bird is glad.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(2)">← Back</button>
+            <button onclick="goToStory(4)">Next →</button>
+        </div>
+    </div>
+
+    <div id="story4" class="story">
+        <h2>4. Fun at the Park</h2>
+        <img src="https://source.unsplash.com/random/800x600/?park,playground" alt="Children playing in a park">
+        <p>We go to the park.</p>
+        <p>The park has swings.</p>
+        <p>I swing high up.</p>
+        <p>My sister slides down.</p>
+        <p>The slide is fast.</p>
+        <p>We run on the grass.</p>
+        <p>The grass is green.</p>
+        <p>We chase a ball.</p>
+        <p>The ball is red.</p>
+        <p>We play all day.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(3)">← Back</button>
+            <button onclick="goToStory(5)">Next →</button>
+        </div>
+    </div>
+
+    <div id="story5" class="story">
+        <h2>5. The Brave Frog</h2>
+        <img src="https://source.unsplash.com/random/800x600/?green,frog" alt="A brave green frog">
+        <p>A frog lives by the pond.</p>
+        <p>The frog is green.</p>
+        <p>It jumps on a log.</p>
+        <p>The log is long.</p>
+        <p>A fish swims by.</p>
+        <p>The frog says hop!</p>
+        <p>It catches a bug.</p>
+        <p>The bug is small.</p>
+        <p>The frog smiles big.</p>
+        <p>It is brave and strong.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(4)">← Back</button>
+            <button onclick="goToStory(6)">Next →</button>
+        </div>
+    </div>
+
+    <div id="story6" class="story">
+        <h2>6. A Sunny Day</h2>
+        <img src="https://source.unsplash.com/random/800x600/?sunny,day,bike" alt="Riding bike on a sunny day">
+        <p>The sun shines bright.</p>
+        <p>It is a sunny day.</p>
+        <p>I ride my bike.</p>
+        <p>The bike is blue.</p>
+        <p>I ride to the lake.</p>
+        <p>The lake has ducks.</p>
+        <p>The ducks quack loud.</p>
+        <p>I feed them bread.</p>
+        <p>They like the crumbs.</p>
+        <p>I smile and wave.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(5)">← Back</button>
+            <button onclick="goToStory(7)">Next →</button>
+        </div>
+    </div>
+
+    <div id="story7" class="story">
+        <h2>7. The Lost Kite</h2>
+        <img src="https://source.unsplash.com/random/800x600/?kite,sky" alt="A colorful kite flying">
+        <p>My kite is red and white.</p>
+        <p>It flies in the wind.</p>
+        <p>The wind blows hard.</p>
+        <p>The kite goes up high.</p>
+        <p>Oh no, it gets stuck!</p>
+        <p>It is in a tree.</p>
+        <p>I climb the tree.</p>
+        <p>I get my kite.</p>
+        <p>Now it flies again.</p>
+        <p>I am so happy.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(6)">← Back</button>
+            <button onclick="goToStory(8)">Next →</button>
+        </div>
+    </div>
+
+    <div id="story8" class="story">
+        <h2>8. The Shiny Shell</h2>
+        <img src="https://source.unsplash.com/random/800x600/?beach,shell" alt="Shiny shell on the beach">
+        <p>We walk on the beach.</p>
+        <p>The sand is warm.</p>
+        <p>I find a shell.</p>
+        <p>The shell is shiny.</p>
+        <p>It has pink stripes.</p>
+        <p>I hold it to my ear.</p>
+        <p>I hear the waves.</p>
+        <p>The waves crash loud.</p>
+        <p>I keep the shell.</p>
+        <p>It is my treasure.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(7)">← Back</button>
+            <button onclick="goToStory(9)">Next →</button>
+        </div>
+    </div>
+
+    <div id="story9" class="story">
+        <h2>9. Sam and the Jam</h2>
+        <img src="https://source.unsplash.com/random/800x600/?toast,jam" alt="Toast with jam">
+        <p>Sam likes jam on toast.</p>
+        <p>The jam is sweet.</p>
+        <p>He spreads it thick.</p>
+        <p>Sam eats his toast.</p>
+        <p>It tastes so good.</p>
+        <p>He licks his lips.</p>
+        <p>Mom says clean up.</p>
+        <p>Sam wipes his chin.</p>
+        <p>He helps in the kitchen.</p>
+        <p>Sam is a good boy.</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(8)">← Back</button>
+            <button onclick="goToStory(10)">Next →</button>
+        </div>
+    </div>
+
+    <!-- Story 10 -->
+    <div id="story10" class="story">
+        <h2>10. The Magic Seed</h2>
+        <img src="https://source.unsplash.com/random/800x600/?flower,seed,growing" alt="A flower growing from a seed">
+        <p>I plant a small seed.</p>
+        <p>The seed is brown.</p>
+        <p>I give it water.</p>
+        <p>The sun helps it grow.</p>
+        <p>A green sprout comes up.</p>
+        <p>It grows tall fast.</p>
+        <p>Now it has flowers.</p>
+        <p>The flowers are yellow.</p>
+        <p>Bees come to visit.</p>
+        <p>The seed made magic!</p>
+        <div class="buttons">
+            <button onclick="goHome()">Home</button>
+            <button onclick="goToStory(9)">← Back</button>
+            <button id="next10" onclick="goToStory(1)" disabled>Next →</button>
+        </div>
+        <h3 style="color:#ff6b6b; margin-top:40px;">🎉 You finished all 10 stories! You're a super reader! 🎉</h3>
+    </div>
+
+    <script>
+        function goHome() {
+            document.querySelectorAll('.story').forEach(s => s.classList.remove('active'));
+            document.getElementById('contents').classList.add('active');
+        }
+
+        function goToStory(n) {
+            document.querySelectorAll('.story').forEach(s => s.classList.remove('active'));
+            document.getElementById('story' + n).classList.add('active');
+        }
+    </script>
+</body>
+</html>

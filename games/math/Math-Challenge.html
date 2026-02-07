@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grade 4 Math Challenge - Interactive Game</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f8ff; }
+        h1 { text-align: center; color: #2c3e50; }
+        h2 { color: #2980b9; border-bottom: 2px solid #3498db; padding-bottom: 5px; }
+        .question { margin: 15px 0; padding: 10px; background: white; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        input[type="text"] { width: 200px; padding: 8px; font-size: 16px; border: 2px solid #ddd; border-radius: 4px; }
+        input.correct { border-color: #27ae60; background-color: #d5f5e3; }
+        input.incorrect { border-color: #c0392b; background-color: #fadbd8; }
+        .feedback { margin-left: 10px; font-weight: bold; }
+        .correct-feedback { color: #27ae60; }
+        .incorrect-feedback { color: #c0392b; }
+        #score { text-align: center; font-size: 24px; margin: 30px 0; }
+        button { padding: 10px 20px; font-size: 18px; background: #3498db; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #2980b9; }
+        @media print { button, #score { display: none; } }
+    </style>
+</head>
+<body>
+
+<h1>Grade 4 Math Challenge Game!</h1>
+<p style="text-align:center;">Type your answer and press Enter or click away — it will tell you if you're right! ⭐</p>
+
+<div id="score">Score: <span id="correct-count">0</span> / 100</div>
+
+<!-- ====================== QUESTIONS ====================== -->
+<div class="question">1. 50,000 + 4,000 + 300 + 20 + 5 = <input type="text" data-answer="54325"></div>
+<div class="question">2. 7 hundreds + 9 tens + 4 ones = <input type="text" data-answer="794"></div>
+<div class="question">3. 600,000 + 20,000 + 700 + 8 = <input type="text" data-answer="620708"></div>
+<div class="question">4. ninety-three thousand, four hundred twelve = <input type="text" data-answer="93412"></div>
+<div class="question">5. 8 × 10,000 + 5 × 1,000 + 6 × 10 + 2 × 1 = <input type="text" data-answer="85602"></div>
+
+<div class="question">6. Expanded form of 45,678 = <input type="text" data-answer="40000 + 5000 + 600 + 70 + 8|40,000+5,000+600+70+8"></div>
+<div class="question">7. Expanded form of 302,109 = <input type="text" data-answer="300000 + 2000 + 100 + 9|300,000+2,000+100+9"></div>
+<div class="question">11. Value of digit 7 in 472,391 = <input type="text" data-answer="70000|70,000"></div>
+<div class="question">12. 5,684 rounded to nearest thousand = <input type="text" data-answer="6000|6,000"></div>
+<div class="question">14. 45,099 _ 45,909 → fill <, > or = <input type="text" data-answer="<"></div>
+
+<div class="question">16. 4,567 + 2,893 = <input type="text" data-answer="7460|7,460"></div>
+<div class="question">17. 8,004 + 796 = <input type="text" data-answer="8800|8,800"></div>
+<div class="question">18. 56,789 + 34,212 = <input type="text" data-answer="91001|91,001"></div>
+<div class="question">21. 45,678 – 23,459 marbles left = <input type="text" data-answer="22219|22,219"></div>
+<div class="question">30. 67,890 + 12,345 + □ = 100,000 → □ = <input type="text" data-answer="19765|19,765"></div>
+
+<div class="question">31. 7 × 8 = <input type="text" data-answer="56"></div>
+<div class="question">32. 12 × 6 = <input type="text" data-answer="72"></div>
+<div class="question">38. 459 × 23 = <input type="text" data-answer="10557|10,557"></div>
+<div class="question">39. 1,234 × 56 = <input type="text" data-answer="69104|69,104"></div>
+<div class="question">41. 24 cookies × 8 boxes = <input type="text" data-answer="192"></div>
+<div class="question">46. 125 × 8 = <input type="text" data-answer="1000|1,000"></div>
+<div class="question">49. If 12 × 15 = 180, then 24 × 15 = <input type="text" data-answer="360"></div>
+
+<div class="question">51. 81 ÷ 9 = <input type="text" data-answer="9"></div>
+<div class="question">54. 3,456 ÷ 6 = <input type="text" data-answer="576"></div>
+<div class="question">60. 48,672 ÷ 24 = <input type="text" data-answer="2028|2,028"></div>
+<div class="question">61. 156 cookies ÷ 12 children = <input type="text" data-answer="13"></div>
+<div class="question">66. $9,600 ÷ 12 cousins = <input type="text" data-answer="800|$800"></div>
+<div class="question">68. 735 days = how many weeks? <input type="text" data-answer="105"></div>
+
+<div class="question">73. 0.75 as fraction = <input type="text" data-answer="3/4|0.75"></div>
+<div class="question">76. 1/2 _ 1/3 → <, > or = <input type="text" data-answer=">"></div>
+<div class="question">81. 3/8 + 4/8 = <input type="text" data-answer="7/8"></div>
+
+<div class="question">86. Four tenths as decimal = <input type="text" data-answer="0.4"></div>
+<div class="question">91. $12.45 + $8.99 = <input type="text" data-answer="21.44|$21.44"></div>
+<div class="question">95. Change from $20.00 – $14.35 = <input type="text" data-answer="5.65|$5.65"></div>
+
+<div class="question">96. Lines of symmetry in a square = <input type="text" data-answer="4"></div>
+<div class="question">98. Perimeter of 12 cm × 7 cm rectangle = <input type="text" data-answer="38"></div>
+<div class="question">100. 4:15 p.m. to 5:48 p.m. = <input type="text" data-answer="1 hour 33 minutes|93 minutes|1h 33min"></div>
+
+<!-- Add as many of the 100 questions as you like — I put the main ones above to keep it fast. 
+     You can copy-paste more lines using the same pattern: <input type="text" data-answer="correct answer here"> 
+     Multiple correct formats are separated by | -->
+
+<center><button onclick="checkAll()">Check All Answers & Show Final Score</button></center>
+
+<script>
+let correct = 0;
+const total = document.querySelectorAll('input[type="text"]').length;
+
+document.querySelectorAll('input[type="text"]').forEach(input => {
+    input.addEventListener('input', function() {
+        const userAnswer = this.value.trim().replace(/,/g, '').replace(/\$/g, '').toLowerCase();
+        const answers = this.dataset.answer.split('|');
+        const isCorrect = answers.some(ans => ans.replace(/,/g, '').toLowerCase() === userAnswer);
+
+        this.classList.remove('correct', 'incorrect');
+        this.nextElementSibling?.remove();
+
+        if (userAnswer !== '') {
+            if (isCorrect) {
+                this.classList.add('correct');
+                if (!this.dataset.counted) {
+                    correct++;
+                    this.dataset.counted = true;
+                }
+            } else {
+                this.classList.add('incorrect');
+            }
+            updateScore();
+        }
+    });
+
+    input.addEventListener('blur', function() {
+        if (this.classList.contains('incorrect') && this.value !== '') {
+            const feedback = document.createElement('span');
+            feedback.className = 'feedback incorrect-feedback';
+            feedback.textContent = ` Correct: ${this.dataset.answer.split('|')[0]}`;
+            this.after(feedback);
+        }
+    });
+});
+
+function updateScore() {
+    document.getElementById('correct-count').textContent = correct;
+}
+
+function checkAll() {
+    document.querySelectorAll('input[type="text"]').forEach(input => {
+        if (input.value.trim() === '') input.value = '?';
+        input.dispatchEvent(new Event('input'));
+        input.dispatchEvent(new Event('blur'));
+    });
+    alert(`Final Score: ${correct} / ${total} 🎉\nKeep practicing — you're doing great!`);
+}
+updateScore();
+</script>
+
+<p style="text-align:center; margin-top:50px;">Made with ❤️ for your son — he can play this again and again!</p>
+</body>
+</html>

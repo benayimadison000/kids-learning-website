@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ultimate Math Flashcard Hero!</title>
+<style>
+    body { 
+        margin:0; padding:10px; min-height:100vh; 
+        font-family: 'Comic Sans MS', cursive, sans-serif;
+        background: linear-gradient(to bottom, #0f0c29, #302b63, #24243e);
+        color:white; display:flex; flex-direction:column; align-items:center;
+        overflow-x:hidden;
+    }
+    canvas { position:fixed; top:0; left:0; z-index:-1; }
+    h1 { font-size:2.8em; text-shadow:0 0 20px #fff; margin:10px; }
+    #controls button { padding:14px 24px; margin:8px; font-size:18px; background:#9b59b6; border:none; border-radius:15px; color:white; cursor:pointer; box-shadow:0 6px 20px rgba(0,0,0,0.5); }
+    button.active { background:#e74c3c !important; }
+    button:hover { transform:translateY(-4px); }
+    #next-btn { padding:20px 50px !important; font-size:30px !important; background:linear-gradient(135deg,#f39c12,#e67e22) !important; border-radius:20px; animation:pulse 2s infinite; margin:20px 0; }
+    @keyframes pulse { 0%{box-shadow:0 0 0 0 rgba(243,156,18,.7)} 70%{box-shadow:0 0 0 20px rgba(243,156,18,0)} 100%{box-shadow:0 0 0 0 rgba(243,156,18,0)} }
+    #card { width:90vw; max-width:440px; height:65vh; max-height:560px; perspective:1200px; margin:20px 0; }
+    #card-inner { position:relative; width:100%; height:100%; transition:transform 0.9s; transform-style:preserve-3d; cursor:pointer; }
+    .side { position:absolute; width:100%; height:100%; backface-visibility:hidden; border-radius:25px; display:flex; flex-direction:column; align-items:center; justify-content:center; box-shadow:0 15px 40px rgba(0,0,0,0.7); padding:20px; text-align:center; }
+    #front { background:linear-gradient(135deg,#667eea,#764ba2); font-size:70px; }
+    #back { background:linear-gradient(135deg,#f093fb,#f5576c); transform:rotateY(180deg); }
+    input { padding:15px; font-size:32px; width:240px; text-align:center; border-radius:15px; border:4px solid #ddd; margin:15px; }
+    .correct { border-color:#2ecc71 !important; background:#d5f5e3 !important; color:#27ae60; }
+    .wrong { border-color:#e74c3c !important; background:#fadbd8 !important; color:#c0392b; }
+    #score { font-size:32px; background:rgba(0,0,0,0.4); padding:10px 25px; border-radius:25px; }
+    #message { font-size:38px; margin:10px; text-shadow:0 0 0 15px #fff; min-height:60px; }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<h1>Ultimate Math Flashcard Hero! 🚀</h1>
+<div id="score">Score: <span id="correct">0</span> / <span id="attempts">0</span></div>
+<div id="message"></div>
+
+<div id="controls">
+    <button class="mode-btn active" data-mode="mixed">Mixed Mode</button>
+    <button class="mode-btn" data-mode="multiplication">Multiplication</button>
+    <button class="mode-btn" data-mode="division">Division</button>
+    <button class="mode-btn" data-mode="fractions">Fractions</button>
+</div>
+
+<div id="card" onclick="flipCard()">
+  <div id="card-inner">
+    <div id="front" class="side">Tap the card to begin!</div>
+    <div id="back" class="side">
+      <div id="question"></div>
+      <div id="visual" style="margin:20px;"></div>
+      <input type="text" id="user-answer" placeholder="Your answer" autocomplete="off">
+      <button onclick="event.stopPropagation(); checkAnswer()">Check!</button>
+      <div id="correct-answer" style="margin-top:20px; font-size:60px;"></div>
+    </div>
+  </div>
+</div>
+
+<button id="next-btn" onclick="nextCard()">Next Card ➜</button>
+
+<script>
+// Starry background
+const canvas = document.getElementById('stars');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+const stars = [];
+for(let i=0;i<300;i++) stars.push({x:Math.random()*canvas.width,y:Math.random()*canvas.height,r:Math.random()*2+0.5,s:Math.random()*0.8+0.2});
+function drawStars(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#fff';
+  stars.forEach(s=>{ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill(); s.y+=s.s; if(s.y>canvas.height) s.y=0;});
+  requestAnimationFrame(drawStars);
+}
+drawStars();
+window.addEventListener('resize',()=>{canvas.width=innerWidth; canvas.height=innerHeight;});
+
+// ==== ALL FLASHCARDS ====
+let allFacts = [];
+
+// Multiplication & Division (1–12)
+for(let i=1;i<=12;i++){
+  for(let j=1;j<=12;j++){
+    allFacts.push({type:'×', q:`${i} × ${j}`, a:i*j});
+    allFacts.push({type:'÷', q:`${i*j} ÷ ${j}`, a:i});
+  }
+}
+
+// Fraction flashcards
+const fractionList = [
+  // Proper fractions → name & draw
+  {q:"1/2", a:"1/2", draw:{num:1,den:2}},
+  {q:"3/4", a:"3/4", draw:{num:3,den:4}},
+  {q:"2/5", a:"2/5", draw:{num:2,den:5}},
+  {q:"5/6", a:"5/6", draw:{num:5,den:6}},
+  {q:"1/3", a:"1/3", draw:{num:1,den:3}},
+  {q:"2/3", a:"2/3", draw:{num:2,den:3}},
+  {q:"1/4", a:"1/4", draw:{num:1,den:4}},
+  {q:"3/8", a:"3/8", draw:{num:3,den:8}},
+  {q:"5/8", a:"5/8", draw:{num:5,den:8}},
+
+  // Mixed ↔ Improper
+  {q:"2 1/3 as improper", a:"7/3"},
+  {q:"2 3/4 as improper", a:"11/4"},
+  {q:"4 1/2 as improper", a:"9/2"},
+  {q:"15/4 as mixed", a:"3 3/4"|"3 3/4"},
+  {q:"23/5 as mixed", a:"4 3/5"},
+  {q:"17/6 as mixed", a:"2 5/6"},
+
+  // Simplify
+  {q:"Simplify 4/8", a:"1/2"},
+  {q:"Simplify 6/9", a:"2/3"},
+  {q:"Simplify 10/15", a:"2/3"},
+  {q:"Simplify 15/20", a:"3/4"},
+  {q:"Simplify 8/12", a:"2/3"},
+
+  // Equivalent fractions
+  {q:"What is equivalent to 1/2?", a:"2/4|3/6|4/8|5/10"},
+  {q:"What is equivalent to 3/5?", a:"6/10|9/15"},
+  {q:"What is equivalent to 2/3?", a:"4/6|6/9|8/12"},
+  
+  // Fraction of a number
+  {q:"1/2 of 12", a:"6"},
+  {q:"1/4 of 20", a:"5"},
+  {q:"3/5 of 20", a:"12"},
+  {q:"2/3 of 18", a:"12"},
+];
+
+fractionList.forEach(f => {
+  f.type = 'Fraction';
+  allFacts.push(f);
+});
+
+let deck = [];
+let current;
+let correct = 0, attempts = 0;
+let mode = 'mixed';
+
+function shuffle(a){ for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];} }
+
+function buildDeck(){
+  if(mode==='mixed') deck = [...allFacts];
+  else deck = allFacts.filter(c => c.type===mode);
+  shuffle(deck);
+}
+buildDeck();
+
+function drawFraction(num, den, correct=false) {
+  const size = 120;
+  let html = `<svg width="${size}" height="${size}" viewBox="0 0 100 100">`;
+  for(let i=0;i<den;i++){
+    let angle = i/den * Math.PI*2 - Math.PI/2;
+    let x1 = 50, y1 = 50;
+    let x2 = 50 + 45*Math.cos(angle);
+    let y2 = 50 + 45*Math.sin(angle);
+    let x3 = 50 + 45*Math.cos(angle + Math.PI*2/den);
+    let y3 = 50 + 45*Math.sin(angle + Math.PI*2/den);
+    let fill = (i < num) ? (correct?'#2ecc71':'#f39c12') : '#fff';
+    html += `<path d="M50 50 L${x2} ${y2} A45 45 0 0 1 ${x3} ${y3} Z" fill="${fill}" stroke="#333" stroke-width="2"/>`;
+  }
+  html += `<circle cx="50" cy="50" r="45" fill="none" stroke="#333" stroke-width="4"/>`;
+  html += `<text x="50" y="105" font-size="20" text-anchor="middle">${num}/${den}</text>`;
+  html += `</svg>`;
+  return html;
+}
+
+function nextCard(){
+  if(deck.length===0) buildDeck();
+  current = deck.pop();
+  
+  document.getElementById("front").innerHTML = `<div style="font-size:80px">${current.q}</div>`;
+  document.getElementById("question").innerHTML = current.q;
+  document.getElementById("visual").innerHTML = "";
+  
+  if(current.draw){
+    document.getElementById("visual").innerHTML = drawFraction(current.draw.num, current.draw.den);
+  }
+  
+  document.getElementById("user-answer").value = "";
+  document.getElementById("user-answer").classList.remove("correct","wrong");
+  document.getElementById("correct-answer").innerHTML = "";
+  document.getElementById("message").innerHTML = "";
+  document.getElementById("card-inner").style.transform = "rotateY(0deg)";
+}
+
+function flipCard(){ document.getElementById("card-inner").style.transform = "rotateY(180deg)"; }
+
+function checkAnswer(){
+  event.stopPropagation();
+  const input = document.getElementById("user-answer");
+  const user = input.value.trim().replaceAll(' ','').toLowerCase();
+  let answers = (current.a+'').split('|');
+  attempts++;
+  const isCorrect = answers.some(ans => ans.replaceAll(' ','').toLowerCase() === user);
+  
+  if(isCorrect){
+    correct++;
+    input.classList.add("correct");
+    document.getElementById("correct-answer").innerHTML = "✓ Correct!";
+    if(current.draw) document.getElementById("visual").innerHTML = drawFraction(current.draw.num, current.draw.den, true);
+    document.getElementById("message").innerHTML = ["Super!", "Amazing!", "Wow!", "Genius!", "Perfect!"][Math.floor(Math.random()*5)] + " ✨";
+  } else {
+    input.classList.add("wrong");
+    document.getElementById("correct-answer").innerHTML = `= ${answers[0]}`;
+    document.getElementById("message").innerHTML = "Keep going! 💪";
+  }
+  document.getElementById("correct").textContent = correct;
+  document.getElementById("attempts").textContent = attempts;
+}
+
+// Mode buttons
+document.querySelectorAll('.mode-btn').forEach(btn=>{
+  btn.onclick = function(){
+    document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    mode = this.dataset.mode === 'multiplication' ? '×' : this.dataset.mode === 'division' ? '÷' : this.dataset.mode === 'fractions' ? 'Fraction' : 'mixed';
+    buildDeck();
+    nextCard();
+  };
+});
+
+// Start
+nextCard();
+</script>
+
+<p style="position:fixed;bottom:8px;">Made with ❤️ for your Grade 4 math champion!</p>
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>30 Story Star Galaxy</title>
+    <style>
+        :root { --space-blue: #0b0d29; --star-gold: #FFD700; --text-gray: #444; }
+        body {
+            font-family: 'Verdana', sans-serif;
+            background-color: var(--space-blue);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            margin: 0;
+        }
+        #book-container {
+            background: white;
+            width: 95%;
+            max-width: 800px;
+            padding: 30px;
+            border-radius: 25px;
+            box-shadow: 0 0 40px rgba(255, 255, 255, 0.2);
+            border: 5px solid var(--star-gold);
+            margin-top: 10px;
+            text-align: center;
+        }
+        .emoji-header { font-size: 50px; margin: 0; }
+        h1 { color: #1e90ff; font-size: 24px; margin: 10px 0; border-bottom: 2px solid #eee; padding-bottom: 10px; }
+        #story-content {
+            font-size: 22px;
+            line-height: 1.8;
+            text-align: left;
+            margin: 20px 0;
+            color: var(--text-gray);
+            min-height: 280px;
+        }
+        .sentence { margin-bottom: 12px; display: block; border-left: 4px solid #f0f0f0; padding-left: 15px; }
+        .nav-buttons { display: flex; justify-content: space-between; gap: 10px; }
+        button {
+            padding: 12px 25px;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 12px;
+            border: none;
+            background-color: #ff4757;
+            color: white;
+            font-weight: bold;
+            flex: 1;
+        }
+        button:disabled { background-color: #ccc; }
+        #progress-grid {
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(10, 1fr);
+            gap: 5px;
+            width: 100%;
+            max-width: 800px;
+        }
+        .dot {
+            aspect-ratio: 1;
+            background: #333;
+            border-radius: 5px;
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            border: 1px solid #666;
+        }
+        .dot.active { background: var(--star-gold); color: black; font-weight: bold; transform: scale(1.1); }
+        .dot.finished { background: #2ed573; border-color: white; }
+    </style>
+</head>
+<body>
+
+    <div id="book-container">
+        <div class="emoji-header" id="emoji">📖</div>
+        <h1 id="story-title">Loading Galaxy...</h1>
+        <div id="story-content"></div>
+        <div class="nav-buttons">
+            <button id="prevBtn" onclick="changeStory(-1)">⬅ Back</button>
+            <button id="nextBtn" onclick="changeStory(1)">Next Story ➡</button>
+        </div>
+        <p id="counter" style="margin-top: 15px; color: #888; font-size: 14px;"></p>
+    </div>
+
+    <div id="progress-grid"></div>
+
+    <script>
+        const stories = [
+            { t: "The Blue Cat", e: "🐱", l: ["The big blue cat sat on a very soft mat.", "He said he wanted to play with a red ball.", "The cat ran fast to catch the little red ball.", "He was very happy to play in the big house.", "Now the tired cat wants to take a long nap."] },
+            { t: "Space Trip", e: "🚀", l: ["We went to the moon in a very fast ship.", "It was fun to see the stars in the sky.", "The moon looked like a big white ball of cheese.", "We could jump very high because there is no air.", "It is time to go back to our home planet."] },
+            { t: "Garden Frog", e: "🐸", l: ["A green frog can jump over the big brown log.", "He likes to eat many small bugs for his lunch.", "The frog sits on a leaf in the blue pond.", "He makes a loud sound when the sun goes down.", "Watch the frog splash into the cool dark water now."] },
+            { t: "Best Friends", e: "👫", l: ["My friend and I like to play in the park.", "We run fast and laugh because it is sunny today.", "She has a blue bike and I have a red.", "We like to eat sweet ice cream at the shop.", "It is fun to be with my very best friend."] },
+            { t: "Hiding Dog", e: "🐶", l: ["Where did the little dog go in the dark woods?", "I think he is hiding under the big green tree.", "I called his name and he came running to me.", "He wagged his tail because he was happy to see me.", "We walked back to the house for a tasty snack."] },
+            { t: "Birthday Cake", e: "🎂", l: ["Mom made a big cake for the happy birthday party.", "It had pink frosting and many sweet stars on top.", "I blew out the candles with one big deep breath.", "My friends said the cake was the best thing ever.", "We all had a very good time at the party."] },
+            { t: "Race Car", e: "🚗", l: ["The red car can go very fast down the road.", "Dad said we should stop at the little toy shop.", "I saw a blue truck and a yellow bus there.", "We bought a new map to find the secret way.", "Driving in the car is my favorite thing to do."] },
+            { t: "Snowy Morning", e: "❄️", l: ["The white snow is falling down on the cold ground.", "We can build a tall snowman with a carrot nose.", "I put on my red coat and my warm boots.", "My sister and I made a big snow fort today.", "The hot cocoa smells very good in my purple mug."] },
+            { t: "Singing Bird", e: "🐦", l: ["A blue bird sat on the fence and sang loud.", "He had a yellow beak and very soft little wings.", "The bird was looking for a worm in the grass.", "He flew up high to his nest in the tree.", "I like to hear the bird sing his pretty song."] },
+            { t: "Goldfish", e: "🐠", l: ["The gold fish swims in the clear blue water bowl.", "He looks at me when I give him some food.", "His fins move fast as he swims in a circle.", "I named my fish Goldie because he is so bright.", "He is a very quiet pet to have in my room."] },
+            { t: "Robot Friend", e: "🤖", l: ["I have a robot that can walk and talk loud.", "He says hello when I come home from my school.", "His eyes light up with a bright green glow now.", "The robot can help me pick up my messy toys.", "He is the best robot in the whole wide world."] },
+            { t: "Rainy Day", e: "☔", l: ["The rain fell down on my big green silk hat.", "I had to jump over the deep puddles of water.", "My yellow boots kept my feet very dry and warm.", "The sky was gray but I was very happy today.", "I saw a colorful rainbow after the rain went away."] },
+            { t: "Dragon Book", e: "📚", l: ["I like to read my new book in the bed.", "It has pictures of dragons and a brave little girl.", "The dragon breathed fire and flew over the tall castle.", "The girl was not afraid of the big green dragon.", "I want to read this story again and again tonight."] },
+            { t: "The Farm", e: "🐮", l: ["The cow says moo when she see the white milk.", "The horse runs fast across the big green grass field.", "The pink pigs like to roll in the brown mud.", "A little yellow duck swims in the small farm pond.", "The farm is a very busy place for the animals."] },
+            { t: "Night Sky", e: "🌙", l: ["It is time to sleep and dream of the stars.", "Goodnight to the world and the bright yellow round moon.", "I can see the stars from my bedroom window now.", "The dark night is very quiet and very peaceful today.", "I will wake up when the bright sun comes out."] },
+            { t: "Beach Day", e: "🏖️", l: ["We went to the beach to play in the sand.", "The ocean water was very blue and very cold today.", "I built a big castle with a tall sand tower.", "A small crab ran past my feet on the shore.", "We found many pretty shells to take back home now."] },
+            { t: "Magic Wand", e: "🪄", l: ["I found a magic wand under my old wood bed.", "It made a bright sparkle when I waved it around.", "I made my teddy bear dance a funny little jig.", "The wand glows red when I say a magic word.", "Magic is the most fun thing in the whole house."] },
+            { t: "Apple Tree", e: "🍎", l: ["The apple tree is very tall in the back yard.", "Red apples grow on the branches during the fall time.", "I like to pick the best one for my lunch.", "The apples taste sweet and they are very crunchy too.", "We can make a big pie with the red fruit."] },
+            { t: "Busy Bee", e: "🐝", l: ["A fuzzy bee flies around the bright yellow garden flowers.", "He is looking for sweet juice to make some honey.", "Do not touch the bee or he might get mad.", "The bee makes a soft buzz sound in the air.", "He is a very busy worker in the green grass."] },
+            { t: "The Picnic", e: "🧺", l: ["We put some bread and jam in a big basket.", "Dad found a nice spot under a shady oak tree.", "An ant tried to eat a piece of my fruit.", "We drank cold juice while we sat on the grass.", "A picnic is a great way to spend the day."] },
+            { t: "Cool Kite", e: "🪁", l: ["My new kite is purple with a very long tail.", "The wind blows hard and pulls it up very high.", "I hold the string tight so it does not fly.", "It looks like a bird dancing in the blue sky.", "Running with my kite makes me feel very fast today."] },
+            { t: "The Zoo", e: "🦁", l: ["We saw a big lion with a very thick mane.", "The tall giraffe ate leaves from the top of trees.", "Monkeys like to swing and play on the long ropes.", "The zoo is full of many loud and wild animals.", "I want to see the giant gray elephants drink water."] },
+            { t: "Bike Ride", e: "🚲", l: ["I wear my shiny blue helmet when I ride fast.", "My bike has a bell that goes ring ring ring.", "I ride on the path near the pretty city park.", "I can pedal very hard to go up the hill.", "Riding my bike is good for my strong young legs."] },
+            { t: "Hot Soup", e: "🥣", l: ["Grandma made a big pot of hot chicken noodle soup.", "It smells very good and it tastes even better now.", "I use a big spoon to eat the yellow corn.", "The soup keeps me warm on a very cold day.", "I asked for more because I liked it so much."] },
+            { t: "The Library", e: "🏫", l: ["The library is a quiet place with many old books.", "I can pick any story that I want to read.", "The lady at the desk says to be very quiet.", "I found a book about a cat that can fly.", "Reading books helps me learn many new and great things."] },
+            { t: "Morning Sun", e: "☀️", l: ["The yellow sun comes up over the green hills today.", "The birds start to sing when they see the light.", "I wake up and stretch my arms out very wide.", "It is time to get ready for a new day.", "The sun makes the world feel very warm and bright."] },
+            { t: "Lost Key", e: "🔑", l: ["I found a shiny silver key on the stone path.", "It looks like it opens a very old secret door.", "I looked for the lock in the big garden wall.", "Maybe it opens a chest full of bright gold coins.", "I will keep the key safe in my small pocket."] },
+            { t: "Pizza Night", e: "🍕", l: ["Tonight we are having cheese pizza for our big dinner.", "I like to help put the meat on the dough.", "The oven is very hot so I must stay back.", "The melted cheese is very long and very sticky now.", "Pizza night is the best night of the whole week."] },
+            { t: "Toy Box", e: "🧸", l: ["My toy box is full of many fun things today.", "I have a car and a plane and a ball.", "I like to share my toys with my little sister.", "We must clean up when we are done with play.", "Everything goes back inside the big blue wooden toy box."] },
+            { t: "Good Night", e: "🛌", l: ["The day is done and it is time for bed.", "I brush my teeth until they are very white now.", "My mom tells me a story about a brave king.", "I pull the soft covers up to my chin today.", "Sleep well and have many happy dreams in the night."] }
+        ];
+
+        let currentIdx = 0;
+        function init() {
+            const grid = document.getElementById('progress-grid');
+            stories.forEach((_, i) => {
+                const d = document.createElement('div');
+                d.className = 'dot'; d.id = 'd-' + i; d.innerText = i + 1;
+                grid.appendChild(d);
+            });
+            update();
+        }
+        function update() {
+            const s = stories[currentIdx];
+            document.getElementById('story-title').innerText = s.t;
+            document.getElementById('emoji').innerText = s.e;
+            const c = document.getElementById('story-content');
+            c.innerHTML = s.l.map(line => `<span class="sentence">${line}</span>`).join('');
+            document.getElementById('prevBtn').disabled = currentIdx === 0;
+            document.getElementById('nextBtn').innerText = currentIdx === stories.length - 1 ? "Finish! 🏆" : "Next Story ➡";
+            document.getElementById('counter').innerText = `Progress: ${currentIdx + 1} / 30 Stories`;
+            document.querySelectorAll('.dot').forEach((d, i) => {
+                d.classList.remove('active');
+                if (i === currentIdx) d.classList.add('active');
+                if (i < currentIdx) d.classList.add('finished');
+            });
+        }
+        function changeStory(n) {
+            currentIdx += n;
+            if (currentIdx >= stories.length) {
+                alert("🎉 AMAZING! You read 30 stories! You are a Galaxy Master! 🎉");
+                currentIdx = 0;
+            }
+            update();
+            window.scrollTo(0,0);
+        }
+        init();
+    </script>
+</body>
+</html>

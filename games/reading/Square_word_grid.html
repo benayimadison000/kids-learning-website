@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Word Grid Game - 500 Words</title>
+<style>
+  body { font-family: Arial, sans-serif; text-align: center; background: #f0f8ff; padding: 20px; }
+  h1 { color: #333; }
+  #session-info { font-size: 28px; margin: 20px; font-weight: bold; color: #2c3e50; }
+  #theme { font-size: 32px; margin: 15px; font-style: italic; color: #e67e22; }
+  #progress { font-size: 24px; margin: 20px; font-weight: bold; }
+  #target { font-size: 42px; margin: 30px; height: 80px; color: #d35400; font-weight: bold; }
+  table { margin: 30px auto; border-collapse: collapse; }
+  td {
+    width: 140px;
+    height: 100px;
+    border: 3px solid #34495e;
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    vertical-align: middle;
+    background: #fff;
+    cursor: pointer;
+    text-transform: uppercase;
+    padding: 5px;
+    box-sizing: border-box;
+    word-wrap: break-word;
+  }
+  td:hover { background: #a9e5ff; }
+  td.found { background: #ecf0f1; color: #95a5a6; }
+  #start { font-size: 24px; padding: 15px 40px; margin: 40px; cursor: pointer; background: #3498db; color: white; border: none; border-radius: 8px; }
+  #start:hover { background: #2980b9; }
+</style>
+</head>
+<body>
+<h1>Word Grid Game</h1>
+<div id="session-info">500-Word Edition</div>
+<div id="theme"></div>
+<div id="progress">Click Start to begin!</div>
+<div id="target">Click Start to hear the first word</div>
+<table id="grid"></table>
+<button id="start">Start Game</button>
+
+<script>
+const themes = [
+  "Animals", "Fruits", "Colors", "Family & Jobs", "Nature",
+  "Vegetables", "Vehicles", "Body Parts", "Clothing", "Foods",
+  "Shapes", "Numbers (Words)", "Toys", "Sports", "Weather",
+  "School Items", "Insects", "Ocean Creatures", "Farm Animals", "Pets",
+  "Birds", "Reptiles", "Dinosaurs", "Space", "Emotions"
+];
+
+const sessions = [
+  // 1. Animals
+  ["cat", "dog", "bird", "fish", "horse", "pig", "cow", "sheep", "duck", "goat", "lion", "tiger", "bear", "monkey", "elephant", "giraffe", "zebra", "panda", "koala", "kangaroo"],
+  // 2. Fruits
+  ["apple", "banana", "orange", "grape", "strawberry", "watermelon", "pineapple", "mango", "kiwi", "peach", "pear", "cherry", "lemon", "lime", "blueberry", "raspberry", "coconut", "grapefruit", "plum", "melon"],
+  // 3. Colors
+  ["red", "blue", "green", "yellow", "orange", "purple", "pink", "brown", "black", "white", "gray", "silver", "gold", "beige", "turquoise", "indigo", "violet", "crimson", "scarlet", "teal"],
+  // 4. Family & Jobs
+  ["mother", "father", "brother", "sister", "grandma", "grandpa", "aunt", "uncle", "cousin", "baby", "teacher", "doctor", "nurse", "police", "firefighter", "chef", "farmer", "pilot", "astronaut", "artist"],
+  // 5. Nature
+  ["tree", "flower", "grass", "sun", "moon", "star", "cloud", "rain", "snow", "river", "mountain", "ocean", "beach", "forest", "leaf", "rock", "hill", "valley", "lake", "island"],
+  // 6. Vegetables
+  ["carrot", "potato", "tomato", "onion", "broccoli", "cauliflower", "lettuce", "spinach", "cucumber", "pepper", "corn", "bean", "pea", "garlic", "mushroom", "celery", "cabbage", "pumpkin", "zucchini", "eggplant"],
+  // 7. Vehicles
+  ["car", "truck", "bus", "train", "plane", "boat", "bike", "scooter", "helicopter", "ship", "taxi", "van", "tractor", "ambulance", "firetruck", "policecar", "motorcycle", "subway", "rocket", "balloon"],
+  // 8. Body Parts
+  ["head", "eye", "ear", "nose", "mouth", "tooth", "hand", "finger", "arm", "leg", "foot", "knee", "elbow", "shoulder", "hair", "heart", "lung", "stomach", "bone", "brain"],
+  // 9. Clothing
+  ["shirt", "pants", "dress", "shoes", "socks", "hat", "jacket", "coat", "gloves", "scarf", "belt", "tie", "sweater", "skirt", "boots", "vest", "tshirt", "jeans", "cap", "pajamas"],
+  // 10. Foods
+  ["bread", "milk", "cheese", "egg", "butter", "yogurt", "cake", "cookie", "pizza", "pasta", "rice", "soup", "salad", "sandwich", "hamburger", "hotdog", "chicken", "beef", "fish", "fruit"],
+  // 11. Shapes
+  ["circle", "square", "triangle", "rectangle", "oval", "star", "heart", "diamond", "pentagon", "hexagon", "cube", "sphere", "cone", "cylinder", "pyramid", "arrow", "cross", "crescent", "octagon", "trapezoid"],
+  // 12. Numbers (Words)
+  ["one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen", "twenty"],
+  // 13. Toys
+  ["doll", "ball", "teddy", "truck", "puzzle", "blocks", "lego", "train", "kite", "yoyo", "jumprope", "marble", "frisbee", "hulahoop", "puppet", "skateboard", "swing", "slide", "bike", "game"],
+  // 14. Sports
+  ["soccer", "basketball", "baseball", "football", "tennis", "swimming", "running", "golf", "hockey", "volleyball", "badminton", "cricket", "rugby", "boxing", "wrestling", "archery", "skiing", "cycling", "gymnastics", "karate"],
+  // 15. Weather
+  ["sunny", "cloudy", "rainy", "windy", "snowy", "foggy", "stormy", "hot", "cold", "warm", "cool", "thunder", "lightning", "rainbow", "hurricane", "tornado", "blizzard", "frost", "hail", "breeze"],
+  // 16. School Items
+  ["book", "pencil", "pen", "eraser", "ruler", "notebook", "backpack", "desk", "chair", "board", "chalk", "crayon", "scissors", "glue", "paper", "marker", "calculator", "computer", "lunchbox", "folder"],
+  // 17. Insects
+  ["ant", "bee", "butterfly", "fly", "mosquito", "ladybug", "beetle", "spider", "dragonfly", "grasshopper", "worm", "caterpillar", "moth", "wasp", "flea", "tick", "cockroach", "snail", "cricket", "termite"],
+  // 18. Ocean Creatures
+  ["shark", "dolphin", "whale", "octopus", "squid", "crab", "lobster", "seahorse", "starfish", "jellyfish", "turtle", "clam", "oyster", "coral", "seal", "walrus", "penguin", "eel", "ray", "anemone"],
+  // 19. Farm Animals
+  ["chicken", "rooster", "hen", "turkey", "goose", "donkey", "lamb", "calf", "piglet", "foal", "duckling", "chick", "kid", "colt", "bull", "ram", "horse", "cow", "sheep", "goat"],
+  // 20. Pets
+  ["dog", "cat", "fish", "bird", "hamster", "rabbit", "parrot", "turtle", "snake", "lizard", "frog", "goldfish", "gerbil", "mouse", "rat", "ferret", "guineapig", "budgie", "canary", "hedgehog"],
+  // 21. Birds
+  ["eagle", "owl", "hawk", "parrot", "robin", "sparrow", "pigeon", "dove", "crow", "raven", "swan", "peacock", "penguin", "ostrich", "flamingo", "toucan", "woodpecker", "cardinal", "hummingbird", "finch"],
+  // 22. Reptiles
+  ["snake", "lizard", "turtle", "crocodile", "alligator", "frog", "toad", "chameleon", "iguana", "gecko", "python", "viper", "cobra", "anaconda", "tortoise", "komodo", "boa", "salamander", "newt", "skink"],
+  // 23. Dinosaurs
+  ["trex", "triceratops", "stegosaurus", "velociraptor", "brachiosaurus", "pteranodon", "ankylosaurus", "spinosaurus", "apatosaurus", "diplodocus", "parasaurolophus", "styracosaurus", "carnotaurus", "allosaurus", "dilophosaurus", "gallimimus", "pachy", "therizino", "kentrosaurus", "oviraptor"],
+  // 24. Space
+  ["sun", "moon", "earth", "mars", "jupiter", "saturn", "uranus", "neptune", "venus", "mercury", "asteroid", "comet", "galaxy", "star", "rocket", "spaceship", "astronaut", "telescope", "satellite", "nebula"],
+  // 25. Emotions
+  ["happy", "sad", "angry", "scared", "surprised", "excited", "bored", "tired", "sleepy", "hungry", "thirsty", "love", "fear", "joy", "calm", "nervous", "proud", "shy", "brave", "grateful"]
+];
+
+let currentSession = 0;
+let words = [];
+let remainingWords = [];
+let found = 0;
+let currentTarget = '';
+
+const grid = document.getElementById('grid');
+const progressEl = document.getElementById('progress');
+const targetEl = document.getElementById('target');
+const themeEl = document.getElementById('theme');
+
+function speak(text) {
+  if ('speechSynthesis' in window) {
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'en-US';
+    utterance.rate = 0.9;
+    speechSynthesis.speak(utterance);
+  }
+}
+
+function updateDisplay() {
+  progressEl.textContent = `Session ${currentSession + 1}/${sessions.length} — Words found: ${found}/20`;
+  themeEl.textContent = `Theme: ${themes[currentSession]}`;
+}
+
+function setNewTarget() {
+  if (remainingWords.length === 0) {
+    found = 20;
+    updateDisplay();
+    if (currentSession < sessions.length - 1) {
+      currentSession++;
+      loadSession();
+    } else {
+      targetEl.innerHTML = '<strong>Congratulations!<br>You found all 500 words!</strong>';
+      themeEl.textContent = 'Game Complete!';
+      speak("Congratulations! You found all five hundred words!");
+    }
+    return;
+  }
+  const randIdx = Math.floor(Math.random() * remainingWords.length);
+  currentTarget = remainingWords[randIdx];
+  targetEl.textContent = currentTarget.toUpperCase();
+  speak(currentTarget);
+}
+
+function handleClick(e) {
+  if (!e.target.dataset.word) return;
+  const clickedWord = e.target.dataset.word;
+
+  if (clickedWord === currentTarget) {
+    e.target.textContent = '';
+    e.target.classList.add('found');
+    e.target.dataset.word = '';
+    const idx = remainingWords.indexOf(currentTarget);
+    if (idx > -1) remainingWords.splice(idx, 1);
+    found++;
+  }
+
+  updateDisplay();
+  setNewTarget();
+}
+
+function loadSession() {
+  words = sessions[currentSession];
+  remainingWords = [...words];
+  found = 0;
+  grid.innerHTML = '';
+  let wordIdx = 0;
+  for (let row = 0; row < 5; row++) {
+    const tr = document.createElement('tr');
+    for (let col = 0; col < 4; col++) {
+      const td = document.createElement('td');
+      const word = words[wordIdx];
+      td.textContent = word.toUpperCase();
+      td.dataset.word = word;
+      td.addEventListener('click', handleClick);
+      tr.appendChild(td);
+      wordIdx++;
+    }
+    grid.appendChild(tr);
+  }
+  updateDisplay();
+  setNewTarget();
+}
+
+document.getElementById('start').addEventListener('click', () => {
+  document.getElementById('start').style.display = 'none';
+  loadSession();
+});
+</script>
+</body>
+</html>

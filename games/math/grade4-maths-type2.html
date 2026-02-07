@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Grade 4 Math Game - 100 Questions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent2: #60a5fa;
+      --wrong: #ef4444;
+      --card: #1f2937;
+      --btn: #374151;
+      --gold: #f59e0b;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background: radial-gradient(1200px 600px at 80% -10%, #0b1025, var(--bg));
+      color: var(--text);
+    }
+    header {
+      padding: 18px 22px;
+      background: linear-gradient(120deg, #0b1025 0%, #131a35 100%);
+      border-bottom: 1px solid #0b1228;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 20px; margin: 0; letter-spacing: 0.3px; }
+    header .controls { display: flex; gap: 8px; align-items: center; }
+    header .controls button, header .controls .toggle {
+      background: var(--btn); color: var(--text);
+      border: 1px solid #1f2937; padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    }
+    header .controls button:hover { filter: brightness(1.1); }
+    .container { max-width: 920px; margin: 24px auto 40px; padding: 0 16px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .card { background: var(--card); border: 1px solid #263248; border-radius: 12px; padding: 12px 14px; }
+    .card h3 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px; }
+    .card .value { font-size: 20px; font-weight: 700; }
+    .bar { height: 10px; background: #0e1628; border: 1px solid #22304b; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+    .bar .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 240ms ease; }
+    .panel { background: var(--panel); border: 1px solid #233049; border-radius: 16px; padding: 18px; }
+    .question-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+    .question-header h2 { font-size: 18px; margin: 0; }
+    .category { font-size: 12px; color: var(--muted); background: #0e1628; border: 1px solid #233049; padding: 6px 8px; border-radius: 8px; }
+    .prompt { font-size: 18px; margin: 10px 0 14px; line-height: 1.4; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .option { background: #121a2e; border: 1px solid #233049; border-radius: 12px; padding: 12px; cursor: pointer; transition: transform 120ms ease, border-color 120ms ease, background 120ms ease; display: flex; align-items: center; gap: 10px; }
+    .option:hover { transform: translateY(-1px); border-color: #365386; }
+    .option.correct { border-color: var(--accent); background: #11221a; }
+    .option.wrong { border-color: var(--wrong); background: #2b1212; }
+    .label { font-weight: 700; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: #0e1628; border: 1px solid #233049; }
+    .explanation { margin-top: 14px; padding: 12px; border-radius: 12px; background: #0e1628; border: 1px solid #233049; display: none; }
+    .controls-row { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { background: var(--btn); color: var(--text); border: 1px solid #1f2937; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .btn.primary { background: #0d5e30; border-color: #167342; }
+    .btn.secondary { background: #1d3b63; border-color: #274a7a; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    footer { margin-top: 24px; color: var(--muted); font-size: 12px; text-align: center; }
+    .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    /* Certificate styles */
+    #certificate {
+      display: none;
+      margin-top: 20px;
+      background: #11121f;
+      border: 2px solid #39415e;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .cert-inner {
+      background: #0f1222;
+      border: 2px dashed #586186;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+    }
+    .cert-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 8px;
+      letter-spacing: 0.6px;
+    }
+    .cert-sub { color: var(--muted); margin-bottom: 14px; }
+    .cert-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-top: 14px;
+    }
+    .cert-field {
+      background: #121a2e; border: 1px solid #233049; border-radius: 10px; padding: 10px;
+    }
+    .cert-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-align: left; }
+    .cert-field input {
+      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a3858;
+      background: #0c1428; color: var(--text);
+    }
+    .cert-badge {
+      margin-top: 14px;
+      background: #151c33; border: 1px solid #2a3858; border-radius: 14px; padding: 12px;
+    }
+    .cert-score { font-size: 28px; font-weight: 800; color: var(--accent); }
+    .cert-actions { margin-top: 14px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    @media (max-width: 740px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .options { grid-template-columns: 1fr; }
+      .cert-row { grid-template-columns: 1fr; }
+    }
+
+    /* Print: focus only on certificate */
+    @media print {
+      body { background: white; }
+      header, .summary, .panel, footer { display: none !important; }
+      #certificate { display: block !important; border: none; }
+      .cert-inner { border: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Grade 4 Math Game — 100 Questions</h1>
+    <div class="controls">
+      <button id="resetBtn">Reset</button>
+      <button id="shuffleBtn">Shuffle</button>
+      <button id="reviewBtn">Review mode</button>
+      <span class="toggle" id="soundToggle" role="button" aria-pressed="false">Sound: ON</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="summary">
+      <div class="card">
+        <h3>Questions answered</h3>
+        <div class="value" id="answered">0 / 100</div>
+        <div class="bar"><div class="fill" id="progressFill"></div></div>
+      </div>
+      <div class="card">
+        <h3>Score</h3>
+        <div class="value" id="score">0</div>
+        <div class="small">+1 for correct, 0 for incorrect</div>
+      </div>
+      <div class="card">
+        <h3>Streak</h3>
+        <div class="value" id="streak">0</div>
+        <div class="small">Keep the momentum!</div>
+      </div>
+      <div class="card">
+        <h3>Category</h3>
+        <div class="value" id="currentCategory">—</div>
+        <div class="small">Focus varies by question</div>
+      </div>
+    </div>
+
+    <div class="panel" id="gamePanel">
+      <div class="question-header">
+        <h2 id="qhead">Question 1 of 100</h2>
+        <span class="category" id="qcat">—</span>
+      </div>
+      <div class="prompt" id="prompt">Loading question…</div>
+      <div class="options" id="options"></div>
+      <div class="explanation" id="explain"></div>
+
+      <div class="controls-row">
+        <button class="btn primary" id="nextBtn" disabled>Next</button>
+      </div>
+
+      <div class="grid-two">
+        <div class="card">
+          <h3>Answered correctly</h3>
+          <div class="value" id="correctCount">0</div>
+        </div>
+        <div class="card">
+          <h3>Answered incorrectly</h3>
+          <div class="value" id="wrongCount">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Section -->
+    <div id="certificate">
+      <div class="cert-inner">
+        <div class="cert-title">Math Champion Certificate</div>
+        <div class="cert-sub">Congratulations on completing 100 Grade 4 math questions!</div>
+
+        <div class="cert-row">
+          <div class="cert-field">
+            <label for="studentName">Student name</label>
+            <input id="studentName" type="text" placeholder="Type your name" />
+          </div>
+          <div class="cert-field">
+            <label for="certDate">Date</label>
+            <input id="certDate" type="text" />
+          </div>
+        </div>
+
+        <div class="cert-badge">
+          <div class="small">Score</div>
+          <div class="cert-score" id="certScore">0 / 100</div>
+          <div class="small" id="certMessage">Great effort! Keep practicing and growing.</div>
+        </div>
+
+        <div class="cert-actions">
+          <button class="btn primary" id="printCertBtn">Print/Save certificate</button>
+          <button class="btn secondary" id="playAgainBtn">Play again</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Built for Grade 4 learners: place value, arithmetic, fractions, measurement, geometry, patterns, time, and money.
+    </footer>
+  </div>
+
+  <!-- Sound effects (generated programmatically) -->
+  <script>
+    // Tiny synth for beep sounds
+    const Sound = (() => {
+      const ctx = (window.AudioContext ? new AudioContext() : null);
+      let enabled = true;
+      function beep(freq = 600, ms = 140, vol = 0.08, type = 'sine') {
+        if (!ctx || !enabled) return;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.value = vol;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); }, ms);
+      }
+      return {
+        correct() { beep(800, 140, 0.08, 'triangle'); },
+        wrong() { beep(200, 220, 0.08, 'sawtooth'); },
+        toggle() { enabled = !enabled; return enabled; },
+        isEnabled() { return enabled; }
+      };
+    })();
+  </script>
+
+  <script>
+    // Utility helpers
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+    // Categories
+    const CATS = [
+      "Number sense & place value", "Addition", "Subtraction", "Multiplication", "Division",
+      "Fractions", "Measurement & data", "Geometry", "Patterns & sequences", "Time & money"
+    ];
+
+    // Question factory functions (Grade 4 appropriate)
+    function makePlaceValue() {
+      const thousands = randInt(1, 9);
+      const hundreds = randInt(0, 9);
+      const tens = randInt(0, 9);
+      const ones = randInt(0, 9);
+      const num = thousands * 1000 + hundreds * 100 + tens * 10 + ones;
+      const askDigit = pick(["thousands", "hundreds", "tens", "ones"]);
+      let correct;
+      if (askDigit === "thousands") correct = thousands * 1000;
+      if (askDigit === "hundreds") correct = hundreds * 100;
+      if (askDigit === "tens") correct = tens * 10;
+      if (askDigit === "ones") correct = ones;
+
+      const choices = shuffle([
+        correct,
+        (askDigit === "thousands" ? (thousands * 100) : (hundreds * 100)),
+        (askDigit === "tens" ? (tens) : (tens * 10)),
+        (askDigit === "ones" ? (ones * 10) : (ones))
+      ]).slice(0,4);
+
+      return {
+        category: "Number sense & place value",
+        prompt: `What is the value of the digit in the ${askDigit} place in the number ${num}?`,
+        choices,
+        answerIndex: choices.indexOf(correct),
+        explanation: `The ${askDigit} place in ${num} represents ${correct}.`
+      };
+    }
+
+    function makeAddition() {
+      const a = randInt(100, 4999);
+      const b = randInt(100, 4999);
+      const sum = a + b;
+      const choices = shuffle([
+        sum,
+        sum + randInt(1, 15),
+        sum - randInt(1, 15),
+        sum + randInt(16, 40)
+      ]);
+      return {
+        category: "Addition",
+        prompt: `What is ${a} + ${b}?`,
+        choices,
+        answerIndex: choices.indexOf(sum),
+        explanation: `Add each place value: ${a} + ${b} = ${sum}.`
+      };
+    }
+
+    function makeSubtraction() {
+      const a = randInt(150, 9000);
+      const b = randInt(100, a - 50);
+      const diff = a - b;
+      const choices = shuffle([
+        diff,
+        diff + randInt(1, 20),
+        diff - randInt(1, 20),
+        diff + randInt(21, 50)
+      ]);
+      return {
+        category: "Subtraction",
+        prompt: `What is ${a} − ${b}?`,
+        choices,
+        answerIndex: choices.indexOf(diff),
+        explanation: `Subtract carefully: ${a} − ${b} = ${diff}.`
+      };
+    }
+
+    function makeMultiplication() {
+      const a = randInt(2, 12);
+      const b = randInt(2, 12);
+      const prod = a * b;
+      const choices = shuffle([
+        prod,
+        prod + pick([a, b]),
+        prod - pick([a, b]),
+        prod + randInt(2, 10)
+      ]);
+      return {
+        category: "Multiplication",
+        prompt: `What is ${a} × ${b}?`,
+        choices,
+        answerIndex: choices.indexOf(prod),
+        explanation: `Use facts or skip-counting: ${a} × ${b} = ${prod}.`
+      };
+    }
+
+    function makeDivision() {
+      const b = randInt(2, 12);
+      const q = randInt(2, 12);
+      const a = b * q;
+      const choices = shuffle([
+        q,
+        q + randInt(1, 4),
+        q - randInt(1, 4),
+        q + randInt(5, 9)
+      ]);
+      return {
+        category: "Division",
+        prompt: `What is ${a} ÷ ${b}?`,
+        choices,
+        answerIndex: choices.indexOf(q),
+        explanation: `Inverse of multiplication: ${a} ÷ ${b} = ${q} because ${b} × ${q} = ${a}.`
+      };
+    }
+
+    function gcd(a, b) { while (b) [a, b] = [b, a % b]; return a; }
+
+    function makeFractions() {
+      const type = pick(["compare", "equivalent", "simplify"]);
+      const n1 = randInt(1, 9), d1 = randInt(2, 10);
+      if (type === "compare") {
+        const n2 = randInt(1, 9), d2 = randInt(2, 10);
+        const v1 = n1 / d1, v2 = n2 / d2;
+        const correct = v1 > v2 ? ">" : (v1 < v2 ? "<" : "=");
+        const choices = shuffle([">", "<", "=","Cannot compare"]);
+        return {
+          category: "Fractions",
+          prompt: `Which symbol makes the statement true: ${n1}/${d1} __ ${n2}/${d2}?`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `Compare values: ${n1}/${d1} ≈ ${v1.toFixed(2)}, ${n2}/${d2} ≈ ${v2.toFixed(2)}; correct is "${correct}".`
+        };
+      }
+      if (type === "equivalent") {
+        const k = randInt(2, 5);
+        const eqN = n1 * k, eqD = d1 * k;
+        const correct = `${eqN}/${eqD}`;
+        const choices = shuffle([correct, `${n1}/${d1}`, `${eqN}/${d1}`, `${n1}/${eqD}`]).slice(0,4);
+        return {
+          category: "Fractions",
+          prompt: `Which fraction is equivalent to ${n1}/${d1}?`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `Multiply numerator and denominator by the same number: ×${k} gives ${eqN}/${eqD}.`
+        };
+      }
+      // simplify
+      const num = randInt(2, 18);
+      const den = pick([2,3,4,5,6,8,9,10,12,15,16,18,20]);
+      const g = gcd(num, den);
+      const sNum = num / g, sDen = den / g;
+      const correct = `${sNum}/${sDen}`;
+      const choices = shuffle([
+        correct,
+        `${num}/${den}`,
+        `${sNum}/${sDen + randInt(1,2)}`,
+        `${sNum + randInt(1,2)}/${sDen}`
+      ]);
+      return {
+        category: "Fractions",
+        prompt: `Simplify the fraction ${num}/${den}.`,
+        choices,
+        answerIndex: choices.indexOf(correct),
+        explanation: `Divide numerator and denominator by their greatest common divisor (${g}) to get ${correct}.`
+      };
+    }
+
+    function makeMeasurement() {
+      const type = pick(["length", "mass", "capacity", "data"]);
+      if (type === "length") {
+        const cm = randInt(10, 400);
+        const m = (cm / 100).toFixed(2);
+        const correct = `${m} m`;
+        const choices = shuffle([correct, `${(cm/10).toFixed(1)} m`, `${(cm*2/100).toFixed(2)} m`, `${(cm/1000).toFixed(3)} m`]);
+        return {
+          category: "Measurement & data",
+          prompt: `Convert ${cm} cm to meters.`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `There are 100 cm in 1 m: ${cm} ÷ 100 = ${m} m.`
+        };
+      }
+      if (type === "mass") {
+        const g = randInt(200, 3000);
+        const kg = (g / 1000).toFixed(3);
+        const correct = `${kg} kg`;
+        const choices = shuffle([correct, `${(g/100).toFixed(2)} kg`, `${(g/10).toFixed(1)} kg`, `${(g/2000).toFixed(3)} kg`]);
+        return {
+          category: "Measurement & data",
+          prompt: `Convert ${g} g to kilograms.`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `There are 1000 g in 1 kg: ${g} ÷ 1000 = ${kg} kg.`
+        };
+      }
+      if (type === "capacity") {
+        const ml = randInt(100, 2500);
+        const l = (ml / 1000).toFixed(3);
+        const correct = `${l} L`;
+        const choices = shuffle([correct, `${(ml/100).toFixed(2)} L`, `${(ml/10).toFixed(1)} L`, `${(ml/2000).toFixed(3)} L`]);
+        return {
+          category: "Measurement & data",
+          prompt: `Convert ${ml} mL to liters.`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `There are 1000 mL in 1 L: ${ml} ÷ 1000 = ${l} L.`
+        };
+      }
+      // data
+      const apples = randInt(5, 15);
+      const oranges = randInt(5, 15);
+      const bananas = randInt(5, 15);
+      const correct = apples + oranges + bananas;
+      const choices = shuffle([correct, correct - randInt(1,3), correct + randInt(1,3), Math.max(apples, oranges, bananas)]);
+      return {
+        category: "Measurement & data",
+        prompt: `A chart shows ${apples} apples, ${oranges} oranges, and ${bananas} bananas sold. How many fruits in total?`,
+        choices,
+        answerIndex: choices.indexOf(correct),
+        explanation: `Add counts: ${apples} + ${oranges} + ${bananas} = ${correct}.`
+      };
+    }
+
+    function makeGeometry() {
+      const type = pick(["angles", "shapes", "area", "perimeter"]);
+      if (type === "angles") {
+        const angle = pick([90, 180, 45, 60, 120]);
+        const map = {90: "right angle", 180: "straight angle", 45: "acute angle", 60: "acute angle", 120: "obtuse angle"};
+        const correct = map[angle];
+        const choices = shuffle(["acute angle", "right angle", "obtuse angle", "straight angle"]);
+        return {
+          category: "Geometry",
+          prompt: `What type of angle is ${angle}°?`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `${angle}° corresponds to a ${correct}.`
+        };
+      }
+      if (type === "shapes") {
+        const sides = pick([3,4,5,6]);
+        const names = {3:"triangle",4:"quadrilateral",5:"pentagon",6:"hexagon"};
+        const correct = names[sides];
+        const choices = shuffle(["triangle","quadrilateral","pentagon","hexagon"]);
+        return {
+          category: "Geometry",
+          prompt: `What do you call a polygon with ${sides} sides?`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `A ${sides}-sided polygon is a ${correct}.`
+        };
+      }
+      if (type === "area") {
+        const w = randInt(3, 15);
+        const h = randInt(3, 15);
+        const area = w * h;
+        const correct = `${area} square units`;
+        const choices = shuffle([correct, `${w + h} square units`, `${area + randInt(1,5)} square units`, `${(w*h) - randInt(1,5)} square units`]);
+        return {
+          category: "Geometry",
+          prompt: `Find the area of a rectangle with width ${w} and height ${h}.`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `Area = width × height = ${w} × ${h} = ${area} square units.`
+        };
+      }
+      const a = randInt(4,12), b = randInt(4,12);
+      const perimeter = 2 * (a + b);
+      const correct = `${perimeter} units`;
+      const choices = shuffle([correct, `${a + b} units`, `${perimeter + randInt(1,4)} units`, `${perimeter - randInt(1,4)} units`]);
+      return {
+        category: "Geometry",
+        prompt: `Find the perimeter of a rectangle with sides ${a} and ${b}.`,
+        choices,
+        answerIndex: choices.indexOf(correct),
+        explanation: `Perimeter = 2 × (length + width) = 2 × (${a} + ${b}) = ${perimeter} units.`
+      };
+    }
+
+    function makePatterns() {
+      const start = randInt(1, 20);
+      const step = pick([2,3,4,5,10]);
+      const seq = [start, start + step, start + 2*step, start + 3*step];
+      const correct = start + 4*step;
+      const choices = shuffle([correct, correct + step, correct - step, start + 5*step]);
+      return {
+        category: "Patterns & sequences",
+        prompt: `What comes next: ${seq.join(", ")} , ___ ?`,
+        choices,
+        answerIndex: choices.indexOf(correct),
+        explanation: `Pattern adds ${step} each time; next is ${start} + 4×${step} = ${correct}.`
+      };
+    }
+
+    function makeTimeMoney() {
+      const type = pick(["time", "money", "elapsed"]);
+      if (type === "time") {
+        const hours = randInt(1, 11);
+        const minutes = randInt(0, 59);
+        const addMin = pick([15, 30, 45]);
+        let totalMin = hours*60 + minutes + addMin;
+        const h2 = Math.floor(totalMin/60);
+        const m2 = totalMin % 60;
+        const correct = `${h2}:${m2.toString().padStart(2,"0")}`;
+        const choices = shuffle([
+          correct,
+          `${h2}:${(m2+5)%60}`.replace(":60", ":00"),
+          `${(h2+1)%24}:${m2.toString().padStart(2,"0")}`,
+          `${h2}:${(m2+10)%60}`.replace(":60", ":00")
+        ]);
+        return {
+          category: "Time & money",
+          prompt: `If the time is ${hours}:${minutes.toString().padStart(2,"0")} and you add ${addMin} minutes, what time is it?`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `Add ${addMin} minutes and convert to hours/minutes: ${correct}.`
+        };
+      }
+      if (type === "money") {
+        const dollars = randInt(5, 20);
+        const cents = pick([0,25,50,75]);
+        const price = dollars + cents/100;
+        const pay = dollars + randInt(1, 5) + (pick([0,25,50,75]) / 100);
+        const change = +(pay - price).toFixed(2);
+        const correct = `$${change.toFixed(2)}`;
+        const choices = shuffle([
+          correct,
+          `$${(change + 0.10).toFixed(2)}`,
+          `$${(change - 0.10).toFixed(2)}`,
+          `$${(change + 0.25).toFixed(2)}`
+        ]);
+        return {
+          category: "Time & money",
+          prompt: `An item costs $${price.toFixed(2)}. You pay $${pay.toFixed(2)}. What is your change?`,
+          choices,
+          answerIndex: choices.indexOf(correct),
+          explanation: `Change = amount paid − price = $${pay.toFixed(2)} − $${price.toFixed(2)} = ${correct}.`
+        };
+      }
+      const startH = randInt(1, 9);
+      const duration = pick([30, 45, 60, 90]);
+      const endH = Math.floor((startH*60 + duration) / 60);
+      const endM = (startH*60 + duration) % 60;
+      const correct = `${endH}:${endM.toString().padStart(2,"0")}`;
+      const choices = shuffle([
+        correct,
+        `${startH+1}:${(endM+10)%60}`.replace(":60", ":00"),
+        `${endH}:${(endM+15)%60}`.replace(":60", ":00"),
+        `${endH+1}:${endM.toString().padStart(2,"0")}`
+      ]);
+      return {
+        category: "Time & money",
+        prompt: `A movie starts at ${startH}:00 and lasts ${duration} minutes. When does it end?`,
+        choices,
+        answerIndex: choices.indexOf(correct),
+        explanation: `Add ${duration} minutes: ${startH}:00 → ${correct}.`
+      };
+    }
+
+    // Build the full set of 100 questions with balanced categories
+    function buildQuestionSet() {
+      const plan = {
+        "Number sense & place value": 10,
+        "Addition": 10,
+        "Subtraction": 10,
+        "Multiplication": 15,
+        "Division": 15,
+        "Fractions": 10,
+        "Measurement & data": 10,
+        "Geometry": 10,
+        "Patterns & sequences": 5,
+        "Time & money": 5
+      };
+      const makerMap = {
+        "Number sense & place value": makePlaceValue,
+        "Addition": makeAddition,
+        "Subtraction": makeSubtraction,
+        "Multiplication": makeMultiplication,
+        "Division": makeDivision,
+        "Fractions": makeFractions,
+        "Measurement & data": makeMeasurement,
+        "Geometry": makeGeometry,
+        "Patterns & sequences": makePatterns,
+        "Time & money": makeTimeMoney
+      };
+      const questions = [];
+      for (const [cat, count] of Object.entries(plan)) {
+        for (let i = 0; i < count; i++) {
+          let q; let tries = 0;
+          do { q = makerMap[cat](); tries++; }
+          while (questions.some(x => x.prompt === q.prompt) && tries < 5);
+          questions.push(q);
+        }
+      }
+      return shuffle(questions);
+    }
+
+    // Game state
+    let QUESTIONS = buildQuestionSet();
+    let index = 0;
+    let score = 0;
+    let streak = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let reviewMode = false;
+
+    // DOM refs
+    const answeredEl = document.getElementById('answered');
+    const scoreEl = document.getElementById('score');
+    const streakEl = document.getElementById('streak');
+    const correctEl = document.getElementById('correctCount');
+    const wrongEl = document.getElementById('wrongCount');
+    const qheadEl = document.getElementById('qhead');
+    const qcatEl = document.getElementById('qcat');
+    const promptEl = document.getElementById('prompt');
+    const optionsEl = document.getElementById('options');
+    const explainEl = document.getElementById('explain');
+    const nextBtn = document.getElementById('nextBtn');
+    const reviewBtn = document.getElementById('reviewBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const progressFill = document.getElementById('progressFill');
+    const soundToggle = document.getElementById('soundToggle');
+    const gamePanel = document.getElementById('gamePanel');
+    const certEl = document.getElementById('certificate');
+    const certScoreEl = document.getElementById('certScore');
+    const certDateEl = document.getElementById('certDate');
+    const certMsgEl = document.getElementById('certMessage');
+    const studentNameEl = document.getElementById('studentName');
+    const printCertBtn = document.getElementById('printCertBtn');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+
+    function renderQuestion() {
+      const q = QUESTIONS[index];
+      qheadEl.textContent = `Question ${index + 1} of ${QUESTIONS.length}`;
+      qcatEl.textContent = q.category;
+      promptEl.textContent = q.prompt;
+      optionsEl.innerHTML = "";
+      explainEl.style.display = "none";
+      explainEl.textContent = "";
+
+      const letters = ["A","B","C","D"];
+      q.choices.forEach((choice, i) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.dataset.idx = i;
+        div.innerHTML = `
+          <div class="label">${letters[i]}</div>
+          <div>${choice}</div>
+        `;
+        div.addEventListener('click', () => selectAnswer(i));
+        optionsEl.appendChild(div);
+      });
+
+      nextBtn.disabled = true;
+      updateSummary();
+    }
+
+    function selectAnswer(i) {
+      const q = QUESTIONS[index];
+      const options = [...document.querySelectorAll('.option')];
+      options.forEach(opt => opt.style.pointerEvents = 'none');
+
+      const correctIdx = q.answerIndex;
+      const chosen = options[i];
+      options[correctIdx].classList.add('correct');
+
+      if (i === correctIdx) {
+        chosen.classList.add('correct');
+        score += 1;
+        streak += 1;
+        correctCount += 1;
+        Sound.correct();
+      } else {
+        chosen.classList.add('wrong');
+        streak = 0;
+        wrongCount += 1;
+        Sound.wrong();
+      }
+      explainEl.style.display = 'block';
+      explainEl.textContent = q.explanation;
+      nextBtn.disabled = false;
+      updateSummary();
+    }
+
+    function updateSummary() {
+      answeredEl.textContent = `${index} / ${QUESTIONS.length}`;
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      correctEl.textContent = correctCount;
+      wrongEl.textContent = wrongCount;
+      const pct = Math.round((index / QUESTIONS.length) * 100);
+      progressFill.style.width = pct + "%";
+      document.getElementById('currentCategory').textContent = QUESTIONS[index]?.category || "—";
+    }
+
+    function finishGame() {
+      // Hide game, show certificate
+      gamePanel.style.display = 'none';
+      certEl.style.display = 'block';
+
+      const today = new Date();
+      certScoreEl.textContent = `${score} / ${QUESTIONS.length}`;
+      certDateEl.value = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+
+      // Tailored encouragement
+      const pct = Math.round((score / QUESTIONS.length) * 100);
+      let msg = "Great effort! Keep practicing and growing.";
+      if (pct >= 90) msg = "Outstanding work! You're a math star!";
+      else if (pct >= 75) msg = "Fantastic job! Your skills are shining.";
+      else if (pct >= 60) msg = "Nice progress! Practice makes you stronger.";
+      certMsgEl.textContent = msg;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (index < QUESTIONS.length - 1) {
+        index++;
+        renderQuestion();
+      } else {
+        finishGame();
+      }
+    });
+
+    reviewBtn.addEventListener('click', () => {
+      reviewMode = !reviewMode;
+      reviewBtn.textContent = reviewMode ? "Review mode: ON" : "Review mode";
+      reviewBtn.classList.toggle('secondary');
+      reviewBtn.classList.toggle('primary');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      index = 0; score = 0; streak = 0; correctCount = 0; wrongCount = 0;
+      gamePanel.style.display = 'block';
+      certEl.style.display = 'none';
+      renderQuestion();
+    });
+
+    shuffleBtn.addEventListener('click', () => {
+      QUESTIONS = buildQuestionSet();
+      index = 0; score = 0; streak = 0; correctCount = 0; wrongCount = 0;
+      gamePanel.style.display = 'block';
+      certEl.style.display = 'none';
+      renderQuestion();
+    });
+
+    soundToggle.addEventListener('click', () => {
+      const on = Sound.toggle();
+      soundToggle.textContent = on ? "Sound: ON" : "Sound: OFF";
+      soundToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    printCertBtn.addEventListener('click', () => {
+      // Ensure name visible in print
+      if (!studentNameEl.value.trim()) {
+        studentNameEl.value = "Math Champion";
+      }
+      window.print();
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      QUESTIONS = buildQuestionSet();
+      index = 0; score = 0; streak = 0; correctCount = 0; wrongCount = 0;
+      certEl.style.display = 'none';
+      gamePanel.style.display = 'block';
+      renderQuestion();
+    });
+
+    // Initialize
+    renderQuestion();
+  </script>
+</body>
+</html>

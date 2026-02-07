@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Word Hunt - Listening Challenge</title>
+    <style>
+        body {
+            margin: 0;
+            background: #f0f4f8;
+            font-family: 'Comic Sans MS', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #ui-layer {
+            width: 100%;
+            padding: 20px;
+            background: #ffffff;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        #instruction-box {
+            font-size: 32px;
+            color: #d81b60;
+            font-weight: bold;
+            padding: 10px 30px;
+            border-radius: 50px;
+            background: #fce4ec;
+            border: 3px solid #f06292;
+        }
+
+        .stat-box {
+            font-size: 24px;
+            color: #455a64;
+            background: #e1f5fe;
+            padding: 10px 20px;
+            border-radius: 15px;
+        }
+
+        #grid-container {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            grid-template-rows: repeat(4, 1fr);
+            gap: 15px;
+            padding: 30px;
+            width: 90vw;
+            height: 75vh;
+            margin-top: 10px;
+        }
+
+        .word-card {
+            background: white;
+            border: 3px solid #90caf9;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: bold;
+            color: #1565c0;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 #bbdefb;
+        }
+
+        .word-card:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .hidden {
+            visibility: hidden;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        #start-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(255,255,255,0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+        }
+
+        #start-btn {
+            padding: 20px 50px;
+            font-size: 40px;
+            background: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+    <div id="start-screen">
+        <button id="start-btn" onclick="startGame()">Start Game</button>
+    </div>
+
+    <div id="ui-layer">
+        <div class="stat-box">⭐ Found: <span id="score">0</span></div>
+        <div id="instruction-box">Listen Carefully!</div>
+        <div class="stat-box">Round: <span id="round">1</span>/20</div>
+    </div>
+
+    <div id="grid-container"></div>
+
+    <script>
+        // Expanded to 200 Words
+        const wordPool = [
+            "Apple", "Ball", "Cat", "Dog", "Egg", "Fish", "Goat", "Hat", "Ice", "Jam", "Kite", "Lamp", 
+		"Moon", "Net", "Owl", "Pig", "Queen", "Rain", "Sun", "Tree", "Up", "Van", "Web", "Box", "Yo-yo", "Zebra", 
+		"Ant", "Bear", "Cup", "Desk", "Ear", "Frog", "Gift", "Hand", "Ink", "Jar", "Key", "Leaf", "Milk", "Nose", 
+		"Orange", "Pear", "Quack", "Rock", "Star", "Tent", "Uncle", "Vest", "Wind", "X-ray", "Yellow", "Zoo", 
+		"Boat", "Car", "Duck", "Fork", "Game", "Hill", "Iron", "Jump", "King", "Lion", "Map", "Nut", "Ocean", 
+		"Park", "Quiet", "Rose", "Ship", "Tank", "Under", "Vase", "Wall", "Yard", "Zip", "Axe", "Bee", "Cake", 
+		"Door", "Eye", "Feet", "Gate", "Home", "Idea", "Joke", "Kiss", "Leg", "Mouth", "Nail", "Open", "Pencil", 
+		"Quick", "Roof", "Spoon", "Table", "Unit", "Voice", "Water", "Year", "Zero","Ant", "Bag", "Bed", "Big", 
+		"Bug", "Bus", "Cap", "Cow", "Dad", "Dig", "Dot", "Fin", "Fox", "Get", "Gum", "Hot", "Jet", "Kid", "Log", 
+		"Mad", "Mom", "Mud", "Nap", "Off", "Old", "Pan", "Pet", "Pot", "Rat", "Red", "Run", "Sit", "Six", "Tag", 
+		"Ten", "Top", "Toy", "Two", "Wet", "Wig", "Win", "Box", "Boy", "Fly", "Sky", "Try", "Cry", "Day", "Say", 
+		"May", "Play", "Stay", "Way", "New", "Few", "Low", "Now", "How", "Out", "Our", "All", "Eat", "See", "Run", 
+		"Hop", "Sit", "Stand", "Walk", "Baby", "Blue", "Cold", "Fast", "Good", "Hard", "Help", "Little", "Love", 
+		"Nice", "Soft", "Talk", "Tell", "Very", "Work", "Bird", "Fire", "Gold", "Hair", "Left", "Next", "Page", 
+		"Road", "Side", "Snow", "Stop", "Time", "Town", "Tree", "True", "Wish", "Wood"
+        ];
+
+        let sessionWords = [];
+        let currentTarget = "";
+        let score = 0;
+        let femaleVoice = null;
+
+        // Find a female voice on load
+        function loadVoices() {
+            let voices = window.speechSynthesis.getVoices();
+            // Look for common female voice names
+            femaleVoice = voices.find(v => v.name.includes('Google US English') || v.name.includes('Samantha') || v.name.includes('Female') || v.name.includes('Zira'));
+        }
+
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        function speak(text) {
+            window.speechSynthesis.cancel();
+            const msg = new SpeechSynthesisUtterance(text);
+            if (femaleVoice) msg.voice = femaleVoice;
+            msg.rate = 0.75; // Slower for clarity
+            msg.pitch = 1.2; // Friendly tone
+            window.speechSynthesis.speak(msg);
+        }
+
+        function startGame() {
+            document.getElementById('start-screen').style.display = 'none';
+            setupSession();
+        }
+
+        function setupSession() {
+            const container = document.getElementById('grid-container');
+            container.innerHTML = '';
+            score = 0;
+            document.getElementById('score').innerText = score;
+            
+            // Pick 20 unique words
+            sessionWords = [...new Set(wordPool)].sort(() => 0.5 - Math.random()).slice(0, 20);
+            
+            sessionWords.forEach(word => {
+                const div = document.createElement('div');
+                div.className = 'word-card';
+                div.innerText = word;
+                div.id = 'word-' + word;
+                div.onclick = () => checkWord(word, div);
+                container.appendChild(div);
+            });
+
+            setTimeout(pickNewTarget, 500);
+        }
+
+        function pickNewTarget() {
+            const cards = document.querySelectorAll('.word-card:not(.hidden)');
+            
+            if (cards.length === 0) {
+                speak("You found them all! You are a superstar!");
+                setTimeout(setupSession, 3000);
+                return;
+            }
+
+            // Pick a word from what's left on the screen
+            const remainingWords = Array.from(cards).map(c => c.innerText);
+            currentTarget = remainingWords[Math.floor(Math.random() * remainingWords.length)];
+            
+            document.getElementById('round').innerText = (21 - cards.length);
+            speak("Can you find... " + currentTarget + "?");
+        }
+
+        function checkWord(clickedWord, element) {
+            if (clickedWord === currentTarget) {
+                score++;
+                document.getElementById('score').innerText = score;
+                element.classList.add('hidden');
+                speak("Yes! That is " + clickedWord);
+                setTimeout(pickNewTarget, 1200);
+            } else {
+                // Moving on as requested, but naming the word they clicked for learning
+                speak("That word was " + clickedWord + ". Let's look for " + currentTarget + " next time.");
+                setTimeout(pickNewTarget, 1500);
+            }
+        }
+    </script>
+</body>
+</html>

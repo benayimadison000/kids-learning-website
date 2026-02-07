@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Grade 2 Math Game - 100 Questions</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: #111827;
+      --text: #e5e7eb;
+      --muted: #9ca3af;
+      --accent: #22c55e;
+      --accent2: #60a5fa;
+      --wrong: #ef4444;
+      --card: #1f2937;
+      --btn: #374151;
+      --gold: #f59e0b;
+    }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, "Helvetica Neue", Arial, "Noto Sans";
+      background: radial-gradient(1200px 600px at 80% -10%, #0b1025, var(--bg));
+      color: var(--text);
+    }
+    header {
+      padding: 18px 22px;
+      background: linear-gradient(120deg, #0b1025 0%, #131a35 100%);
+      border-bottom: 1px solid #0b1228;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    header h1 { font-size: 20px; margin: 0; letter-spacing: 0.3px; }
+    header .controls { display: flex; gap: 8px; align-items: center; }
+    header .controls button, header .controls .toggle {
+      background: var(--btn); color: var(--text);
+      border: 1px solid #1f2937; padding: 8px 12px; border-radius: 8px; cursor: pointer;
+    }
+    header .controls button:hover { filter: brightness(1.1); }
+    .container { max-width: 920px; margin: 24px auto 40px; padding: 0 16px; }
+    .summary { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 16px; }
+    .card { background: var(--card); border: 1px solid #263248; border-radius: 12px; padding: 12px 14px; }
+    .card h3 { margin: 0 0 8px; font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.3px; }
+    .card .value { font-size: 20px; font-weight: 700; }
+    .bar { height: 10px; background: #0e1628; border: 1px solid #22304b; border-radius: 6px; overflow: hidden; margin-top: 8px; }
+    .bar .fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--accent), var(--accent2)); transition: width 240ms ease; }
+    .panel { background: var(--panel); border: 1px solid #233049; border-radius: 16px; padding: 18px; }
+    .question-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 12px; }
+    .question-header h2 { font-size: 18px; margin: 0; }
+    .category { font-size: 12px; color: var(--muted); background: #0e1628; border: 1px solid #233049; padding: 6px 8px; border-radius: 8px; }
+    .prompt { font-size: 18px; margin: 10px 0 14px; line-height: 1.4; }
+    .options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .option { background: #121a2e; border: 1px solid #233049; border-radius: 12px; padding: 12px; cursor: pointer; transition: transform 120ms ease, border-color 120ms ease, background 120ms ease; display: flex; align-items: center; gap: 10px; }
+    .option:hover { transform: translateY(-1px); border-color: #365386; }
+    .option.correct { border-color: var(--accent); background: #11221a; }
+    .option.wrong { border-color: var(--wrong); background: #2b1212; }
+    .label { font-weight: 700; width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; background: #0e1628; border: 1px solid #233049; }
+    .explanation { margin-top: 14px; padding: 12px; border-radius: 12px; background: #0e1628; border: 1px solid #233049; display: none; }
+    .controls-row { margin-top: 14px; display: flex; gap: 8px; flex-wrap: wrap; }
+    .btn { background: var(--btn); color: var(--text); border: 1px solid #1f2937; padding: 10px 14px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+    .btn.primary { background: #0d5e30; border-color: #167342; }
+    .btn.secondary { background: #1d3b63; border-color: #274a7a; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    footer { margin-top: 24px; color: var(--muted); font-size: 12px; text-align: center; }
+    .grid-two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+    .small { font-size: 12px; color: var(--muted); }
+
+    /* Certificate styles */
+    #certificate {
+      display: none;
+      margin-top: 20px;
+      background: #11121f;
+      border: 2px solid #39415e;
+      border-radius: 16px;
+      padding: 20px;
+    }
+    .cert-inner {
+      background: #0f1222;
+      border: 2px dashed #586186;
+      border-radius: 14px;
+      padding: 18px;
+      text-align: center;
+    }
+    .cert-title {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--gold);
+      margin-bottom: 8px;
+      letter-spacing: 0.6px;
+    }
+    .cert-sub { color: var(--muted); margin-bottom: 14px; }
+    .cert-row {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 10px; margin-top: 14px;
+    }
+    .cert-field {
+      background: #121a2e; border: 1px solid #233049; border-radius: 10px; padding: 10px;
+    }
+    .cert-field label { display: block; font-size: 12px; color: var(--muted); margin-bottom: 6px; text-align: left; }
+    .cert-field input {
+      width: 100%; padding: 8px 10px; border-radius: 8px; border: 1px solid #2a3858;
+      background: #0c1428; color: var(--text);
+    }
+    .cert-badge {
+      margin-top: 14px;
+      background: #151c33; border: 1px solid #2a3858; border-radius: 14px; padding: 12px;
+    }
+    .cert-score { font-size: 28px; font-weight: 800; color: var(--accent); }
+    .cert-actions { margin-top: 14px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    @media (max-width: 740px) {
+      .summary { grid-template-columns: repeat(2, 1fr); }
+      .options { grid-template-columns: 1fr; }
+      .cert-row { grid-template-columns: 1fr; }
+    }
+    @media print {
+      body { background: white; }
+      header, .summary, .panel, footer { display: none !important; }
+      #certificate { display: block !important; border: none; }
+      .cert-inner { border: none; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Grade 2 Math Game — 100 Questions</h1>
+    <div class="controls">
+      <button id="resetBtn">Reset</button>
+      <button id="shuffleBtn">Shuffle</button>
+      <button id="reviewBtn">Review mode</button>
+      <span class="toggle" id="soundToggle" role="button" aria-pressed="false">Sound: ON</span>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="summary">
+      <div class="card">
+        <h3>Questions answered</h3>
+        <div class="value" id="answered">0 / 100</div>
+        <div class="bar"><div class="fill" id="progressFill"></div></div>
+      </div>
+      <div class="card">
+        <h3>Score</h3>
+        <div class="value" id="score">0</div>
+        <div class="small">+1 for correct, 0 for incorrect</div>
+      </div>
+      <div class="card">
+        <h3>Streak</h3>
+        <div class="value" id="streak">0</div>
+        <div class="small">You’ve got this!</div>
+      </div>
+      <div class="card">
+        <h3>Category</h3>
+        <div class="value" id="currentCategory">—</div>
+        <div class="small">Rotates by question</div>
+      </div>
+    </div>
+
+    <div class="panel" id="gamePanel">
+      <div class="question-header">
+        <h2 id="qhead">Question 1 of 100</h2>
+        <span class="category" id="qcat">—</span>
+      </div>
+      <div class="prompt" id="prompt">Loading question…</div>
+      <div class="options" id="options"></div>
+      <div class="explanation" id="explain"></div>
+
+      <div class="controls-row">
+        <button class="btn primary" id="nextBtn" disabled>Next</button>
+      </div>
+
+      <div class="grid-two">
+        <div class="card">
+          <h3>Answered correctly</h3>
+          <div class="value" id="correctCount">0</div>
+        </div>
+        <div class="card">
+          <h3>Answered incorrectly</h3>
+          <div class="value" id="wrongCount">0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Certificate Section -->
+    <div id="certificate">
+      <div class="cert-inner">
+        <div class="cert-title">Math Super Star Certificate</div>
+        <div class="cert-sub">Congratulations on completing 100 Grade 2 math questions!</div>
+
+        <div class="cert-row">
+          <div class="cert-field">
+            <label for="studentName">Student name</label>
+            <input id="studentName" type="text" placeholder="Type your name" />
+          </div>
+          <div class="cert-field">
+            <label for="certDate">Date</label>
+            <input id="certDate" type="text" />
+          </div>
+        </div>
+
+        <div class="cert-badge">
+          <div class="small">Score</div>
+          <div class="cert-score" id="certScore">0 / 100</div>
+          <div class="small" id="certMessage">Wonderful effort! Keep exploring numbers.</div>
+        </div>
+
+        <div class="cert-actions">
+          <button class="btn primary" id="printCertBtn">Print/Save certificate</button>
+          <button class="btn secondary" id="playAgainBtn">Play again</button>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      Grade 2 topics: place value (tens/ones), addition & subtraction within 100, skip counting, basic facts, time, money, measurement, shapes, and patterns.
+    </footer>
+  </div>
+
+  <!-- Sound effects (simple synth) -->
+  <script>
+    const Sound = (() => {
+      const ctx = (window.AudioContext ? new AudioContext() : null);
+      let enabled = true;
+      function beep(freq = 600, ms = 140, vol = 0.08, type = 'sine') {
+        if (!ctx || !enabled) return;
+        const o = ctx.createOscillator();
+        const g = ctx.createGain();
+        o.type = type; o.frequency.value = freq;
+        g.gain.value = vol;
+        o.connect(g); g.connect(ctx.destination);
+        o.start();
+        setTimeout(() => { o.stop(); }, ms);
+      }
+      return {
+        correct() { beep(900, 150, 0.09, 'triangle'); },
+        wrong() { beep(220, 220, 0.09, 'sawtooth'); },
+        toggle() { enabled = !enabled; return enabled; },
+        isEnabled() { return enabled; }
+      };
+    })();
+  </script>
+
+  <script>
+    // Helpers
+    const randInt = (min, max) => Math.floor(Math.random() * (max - min + 1)) + min;
+    const pick = (arr) => arr[Math.floor(Math.random() * arr.length)];
+    const shuffle = (arr) => arr.sort(() => Math.random() - 0.5);
+
+    // Categories (Grade 2)
+    const CATS = [
+      "Number sense & place value",
+      "Addition within 100",
+      "Subtraction within 100",
+      "Basic facts (× and ÷ to 5s & 10s)",
+      "Skip counting & patterns",
+      "Time",
+      "Money",
+      "Measurement",
+      "Shapes & geometry",
+      "Word problems (one-step)"
+    ];
+
+    // Fact helpers
+    function gcd(a, b) { while (b) [a, b] = [b, a % b]; return a; }
+
+    // Question generators aligned to Grade 2
+    function makePlaceValue() {
+      const tens = randInt(1, 9), ones = randInt(0, 9);
+      const num = tens * 10 + ones;
+      const ask = pick(["tens", "ones", "expanded"]);
+      if (ask === "expanded") {
+        const correct = `${tens * 10} + ${ones}`;
+        const choices = shuffle([correct, `${tens} + ${ones}`, `${tens * 10} + ${ones + 1}`, `${(tens - 1) * 10} + ${ones}`]);
+        return {
+          category: "Number sense & place value",
+          prompt: `Write ${num} in expanded form.`,
+          choices, answerIndex: choices.indexOf(correct),
+          explanation: `${num} = ${tens} tens and ${ones} ones → ${tens*10} + ${ones}.`
+        };
+      }
+      const correct = ask === "tens" ? tens : ones;
+      const choices = shuffle([correct, correct + 1, Math.max(0, correct - 1), ask === "tens" ? ones : tens]).slice(0,4);
+      return {
+        category: "Number sense & place value",
+        prompt: `How many ${ask} are in ${num}?`,
+        choices, answerIndex: choices.indexOf(correct),
+        explanation: `${num} has ${tens} tens and ${ones} ones.`
+      };
+    }
+
+    function makeAddition() {
+      // sums within 100 (with and without regrouping)
+      const a = randInt(2, 89);
+      const b = randInt(2, 89);
+      const sum = a + b;
+      // ensure within 100
+      if (sum > 100) return makeAddition();
+      const choices = shuffle([sum, sum + randInt(1, 5), sum - randInt(1, 5), sum + randInt(6, 10)]);
+      return {
+        category: "Addition within 100",
+        prompt: `What is ${a} + ${b}?`,
+        choices, answerIndex: choices.indexOf(sum),
+        explanation: `Add ones, then tens: ${a} + ${b} = ${sum}.`
+      };
+    }
+
+    function makeSubtraction() {
+      const a = randInt(20, 100);
+      const b = randInt(2, Math.min(50, a));
+      const diff = a - b;
+      const choices = shuffle([diff, diff + randInt(1, 5), diff - randInt(1, 5), diff + randInt(6, 10)]);
+      return {
+        category: "Subtraction within 100",
+        prompt: `What is ${a} − ${b}?`,
+        choices, answerIndex: choices.indexOf(diff),
+        explanation: `Subtract ones, then tens: ${a} − ${b} = ${diff}.`
+      };
+    }
+
+    function makeBasicFacts() {
+      const type = pick(["times", "divide"]);
+      if (type === "times") {
+        const a = pick([0,1,2,3,4,5,10]);
+        const b = pick([0,1,2,3,4,5,10]);
+        const prod = a * b;
+        const choices = shuffle([prod, prod + a, Math.max(0, prod - b), prod + randInt(1, 4)]);
+        return {
+          category: "Basic facts (× and ÷ to 5s & 10s)",
+          prompt: `What is ${a} × ${b}?`,
+          choices, answerIndex: choices.indexOf(prod),
+          explanation: `Think groups: ${a} groups of ${b} = ${prod}.`
+        };
+      } else {
+        const b = pick([1,2,3,4,5,10]);
+        const q = pick([0,1,2,3,4,5,10]);
+        const a = b * q;
+        const choices = shuffle([q, q + 1, Math.max(0, q - 1), q + 2]);
+        return {
+          category: "Basic facts (× and ÷ to 5s & 10s)",
+          prompt: `What is ${a} ÷ ${b}?`,
+          choices, answerIndex: choices.indexOf(q),
+          explanation: `Sharing equally: ${a} ÷ ${b} = ${q} because ${b} × ${q} = ${a}.`
+        };
+      }
+    }
+
+    function makeSkipPatterns() {
+      const step = pick([2,5,10]);
+      const start = randInt(0, 20);
+      const seq = [start, start + step, start + 2*step, start + 3*step];
+      const correct = start + 4*step;
+      const choices = shuffle([correct, correct + step, correct - step, start + 5*step]);
+      return {
+        category: "Skip counting & patterns",
+        prompt: `What comes next: ${seq.join(", ")} , ___ ?`,
+        choices, answerIndex: choices.indexOf(correct),
+        explanation: `Skip count by ${step}: add ${step} each time.`
+      };
+    }
+
+    function makeTime() {
+      const hour = randInt(1, 11);
+      const min = pick([0, 15, 30, 45]);
+      const add = pick([15, 30]);
+      const total = hour * 60 + min + add;
+      const h2 = Math.floor(total / 60);
+      const m2 = total % 60;
+      const correct = `${h2}:${m2.toString().padStart(2, "0")}`;
+      const choices = shuffle([
+        correct,
+        `${h2}:${((m2 + 5) % 60).toString().padStart(2, "0")}`,
+        `${(h2 + 1) % 24}:${m2.toString().padStart(2, "0")}`,
+        `${h2}:${((m2 + 10) % 60).toString().padStart(2, "0")}`
+      ]);
+      return {
+        category: "Time",
+        prompt: `The time is ${hour}:${min.toString().padStart(2, "0")}. Add ${add} minutes. What time is it?`,
+        choices, answerIndex: choices.indexOf(correct),
+        explanation: `Add ${add} minutes and adjust hours: ${correct}.`
+      };
+    }
+
+    function makeMoney() {
+      // US coins up to $1.00, count value or change from a round amount
+      const type = pick(["count", "change"]);
+      const coins = [1,5,10,25]; // cents
+      if (type === "count") {
+        const c1 = pick(coins), c2 = pick(coins), c3 = pick(coins), c4 = pick(coins);
+        const total = c1 + c2 + c3 + c4;
+        const correct = `$${(total/100).toFixed(2)}`;
+        const choices = shuffle([correct, `$${((total+5)/100).toFixed(2)}`, `$${((total-5)/100).toFixed(2)}`, `$${((total+10)/100).toFixed(2)}`]);
+        return {
+          category: "Money",
+          prompt: `Add the coin values: ${c1}¢, ${c2}¢, ${c3}¢, ${c4}¢`,
+          choices, answerIndex: choices.indexOf(correct),
+          explanation: `Total cents = ${total}¢ → ${correct}.`
+        };
+      } else {
+        const priceCents = pick([25, 30, 40, 50, 65, 75, 80, 90]);
+        const payCents = pick([50, 75, 100, 125]);
+        if (payCents < priceCents) return makeMoney();
+        const change = (payCents - priceCents) / 100;
+        const correct = `$${change.toFixed(2)}`;
+        const choices = shuffle([correct, `$${(change + 0.05).toFixed(2)}`, `$${(Math.max(0, change - 0.05)).toFixed(2)}`, `$${(change + 0.10).toFixed(2)}`]);
+        return {
+          category: "Money",
+          prompt: `An item costs $${(priceCents/100).toFixed(2)}. You pay $${(payCents/100).toFixed(2)}. What is the change?`,
+          choices, answerIndex: choices.indexOf(correct),
+          explanation: `Change = paid − price = $${(payCents/100).toFixed(2)} − $${(priceCents/100).toFixed(2)} = ${correct}.`
+        };
+      }
+    }
+
+    function makeMeasurement() {
+      // Compare lengths (cm) or choose appropriate unit
+      const type = pick(["compare", "unit"]);
+      if (type === "compare") {
+        const a = randInt(5, 40), b = randInt(5, 40);
+        const symbol = a > b ? ">" : (a < b ? "<" : "=");
+        const choices = shuffle([">", "<", "=","Cannot tell"]);
+        return {
+          category: "Measurement",
+          prompt: `Compare: ${a} cm __ ${b} cm`,
+          choices, answerIndex: choices.indexOf(symbol),
+          explanation: `${a} and ${b} compare as "${symbol}".`
+        };
+      } else {
+        const obj = pick(["a pencil", "a classroom", "a book", "a swimming pool"]);
+        const correct = (obj === "a pencil" || obj === "a book") ? "centimeters" : "meters";
+        const choices = shuffle(["centimeters", "meters", "kilometers", "millimeters"]);
+        return {
+          category: "Measurement",
+          prompt: `Which unit is best to measure ${obj}?`,
+          choices, answerIndex: choices.indexOf(correct),
+          explanation: `Small objects → centimeters; larger spaces → meters.`
+        };
+      }
+    }
+
+    function makeShapes() {
+      const type = pick(["name", "sides", "symmetry"]);
+      if (type === "name") {
+        const sides = pick([3,4,5,6]);
+        const names = {3:"triangle",4:"quadrilateral",5:"pentagon",6:"hexagon"};
+        const correct = names[sides];
+        const choices = shuffle(["triangle","quadrilateral","pentagon","hexagon"]);
+        return {
+          category: "Shapes & geometry",
+          prompt: `A polygon with ${sides} sides is called a:`,
+          choices, answerIndex: choices.indexOf(correct),
+          explanation: `${sides} sides → ${correct}.`
+        };
+      }
+      if (type === "sides") {
+        const shape = pick(["square","rectangle","triangle"]);
+        const sidesMap = {square:4, rectangle:4, triangle:3};
+        const correct = sidesMap[shape];
+        const choices = shuffle([correct, correct - 1, correct + 1, correct + 2]);
+        return {
+          category: "Shapes & geometry",
+          prompt: `How many sides does a ${shape} have?`,
+          choices, answerIndex: choices.indexOf(correct),
+          explanation: `${shape} has ${correct} sides.`
+        };
+      }
+      const shape = pick(["square","rectangle","circle"]);
+      const ans = shape === "circle" ? "many lines of symmetry" : "at least 2 lines of symmetry";
+      const choices = shuffle(["no lines of symmetry", "1 line of symmetry", "at least 2 lines of symmetry", "many lines of symmetry"]);
+      return {
+        category: "Shapes & geometry",
+        prompt: `Which is true about a ${shape}'s symmetry?`,
+        choices, answerIndex: choices.indexOf(ans),
+        explanation: `Circles have many symmetry lines; squares/rectangles have multiple.`
+      };
+    }
+
+    function makeWord() {
+      // One-step add/sub within 100
+      const a = randInt(5, 50), b = randInt(5, 40);
+      const type = pick(["add", "sub"]);
+      if (type === "add") {
+        const sum = a + b;
+        const choices = shuffle([sum, sum + randInt(1,5), sum - randInt(1,5), sum + randInt(6,10)]);
+        return {
+          category: "Word problems (one-step)",
+          prompt: `Mia has ${a} stickers. She gets ${b} more. How many stickers does she have now?`,
+          choices, answerIndex: choices.indexOf(sum),
+          explanation: `${a} + ${b} = ${sum} stickers.`
+        };
+      } else {
+        const big = a + b;
+        const diff = big - a;
+        const choices = shuffle([diff, diff + randInt(1,5), diff - randInt(1,5), diff + randInt(6,10)]);
+        return {
+          category: "Word problems (one-step)",
+          prompt: `There are ${big} apples. ${a} are eaten. How many are left?`,
+          choices, answerIndex: choices.indexOf(diff),
+          explanation: `${big} − ${a} = ${diff} apples.`
+        };
+      }
+    }
+
+    // Build 100 questions (balanced plan for Grade 2)
+    function buildQuestionSet() {
+      const plan = {
+        "Number sense & place value": 12,
+        "Addition within 100": 16,
+        "Subtraction within 100": 16,
+        "Basic facts (× and ÷ to 5s & 10s)": 12,
+        "Skip counting & patterns": 12,
+        "Time": 8,
+        "Money": 8,
+        "Measurement": 8,
+        "Shapes & geometry": 4,
+        "Word problems (one-step)": 4
+      };
+      const makers = {
+        "Number sense & place value": makePlaceValue,
+        "Addition within 100": makeAddition,
+        "Subtraction within 100": makeSubtraction,
+        "Basic facts (× and ÷ to 5s & 10s)": makeBasicFacts,
+        "Skip counting & patterns": makeSkipPatterns,
+        "Time": makeTime,
+        "Money": makeMoney,
+        "Measurement": makeMeasurement,
+        "Shapes & geometry": makeShapes,
+        "Word problems (one-step)": makeWord
+      };
+      const questions = [];
+      for (const [cat, count] of Object.entries(plan)) {
+        for (let i = 0; i < count; i++) {
+          let q; let tries = 0;
+          do { q = makers[cat](); tries++; }
+          while (questions.some(x => x.prompt === q.prompt) && tries < 5);
+          questions.push(q);
+        }
+      }
+      return shuffle(questions);
+    }
+
+    // Game state
+    let QUESTIONS = buildQuestionSet();
+    let index = 0;
+    let score = 0;
+    let streak = 0;
+    let correctCount = 0;
+    let wrongCount = 0;
+    let reviewMode = false;
+
+    // DOM refs
+    const answeredEl = document.getElementById('answered');
+    const scoreEl = document.getElementById('score');
+    const streakEl = document.getElementById('streak');
+    const correctEl = document.getElementById('correctCount');
+    const wrongEl = document.getElementById('wrongCount');
+    const qheadEl = document.getElementById('qhead');
+    const qcatEl = document.getElementById('qcat');
+    const promptEl = document.getElementById('prompt');
+    const optionsEl = document.getElementById('options');
+    const explainEl = document.getElementById('explain');
+    const nextBtn = document.getElementById('nextBtn');
+    const reviewBtn = document.getElementById('reviewBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const shuffleBtn = document.getElementById('shuffleBtn');
+    const progressFill = document.getElementById('progressFill');
+    const soundToggle = document.getElementById('soundToggle');
+    const gamePanel = document.getElementById('gamePanel');
+    const certEl = document.getElementById('certificate');
+    const certScoreEl = document.getElementById('certScore');
+    const certDateEl = document.getElementById('certDate');
+    const certMsgEl = document.getElementById('certMessage');
+    const studentNameEl = document.getElementById('studentName');
+    const printCertBtn = document.getElementById('printCertBtn');
+    const playAgainBtn = document.getElementById('playAgainBtn');
+
+    function renderQuestion() {
+      const q = QUESTIONS[index];
+      qheadEl.textContent = `Question ${index + 1} of ${QUESTIONS.length}`;
+      qcatEl.textContent = q.category;
+      promptEl.textContent = q.prompt;
+      optionsEl.innerHTML = "";
+      explainEl.style.display = "none";
+      explainEl.textContent = "";
+
+      const letters = ["A","B","C","D"];
+      q.choices.forEach((choice, i) => {
+        const div = document.createElement('div');
+        div.className = 'option';
+        div.dataset.idx = i;
+        div.innerHTML = `
+          <div class="label">${letters[i]}</div>
+          <div>${choice}</div>
+        `;
+        div.addEventListener('click', () => selectAnswer(i));
+        optionsEl.appendChild(div);
+      });
+
+      nextBtn.disabled = true;
+      updateSummary();
+    }
+
+    function selectAnswer(i) {
+      const q = QUESTIONS[index];
+      const options = [...document.querySelectorAll('.option')];
+      options.forEach(opt => opt.style.pointerEvents = 'none');
+
+      const correctIdx = q.answerIndex;
+      const chosen = options[i];
+      options[correctIdx].classList.add('correct');
+
+      if (i === correctIdx) {
+        chosen.classList.add('correct');
+        score += 1;
+        streak += 1;
+        correctCount += 1;
+        Sound.correct();
+      } else {
+        chosen.classList.add('wrong');
+        streak = 0;
+        wrongCount += 1;
+        Sound.wrong();
+      }
+      explainEl.style.display = 'block';
+      explainEl.textContent = q.explanation;
+      nextBtn.disabled = false;
+      updateSummary();
+    }
+
+    function updateSummary() {
+      answeredEl.textContent = `${index} / ${QUESTIONS.length}`;
+      scoreEl.textContent = score;
+      streakEl.textContent = streak;
+      correctEl.textContent = correctCount;
+      wrongEl.textContent = wrongCount;
+      const pct = Math.round((index / QUESTIONS.length) * 100);
+      progressFill.style.width = pct + "%";
+      document.getElementById('currentCategory').textContent = QUESTIONS[index]?.category || "—";
+    }
+
+    function finishGame() {
+      gamePanel.style.display = 'none';
+      certEl.style.display = 'block';
+      const today = new Date();
+      certScoreEl.textContent = `${score} / ${QUESTIONS.length}`;
+      certDateEl.value = today.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+      const pct = Math.round((score / QUESTIONS.length) * 100);
+      let msg = "Wonderful effort! Keep exploring numbers.";
+      if (pct >= 90) msg = "Amazing! You’re a Grade 2 math hero!";
+      else if (pct >= 75) msg = "Great job! Your number sense is growing.";
+      else if (pct >= 60) msg = "Nice progress! Practice makes you confident.";
+      certMsgEl.textContent = msg;
+    }
+
+    nextBtn.addEventListener('click', () => {
+      if (index < QUESTIONS.length - 1) {
+        index++;
+        renderQuestion();
+      } else {
+        finishGame();
+      }
+    });
+
+    reviewBtn.addEventListener('click', () => {
+      reviewMode = !reviewMode;
+      reviewBtn.textContent = reviewMode ? "Review mode: ON" : "Review mode";
+      reviewBtn.classList.toggle('secondary');
+      reviewBtn.classList.toggle('primary');
+    });
+
+    resetBtn.addEventListener('click', () => {
+      index = 0; score = 0; streak = 0; correctCount = 0; wrongCount = 0;
+      gamePanel.style.display = 'block';
+      certEl.style.display = 'none';
+      renderQuestion();
+    });
+
+    shuffleBtn.addEventListener('click', () => {
+      QUESTIONS = buildQuestionSet();
+      index = 0; score = 0; streak = 0; correctCount = 0; wrongCount = 0;
+      gamePanel.style.display = 'block';
+      certEl.style.display = 'none';
+      renderQuestion();
+    });
+
+    soundToggle.addEventListener('click', () => {
+      const on = Sound.toggle();
+      soundToggle.textContent = on ? "Sound: ON" : "Sound: OFF";
+      soundToggle.setAttribute('aria-pressed', on ? 'true' : 'false');
+    });
+
+    printCertBtn.addEventListener('click', () => {
+      if (!studentNameEl.value.trim()) {
+        studentNameEl.value = "Math Super Star";
+      }
+      window.print();
+    });
+
+    playAgainBtn.addEventListener('click', () => {
+      QUESTIONS = buildQuestionSet();
+      index = 0; score = 0; streak = 0; correctCount = 0; wrongCount = 0;
+      certEl.style.display = 'none';
+      gamePanel.style.display = 'block';
+      renderQuestion();
+    });
+
+    // Initialize
+    renderQuestion();
+  </script>
+</body>
+</html>

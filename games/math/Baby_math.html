@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Fruit Bowl Math Game</title>
+    <style>
+        body {
+            margin: 0;
+            background: linear-gradient(135deg, #FFDEE9 0%, #B5FFFC 100%);
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        #math-problem {
+            font-size: 80px;
+            color: #2c3e50;
+            margin-top: 20px;
+            background: rgba(255,255,255,0.8);
+            padding: 10px 40px;
+            border-radius: 50px;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+
+        .game-area {
+            display: flex;
+            justify-content: space-around;
+            width: 100%;
+            margin-top: 50px;
+        }
+
+        .box {
+            width: 250px;
+            height: 200px;
+            border: 5px dashed #4CAF50;
+            border-radius: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            padding: 10px;
+            background: rgba(255,255,255,0.3);
+            position: relative;
+        }
+
+        .box::after {
+            content: "Fill Me!";
+            position: absolute;
+            top: 40%;
+            left: 25%;
+            color: rgba(0,0,0,0.2);
+            font-size: 24px;
+        }
+
+        #pantry {
+            width: 80%;
+            height: 120px;
+            background: #fff;
+            margin-top: 40px;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 50px;
+            gap: 15px;
+            box-shadow: 0 -5px 15px rgba(0,0,0,0.1);
+        }
+
+        .fruit {
+            cursor: grab;
+            user-select: none;
+            transition: transform 0.2s;
+        }
+
+        .fruit:active { cursor: grabbing; }
+
+        #bowl {
+            margin-top: 30px;
+            font-size: 150px;
+            filter: drop-shadow(0 10px 10px rgba(0,0,0,0.2));
+            transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .celebrate { transform: scale(1.3); }
+    </style>
+</head>
+<body>
+
+    <div id="math-problem">0 + 0</div>
+
+    <div class="game-area">
+        <div id="box1" class="box" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+        <div style="font-size: 60px; align-self: center;">+</div>
+        <div id="box2" class="box" ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+    </div>
+
+    <div id="bowl">🥣</div>
+
+    <div id="pantry" ondrop="drop(event)" ondragover="allowDrop(event)">
+        </div>
+
+    <script>
+        let num1, num2, targetSum;
+        const fruits = ['🍎', '🍊', '🍐', '🍓', '🍌', '🍇'];
+
+        function speak(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.rate = 0.9;
+            window.speechSynthesis.speak(utterance);
+        }
+
+        function generateProblem() {
+            // Generate numbers where sum is <= 20
+            num1 = Math.floor(Math.random() * 10) + 1;
+            num2 = Math.floor(Math.random() * 10) + 1;
+            targetSum = num1 + num2;
+
+            document.getElementById('math-problem').innerText = `${num1} + ${num2}`;
+            document.getElementById('box1').innerHTML = '';
+            document.getElementById('box2').innerHTML = '';
+            document.getElementById('bowl').innerText = '🥣';
+            document.getElementById('bowl').classList.remove('celebrate');
+            
+            setupPantry();
+            speak(`Can you add ${num1} plus ${num2}?`);
+        }
+
+        function setupPantry() {
+            const pantry = document.getElementById('pantry');
+            pantry.innerHTML = '';
+            const totalNeeded = 30; // Extra fruit for fun
+            const randomFruit = fruits[Math.floor(Math.random() * fruits.length)];
+
+            for (let i = 0; i < totalNeeded; i++) {
+                const f = document.createElement('span');
+                f.className = 'fruit';
+                f.id = 'fruit-' + i;
+                f.draggable = true;
+                f.innerText = randomFruit;
+                f.ondragstart = (ev) => ev.dataTransfer.setData("text", ev.target.id);
+                pantry.appendChild(f);
+            }
+        }
+
+        function allowDrop(ev) { ev.preventDefault(); }
+
+        function drop(ev) {
+            ev.preventDefault();
+            const data = ev.dataTransfer.getData("text");
+            const draggedElement = document.getElementById(data);
+            
+            if (ev.target.classList.contains('box') || ev.target.id === 'pantry') {
+                ev.target.appendChild(draggedElement);
+                checkAnswer();
+            }
+        }
+
+        function checkAnswer() {
+            const count1 = document.getElementById('box1').children.length;
+            const count2 = document.getElementById('box2').children.length;
+
+            // Enforce strict order: Box 1 must match Num 1 AND Box 2 must match Num 2
+            if (count1 === num1 && count2 === num2) {
+                const bowl = document.getElementById('bowl');
+                const problemDisplay = document.getElementById('math-problem');
+
+                // Update the display to show the full answer
+                problemDisplay.innerText = `${num1} + ${num2} = ${targetSum}`;
+
+                bowl.innerText = '🥗'; // Full bowl!
+                bowl.classList.add('celebrate');
+                
+                // Clear any ongoing speech so it doesn't overlap
+                window.speechSynthesis.cancel();
+                speak(`That's right! ${num1} plus ${num2} makes ${targetSum}!`);
+                
+                // Wait 3 seconds so he can see the answer before moving to the next problem
+                setTimeout(() => {
+                    generateProblem();
+                }, 3000); 
+            } 
+        }
+
+
+        // Initialize
+        generateProblem();
+    </script>
+</body>
+</html>

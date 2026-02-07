@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Binary Bridge Builder</title>
+    <style>
+        :root { --neon-blue: #00d4ff; --neon-purple: #9400d3; --void: #02050a; }
+        body { background: var(--void); color: white; font-family: 'Orbitron', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        #game-box { width: 600px; padding: 20px; border: 3px solid var(--neon-blue); border-radius: 15px; background: rgba(0, 212, 255, 0.05); text-align: center; box-shadow: 0 0 20px rgba(0, 212, 255, 0.2); }
+        .bridge-grid { display: flex; gap: 10px; justify-content: center; margin: 20px 0; min-height: 100px; }
+        .tile { width: 80px; height: 80px; border: 2px dashed #444; border-radius: 10px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; }
+        .tile.active { border-style: solid; border-color: var(--neon-blue); background: rgba(0, 212, 255, 0.1); }
+        .tile.solved { border-color: #00ff88; background: rgba(0, 255, 136, 0.2); }
+        .target-num { font-size: 24px; font-weight: bold; color: var(--neon-blue); }
+        .block-area { display: flex; gap: 10px; justify-content: center; margin-top: 20px; padding: 15px; background: #111; border-radius: 10px; }
+        .num-card { width: 50px; height: 50px; background: var(--neon-purple); border-radius: 5px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-weight: bold; font-size: 20px; }
+        #fuel-bar { width: 100%; height: 20px; background: #222; border-radius: 10px; margin: 10px 0; overflow: hidden; }
+        #fuel-fill { width: 100%; height: 100%; background: linear-gradient(90deg, #ff0055, #00d4ff); transition: width 0.5s; }
+        .controls { margin-top: 10px; font-size: 0.9rem; color: #888; }
+    </style>
+</head>
+<body>
+
+<div id="game-box">
+    <h2 style="margin: 0; color: var(--neon-blue);">BINARY BRIDGE BUILDER</h2>
+    <p id="instruction">Memorize the bridge path!</p>
+    
+    <div id="fuel-bar"><div id="fuel-fill"></div></div>
+    
+    <div class="bridge-grid" id="bridge"></div>
+
+    <div class="block-area" id="inventory">
+        </div>
+
+    <div class="controls">
+        Current Sum: <span id="current-sum" style="color:white">0</span> | 
+        Fuel Left: <span id="fuel-val">100</span>%
+    </div>
+</div>
+
+<script>
+    let currentLevel = 1;
+    let fuel = 100;
+    let targetNum = 0;
+    let runningSum = 0;
+    let bridgeIndex = 0;
+    const totalTiles = 4;
+
+    const bridgeEl = document.getElementById('bridge');
+    const invEl = document.getElementById('inventory');
+    const sumDisplay = document.getElementById('current-sum');
+    const fuelDisplay = document.getElementById('fuel-val');
+    const fuelFill = document.getElementById('fuel-fill');
+    const instruct = document.getElementById('instruction');
+
+    function initLevel() {
+        bridgeEl.innerHTML = '';
+        invEl.innerHTML = '';
+        runningSum = 0;
+        bridgeIndex = 0;
+        sumDisplay.innerText = "0";
+        
+        // Generate a math target for the bridge
+        targetNum = Math.floor(Math.random() * 20) + (currentLevel * 5);
+        
+        // Create bridge tiles
+        for(let i=0; i < totalTiles; i++) {
+            const t = document.createElement('div');
+            t.className = 'tile';
+            if(i === 0) t.classList.add('active');
+            t.innerHTML = `<span class="target-num">${targetNum}</span>`;
+            bridgeEl.appendChild(t);
+        }
+
+        // Generate Math Blocks
+        const baseNumbers = [2, 3, 5, 10, targetNum - 7];
+        baseNumbers.forEach(n => {
+            const card = document.createElement('div');
+            card.className = 'num-card';
+            card.innerText = n;
+            card.onclick = () => addNumber(n);
+            invEl.appendChild(card);
+        });
+
+        // Memory Phase
+        instruct.innerText = "MEMORIZE: Target is " + targetNum + "!";
+        setTimeout(() => {
+            if(fuel > 0) instruct.innerText = "Use your blocks to reach " + targetNum + "!";
+        }, 3000);
+    }
+
+    function addNumber(n) {
+        if (fuel <= 0) return;
+        
+        runningSum += n;
+        fuel -= 5; // Every decision costs energy
+        
+        sumDisplay.innerText = runningSum;
+        updateFuel();
+
+        if (runningSum === targetNum) {
+            markTileSolved();
+        } else if (runningSum > targetNum) {
+            instruct.innerText = "OVERLOAD! Sum exceeded target. Resetting tile...";
+            instruct.style.color = "#ff0055";
+            setTimeout(() => {
+                runningSum = 0;
+                sumDisplay.innerText = "0";
+                instruct.style.color = "white";
+                instruct.innerText = "Try again!";
+            }, 1000);
+        }
+    }
+
+    function markTileSolved() {
+        const tiles = document.querySelectorAll('.tile');
+        tiles[bridgeIndex].classList.remove('active');
+        tiles[bridgeIndex].classList.add('solved');
+        tiles[bridgeIndex].innerHTML = "✅";
+        
+        bridgeIndex++;
+        runningSum = 0;
+        sumDisplay.innerText = "0";
+
+        if (bridgeIndex < totalTiles) {
+            tiles[bridgeIndex].classList.add('active');
+            instruct.innerText = "Tile Stabilized! Onto the next one.";
+        } else {
+            currentLevel++;
+            fuel = Math.min(100, fuel + 20); // Bonus fuel for completion
+            instruct.innerText = "BRIDGE COMPLETE! Jumping to next island...";
+            setTimeout(initLevel, 2000);
+        }
+    }
+
+    function updateFuel() {
+        fuelFill.style.width = fuel + "%";
+        fuelDisplay.innerText = fuel;
+        if (fuel <= 0) {
+            instruct.innerText = "SYSTEM FAILURE: Out of Fuel!";
+            setTimeout(() => { fuel = 100; currentLevel = 1; initLevel(); }, 3000);
+        }
+    }
+
+    initLevel();
+</script>
+</body>
+</html>

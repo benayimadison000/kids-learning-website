@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>ROVER: Galactic Explorer</title>
+    <style>
+        body { 
+            background: radial-gradient(circle at center, #1b2735 0%, #090a0f 100%);
+            color: white; 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            height: 100vh; 
+            margin: 0; 
+            overflow: hidden;
+        }
+
+        /* Animated Stars Background */
+        .stars {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: transparent url('https://www.transparenttextures.com/patterns/stardust.png') repeat;
+            z-index: -1;
+            animation: moveStars 100s linear infinite;
+        }
+
+        @keyframes moveStars {
+            from { background-position: 0 0; }
+            to { background-position: 1000px 1000px; }
+        }
+
+        #game-board {
+            position: relative;
+            width: 560px;
+            height: 560px;
+            background: rgba(22, 33, 62, 0.8);
+            border: 8px solid #48abe0;
+            border-radius: 10px;
+            display: grid;
+            /* 8x8 Grid */
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            box-shadow: 0 0 30px rgba(72, 171, 224, 0.3);
+        }
+
+        .cell {
+            border: 1px solid rgba(72, 171, 224, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: rgba(255, 255, 255, 0.2);
+        }
+
+        #rover {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            transition: all 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            font-size: 45px;
+            filter: drop-shadow(0 0 10px #48abe0);
+        }
+
+        .target { font-size: 35px; animation: pulse 1.5s infinite; filter: drop-shadow(0 0 15px gold); }
+        .obstacle { font-size: 35px; filter: drop-shadow(0 0 5px red); }
+
+        #ui { margin-bottom: 20px; text-align: center; width: 560px; }
+        #clue-box { 
+            background: rgba(15, 52, 96, 0.9); 
+            padding: 20px; 
+            border-radius: 12px; 
+            border-bottom: 4px solid #e94560;
+            font-size: 1.2rem;
+            text-shadow: 1px 1px 2px black;
+        }
+
+        .stats { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 1.2rem; letter-spacing: 2px; }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="stars"></div>
+
+    <div id="ui">
+        <div class="stats">
+            <span id="level-display" style="color: #e94560;">PLANET: 1</span>
+            <span id="pos-display" style="color: #48abe0;">COORD: A-1</span>
+        </div>
+        <div id="clue-box">Initializing Rover Systems...</div>
+    </div>
+
+    <div id="game-board" id="grid">
+        </div>
+
+    <p style="opacity: 0.7;">Navigate using <b>Arrow Keys</b></p>
+
+    <script>
+        const board = document.getElementById('game-board');
+        const rover = document.createElement('div');
+        rover.id = 'rover';
+        rover.innerHTML = '🤖';
+        board.appendChild(rover);
+
+        const clueBox = document.getElementById('clue-box');
+        const levelDisplay = document.getElementById('level-display');
+        const posDisplay = document.getElementById('pos-display');
+
+        let x = 0; // 0-7
+        let y = 0; // 0-7
+        let level = 1;
+        let targetX, targetY;
+        let obstacles = [];
+
+        // Simple Audio Generator
+        function playSound(freq, type, duration) {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.type = type;
+            oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + duration);
+            oscillator.stop(audioCtx.currentTime + duration);
+        }
+
+        const missions = [
+            {clue: "Mission 1: Welcome to the 8x8 Sector! Head 4 squares East (Right) and 5 squares North (Up).", tx: 4, ty: 5, obs: []},
+            {clue: "Mission 2: Use your sensors! Go all the way to the top wall, then all the way Right.", tx: 7, ty: 7, obs: [{x:3,y:3}, {x:3,y:4}, {x:4,y:3}]},
+            {clue: "Mission 3: Logic Test! Move to G-2. (Hint: G is the 7th letter, 2 is the 2nd row)", tx: 6, ty: 1, obs: [{x:2,y:0}, {x:2,y:1}, {x:2,y:2}]},
+            {clue: "Mission 4: Avoid the Patrols! Squeeze through the gap to reach the center (D-4).", tx: 3, ty: 3, obs: [{x:2,y:3}, {x:4,y:3}, {x:3,y:2}, {x:3,y:4}]},
+            {clue: "FINAL BOSS: The Golden Key is at H-8! Navigate the grand maze to win!", tx: 7, ty: 7, obs: [{x:0,y:1},{x:1,y:1},{x:2,y:1},{x:3,y:1},{x:4,y:1},{x:5,y:1},{x:6,y:1},{x:1,y:3},{x:2,y:3},{x:3,y:3},{x:4,y:3},{x:5,y:3},{x:6,y:3},{x:7,y:3},{x:0,y:5},{x:1,y:5},{x:2,y:5},{x:3,y:5},{x:4,y:5},{x:5,y:5},{x:6,y:5}]}
+        ];
+
+        function initGrid() {
+            board.innerHTML = '';
+            board.appendChild(rover);
+            for (let i = 0; i < 64; i++) {
+                const cell = document.createElement('div');
+                cell.className = 'cell';
+                board.appendChild(cell);
+            }
+        }
+
+        function updateUI() {
+            const letters = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
+            rover.style.left = (x * 70) + 'px';
+            rover.style.bottom = (y * 70) + 'px';
+            posDisplay.innerText = `COORD: ${letters[x]}-${y + 1}`;
+            checkCollision();
+        }
+
+        function checkCollision() {
+            if (x === targetX && y === targetY) {
+                // Success Sound (C Major Chord feel)
+                playSound(523.25, 'sine', 0.5); // C5
+                setTimeout(() => playSound(659.25, 'sine', 0.5), 100); // E5
+                
+                if (level < missions.length) {
+                    level++;
+                    setTimeout(() => { alert("Crystal Secured!"); loadLevel(); }, 200);
+                } else {
+                    alert("THE GALAXY IS SAVED! You found the Golden Key!");
+                    level = 1; loadLevel();
+                }
+            }
+
+            obstacles.forEach(o => {
+                if (x === o.x && y === o.y) {
+                    playSound(150, 'sawtooth', 0.3); // Error sound
+                    alert("CRITICAL HIT! Resetting Position...");
+                    x = 0; y = 0; updateUI();
+                }
+            });
+        }
+
+        function loadLevel() {
+            initGrid();
+            const m = missions[level-1];
+            x = 0; y = 0;
+            targetX = m.tx; targetY = m.ty;
+            obstacles = m.obs;
+            
+            clueBox.innerText = m.clue;
+            levelDisplay.innerText = `PLANET: ${level}`;
+
+            // Draw Target
+            const t = document.createElement('div');
+            t.className = 'target';
+            t.style.position = 'absolute';
+            t.style.left = (targetX * 70 + 15) + 'px';
+            t.style.bottom = (targetY * 70 + 15) + 'px';
+            t.innerHTML = (level === 5) ? '🔑' : '💎';
+            board.appendChild(t);
+
+            // Draw Obstacles
+            obstacles.forEach(obs => {
+                const o = document.createElement('div');
+                o.className = 'obstacle';
+                o.style.position = 'absolute';
+                o.style.left = (obs.x * 70 + 15) + 'px';
+                o.style.bottom = (obs.y * 70 + 15) + 'px';
+                o.innerHTML = '👾';
+                board.appendChild(o);
+            });
+
+            updateUI();
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowUp' && y < 7) y++;
+            if (e.key === 'ArrowDown' && y > 0) y--;
+            if (e.key === 'ArrowLeft' && x > 0) x--;
+            if (e.key === 'ArrowRight' && x < 7) x++;
+            updateUI();
+        });
+
+        loadLevel();
+    </script>
+</body>
+</html>

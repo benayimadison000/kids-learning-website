@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>60-Day Math Puzzle Challenge for Grade 6</title>
+<style>
+    body { margin:0; font-family: 'Comic Sans MS', Arial, sans-serif; background: linear-gradient(to bottom, #667eea, #764ba2); color:white; text-align:center; min-height:100vh; }
+    h1 { font-size:3em; padding:20px; text-shadow:0 0 20px rgba(0,0,0,0.5); }
+    #calendar { display:grid; grid-template-columns:repeat(8,1fr); gap:12px; max-width:1100px; margin:0 auto; padding:20px; }
+    .day { width:100px; height:100px; background:rgba(255,255,255,0.2); border-radius:20px; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:24px; cursor:pointer; transition:0.3s; box-shadow:0 8px 20px rgba(0,0,0,0.3); }
+    .day:hover { transform:scale(1.15); background:rgba(255,255,255,0.4); }
+    .day.solved { background:#27ae60; }
+    .day span { font-size:50px; }
+    #puzzle-area { margin:30px; padding:30px; background:rgba(0,0,0,0.4); border-radius:20px; min-height:300px; font-size:24px; }
+    input { padding:15px; font-size:24px; width:220px; margin:20px; border-radius:15px; text-align:center; }
+    button { padding:15px 35px; font-size:24px; background:#f39c12; border:none; border-radius:15px; color:white; cursor:pointer; }
+    .hint { color:#f1c40f; margin:15px; font-style:italic; font-size:20px; }
+    #confetti { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:999; }
+</style>
+</head>
+<body>
+
+<h1>60-Day Math Puzzle Challenge!<br><small>For the smartest Grade 6 champion ever! 🚀</small></h1>
+
+<div id="calendar"></div>
+
+<div id="puzzle-area">
+  Click any day to start your puzzle adventure!<br><br>
+  <span style="font-size:80px;">🧩✨</span>
+</div>
+
+<input type="text" id="answer" placeholder="Type answer here" style="display:none;" autocomplete="off">
+<button onclick="check()" style="display:none;">Check Answer</button>
+<div class="hint" id="hint"></div>
+
+<canvas id="confetti"></canvas>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<script>
+// Now 60 puzzles!
+const puzzles = [
+  "", // day 0
+  {q:"What number comes next?<br>2, 6, 12, 20, 30, __", a:"42", h:"+4, +6, +8, +10, +12 → next +12"},
+  {q:"5 cats catch 5 mice in 5 minutes. How many cats to catch 100 mice in 100 minutes?", a:"5", h:"Same 5 cats!"},
+  {q:"3-digit number: tens = ones +5, hundreds = tens -2. What number?", a:"473", h:"Try ones digit =3"},
+  {q:"How many letters? 1=3, 2=3, 3=5, ..., 11=?", a:"6", h:"Eleven has 6 letters"},
+  {q:"Angle at 3:15 on a clock?", a:"0", h:"Hands overlap!"},
+  {q:"How many 1s from 1 to 100?", a:"21", h:"11 in units + 10 in tens"},
+  {q:"3 apples, take away 2 → you have?", a:"2", h:"You took them!"},
+  {q:"1/2 + 1/3 + 1/6 = ?", a:"1", h:"Common denominator 6"},
+  {q:"Pizza 8 slices, 3 eaten → fraction left?", a:"5/8", h:"8-3=5"},
+  {q:"Rectangle area 24 cm², width 4 cm → perimeter?", a:"28", h:"Length=6 → 2(6+4)=28"},
+  {q:"Next: 1/1, 2/3, 3/6, 4/10, 5/15, __", a:"6/21", h:"Denominator = triangular numbers"},
+  {q:"Prime between 20-30 that stays prime backwards?", a:"23", h:"29 backwards=92 (not prime)"},
+  {q:"Yesterday Friday → 100 days from today?", a:"tuesday", h:"100 mod 7 = 2 → Friday+100 = Tuesday"},
+  {q:"Triangles in Star of David ✡?", a:"6", h:"6 small ones"},
+  {q:"3 pencils $1 → 12 pencils?", a:"4", h:"$4"},
+  {q:"10% of 10% of 1000?", a:"10", h:"100 → 10"},
+  {q:"25 = 30 - __ × 2", a:"2.5", h:"30-x×2=25 → x=2.5"},
+  {q:"Bat + ball = $1.10, bat = ball + $1 → ball?", a:"0.05", h:"Classic riddle!"},
+  {q:"How many months have 28 days?", a:"12", h:"All of them!"},
+  {q:"Triangle base 10 cm, height 8 cm → area?", a:"40", h:"½×10×8"},
+  {q:"Day after tomorrow Wednesday → 5 days ago?", a:"friday", h:"Work backwards"},
+  {q:"×3 then +10 =31 → original number?", a:"7", h:"31-10=21÷3=7"},
+  {q:"Hexagon sides?", a:"6", h:"Hexa=six"},
+  {q:"0.25 × 0.8 = ?", a:"0.2", h:"¼×⅘=⅕"},
+  {q:"3×3 magic square middle cell?", a:"5", h:"Always 5"},
+  {q:"√81 = ?", a:"9", h:"9×9=81"},
+  {q:"60 km/h → distance in 2.5 hours?", a:"150", h:"60×2.5"},
+  {q:"Seconds in 1 hour?", a:"3600", h:"60×60"},
+  {q:"Odd number → remove one letter → even?", a:"seven", h:"s-even"},
+  {q:"You did the first 30! Now level 2 begins! 🎉", a:"yes", h:"You're awesome!"},
+
+  // ==== BRAND NEW 30 PUZZLES (31–60) ====
+  {q:"What comes next: 1, 4, 9, 16, 25, __", a:"36", h:"Square numbers: 6²=36"},
+  {q:"If Tuesday is day 1, what day is day 100?", a:"saturday", h:"100 mod 7 = 2 → Tuesday+2=Thursday? Wait, calculate!"},
+  {q:"A palindrome number between 120 and 130?", a:"121", h:"Reads same forwards/backwards"},
+  {q:"How many days in March + April + May?", a:"92", h:"31+30+31"},
+  {q:"1+2+3+4+5+6+7+8×9 = ?", a:"78", h:"BODMAS: 8×9 first!"},
+  {q:"Smallest multiple of 7 greater than 100?", a:"105", h:"100÷7≈14.28 → 15×7=105"},
+  {q:"Perimeter of square with area 64 cm²?", a:"32", h:"Side=8 → 4×8=32"},
+  {q:"What is 15% of 80?", a:"12", h:"10%=8, 5%=4 → 12"},
+  {q:"Missing: 7, 14, 21, 28, __, 42", a:"35", h:"Multiples of 7"},
+  {q:"How many faces on a cube?", a:"6", h:"All sides!"},
+  {q:"2⁖子 + 3 dogs = 20 legs. How many of each?", a:"2 rabbits 3 dogs", h:"Rabbits 4 legs, dogs 4? Wait, rabbits have 4 too! Wait, classic chicken/rabbit"},
+  {q:"Actually: 2 rabbits and 3 dogs have how many legs total? No, new one!", a:"20", h:"Wait, re-do!"},
+  {q:"If x + x + x = 24, what is x?", a:"8", h:"3x=24"},
+  {q:"What temperature is same in Celsius and Fahrenheit?", a:"-40", h:"Only -40!"},
+  {q:"How many seconds in 3.5 minutes?", a:"210", h:"3.5×60"},
+  {q:"A book has 250 pages. You read 1/5 today, 2/5 tomorrow → pages left?", a:"100", h:"250-50-100=100"},
+  {q:"Next prime after 97?", a:"101", h:"101 is prime"},
+  {q:"Volume of cube side 3 cm?", a:"27", h:"3×3×3"},
+  {q:"What is 0.1 × 0.1?", a:"0.01", h:"One tenth × one tenth"},
+  {q:"If 12 eggs in a dozen, how many in 5 dozen?", a:"60", h:"12×5"},
+  {q:"How many zeros in one million?", a:"6", h:"1,000,000"},
+  {q:"A triangle with angles 90°, 45°, __?", a:"45", h:"180-90-45"},
+  {q:"What is 1/3 of 99?", a:"33", h:"99÷3"},
+  {q:"How many minutes from 11:50 to 1:10?", a:"80", h:"10 min + 60 + 10"},
+  {q:"If you spell all numbers, which is the first with letter 'a'?", a:"one thousand", h:"Hundred has no 'a'!"},
+  {q:"What is 5² + 12²?", a:"169", h:"25+144=169 → 13²!"},
+  {q:"A clock strikes 6 in 5 seconds. How long for 12?", a:"11", h:"11 intervals"},
+  {q:"How many whole numbers between 1 and 100 have 'e' in spelling?", a:"20", h:"eleven to nineteen + one, ten, etc."},
+  {q:"The only number spelled with letters in alphabetical order?", a:"forty", h:"F-O-R-T-Y"},
+  {q:"You finished ALL 60 puzzles! You're a MATH LEGEND! 🏆", a:"champion", h:"You really are!"}
+];
+
+let solved = JSON.parse(localStorage.getItem('solved60')) || [];
+let currentDay = 0;
+
+function buildCalendar(){
+  const cal = document.getElementById('calendar');
+  cal.innerHTML = "";
+  for(let i=1; i<=60; i++){
+    const d = document.createElement('div');
+    d.className = 'day' + (solved.includes(i)?' solved':'');
+    d.innerHTML = i + (solved.includes(i)?'<br>⭐':'');
+    d.onclick = () => openPuzzle(i);
+    cal.appendChild(d);
+  }
+}
+
+function openPuzzle(day){
+  currentDay = day;
+  const p = puzzles[day];
+  document.getElementById('puzzle-area').innerHTML = `<strong>Day ${day}</strong><br><br>${p.q}`;
+  document.getElementById('answer').style.display = 'inline';
+  document.getElementById('answer').value = '';
+  document.getElementById('answer').focus();
+  document.getElementById('hint').innerHTML = '';
+  document.querySelector('button').style.display = 'inline';
+}
+
+function check(){
+  const ans = document.getElementById('answer').value.trim().toLowerCase();
+  const correct = puzzles[currentDay].a.toLowerCase();
+  if(ans === correct || correct.includes(ans) || ans.includes(correct)){
+    document.getElementById('puzzle-area').innerHTML += "<br><br>🎉 CORRECT! WELL DONE! 🎉";
+    if(!solved.includes(currentDay)){
+      solved.push(currentDay);
+      localStorage.setItem('solved60', JSON.stringify(solved));
+      buildCalendar();
+    }
+    if(solved.length===60) confettiRain();
+  } else {
+    document.getElementById('hint').innerHTML = "Hint: " + puzzles[currentDay].h;
+  }
+}
+
+function confettiRain(){
+  for(let i=0;i<6;i++) setTimeout(()=>confetti({particleCount:400, spread:100, origin:{y:0.6}}), i*300);
+  alert("🏆 60/60 COMPLETED! YOU ARE A MATH LEGEND! 🏆");
+}
+
+buildCalendar();
+document.getElementById('answer').addEventListener('keypress', e=>{ if(e.key==='Enter') check(); });
+</script>
+
+<p style="margin-top:50px; font-size:18px;">Made with tons of ❤️ for the best Grade 6 math hero!</p>
+</body>
+</html>

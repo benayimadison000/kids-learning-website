@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math & Story Quest: The Enchanted Forest</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1511497580567-2c5d9962af68?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container, #dashboard {
+            max-width: 600px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-in;
+        }
+        #dashboard {
+            display: none;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        button:hover {
+            background-color: #45a049;
+            transform: scale(1.1);
+        }
+        #question-area, #puzzle-area {
+            margin: 20px 0;
+            animation: slideIn 0.5s ease-in;
+        }
+        #gem-counter {
+            font-size: 1.5em;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #feedback {
+            font-size: 1.2em;
+            color: #D81B60;
+        }
+        .option {
+            display: block;
+            margin: 10px auto;
+            width: 250px;
+            font-size: 16px;
+        }
+        .draggable {
+            display: inline-block;
+            padding: 10px;
+            background: #2196F3;
+            color: white;
+            margin: 5px;
+            cursor: move;
+            border-radius: 5px;
+            transition: transform 0.2s;
+        }
+        .draggable:hover {
+            transform: scale(1.05);
+        }
+        .dropzone {
+            display: inline-block;
+            width: 120px;
+            height: 60px;
+            border: 2px dashed #333;
+            margin: 5px;
+            line-height: 60px;
+            background: #f0f0f0;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        #story {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #2E7D32;
+        }
+        #toggle-dashboard {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #FF5722;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Math & Story Quest: The Enchanted Forest</h1>
+        <h2>Level 2: The Sparkling Stream</h2>
+        <p id="gem-counter">Gems: 0</p>
+        <div id="story">Alex reaches a sparkling stream, but a magical barrier blocks the way. A talking fish says, "Answer these questions to lower the barrier!"</div>
+        <div id="question-area"></div>
+        <div id="puzzle-area"></div>
+        <div id="feedback"></div>
+        <canvas id="gems-chart" width="400" height="200"></canvas>
+        <canvas id="performance-chart" width="400" height="200"></canvas>
+        <button id="toggle-dashboard">Parent Dashboard</button>
+    </div>
+    <div id="dashboard">
+        <h2>Parent Dashboard</h2>
+        <p id="dashboard-stats"></p>
+        <button onclick="toggleDashboard()">Back to Game</button>
+    </div>
+
+    <script>
+        let gems = 0;
+        let currentQuestion = 0;
+        let attempts = 0;
+        let maxAttempts = 2;
+        let difficulty = "easy"; // easy, medium, hard
+        let performance = { mathCorrect: 0, mathTotal: 4, readingCorrect: 0, readingTotal: 2, puzzleCorrect: 0, puzzleTotal: 1 };
+
+        // Expanded question set (7 tasks: 4 math, 2 reading, 1 puzzle)
+        const questions = [
+            {
+                type: "math",
+                question: "The fish needs 8 baskets, each holding 5 crystals. How many crystals in total?",
+                answer: "40",
+                options: ["35", "40", "45", "50"],
+                hint: "Imagine 8 groups of 5 stars. Count them or add 5 eight times.",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "The fish needs 12 baskets, each holding 7 crystals. How many crystals in total?",
+                        answer: "84",
+                        options: ["82", "84", "86", "88"]
+                    },
+                    hard: {
+                        question: "A dragon needs 15 baskets, each holding 9 crystals. How many crystals in total?",
+                        answer: "135",
+                        options: ["125", "130", "135", "140"]
+                    }
+                }
+            },
+            {
+                type: "math",
+                question: "Alex finds 18 shells and shares them equally among 3 friends. How many shells does each friend get?",
+                answer: "6",
+                options: ["5", "6", "7", "8"],
+                hint: "Draw 18 shells and split them into 3 equal groups. Count one group.",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Alex finds 24 shells and shares them equally among 4 friends. How many shells does each friend get?",
+                        answer: "6",
+                        options: ["5", "6", "7", "8"]
+                    },
+                    hard: {
+                        question: "Alex finds 36 shells and shares them equally among 6 friends. How many shells does each friend get?",
+                        answer: "6",
+                        options: ["5", "6", "7", "8"]
+                    }
+                }
+            },
+            {
+                type: "reading",
+                question: "Passage: 'The fish swam quickly through the stream. It was clever and knew every twist and turn.' What does 'clever' mean?",
+                answer: "Smart",
+                options: ["Slow", "Smart", "Sleepy", "Tall"],
+                hint: "The fish knew the stream well. Which word means knowing things well?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Passage: 'The fish was cunning and escaped danger.' What does 'cunning' mean?",
+                        answer: "Clever",
+                        options: ["Angry", "Clever", "Quiet", "Heavy"]
+                    },
+                    hard: {
+                        question: "Passage: 'The fish navigated the perilous stream with skill.' What does 'perilous' mean?",
+                        answer: "Dangerous",
+                        options: ["Clear", "Dangerous", "Wide", "Warm"]
+                    }
+                }
+            },
+            {
+                type: "math",
+                question: "A turtle collects 7 gems each day for 4 days. How many gems in total?",
+                answer: "28",
+                options: ["24", "28", "32", "36"],
+                hint: "Multiply the number of gems per day by the number of days.",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "A turtle collects 9 gems each day for 6 days. How many gems in total?",
+                        answer: "54",
+                        options: ["48", "54", "60", "66"]
+                    },
+                    hard: {
+                        question: "A turtle collects 11 gems each day for 8 days. How many gems in total?",
+                        answer: "88",
+                        options: ["80", "88", "96", "104"]
+                    }
+                }
+            },
+            {
+                type: "math",
+                question: "The fish has 24 minnows to feed to 4 baby fish equally. How many minnows does each baby fish get?",
+                answer: "6",
+                options: ["4", "5", "6", "7"],
+                hint: "Divide the total minnows by the number of baby fish.",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "The fish has 36 minnows to feed to 6 baby fish equally. How many minnows does each baby fish get?",
+                        answer: "6",
+                        options: ["5", "6", "7", "8"]
+                    },
+                    hard: {
+                        question: "The fish has 48 minnows to feed to 8 baby fish equally. How many minnows does each baby fish get?",
+                        answer: "6",
+                        options: ["5", "6", "7", "8"]
+                    }
+                }
+            },
+            {
+                type: "reading",
+                question: "Passage: 'The fish darted away when a shadow appeared overhead. It hid under a rock.' Why did the fish hide?",
+                answer: "It saw danger",
+                options: ["It was hungry", "It saw danger", "It was tired", "It wanted to play"],
+                hint: "The shadow made the fish dart away. What might a shadow mean?",
+                difficulty: "easy",
+                altQuestions: {
+                    medium: {
+                        question: "Passage: 'The fish vanished when a hawk circled above.' Why did the fish vanish?",
+                        answer: "To avoid the hawk",
+                        options: ["To find food", "To avoid the hawk", "To sleep", "To play"]
+                    },
+                    hard: {
+                        question: "Passage: 'The fish concealed itself when a predator loomed nearby.' Why did the fish conceal itself?",
+                        answer: "To stay safe",
+                        options: ["To rest", "To stay safe", "To eat", "To swim faster"]
+                    }
+                }
+            }
+        ];
+
+        // Puzzle data
+        const puzzle = {
+            items: ["Blue Crystal", "Green Shell", "Golden Feather"],
+            owners: ["Fish", "Turtle", "Owl"],
+            correctMatches: { "Blue Crystal": "Fish", "Green Shell": "Turtle", "Golden Feather": "Owl" }
+        };
+
+        // Gems chart
+        let gemsChartData = {
+            labels: ["Level 1", "Level 2"],
+            datasets: [{
+                label: "Gems Earned",
+                data: [5, 0], // Level 1 = 5 (preset), Level 2 updated dynamically
+                backgroundColor: ["#4CAF50", "#2196F3"],
+                borderColor: ["#388E3C", "#1976D2"],
+                borderWidth: 1
+            }]
+        };
+
+        // Performance chart (math vs. reading accuracy)
+        let performanceChartData = {
+            labels: ["Math", "Reading"],
+            datasets: [{
+                label: "Accuracy (%)",
+                data: [0, 0], // Updated dynamically
+                backgroundColor: ["#FF9800", "#9C27B0"],
+                borderColor: ["#F57C00", "#7B1FA2"],
+                borderWidth: 1
+            }]
+        };
+
+        // Initialize charts
+        const gemsCtx = document.getElementById('gems-chart').getContext('2d');
+        const gemsChart = new Chart(gemsCtx, {
+            type: 'bar',
+            data: gemsChartData,
+            options: {
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: "Gems Earned" } },
+                    x: { title: { display: true, text: "Level" } }
+                },
+                plugins: { title: { display: true, text: "Gems Earned in Crystal Caves" } }
+            }
+        });
+
+        const perfCtx = document.getElementById('performance-chart').getContext('2d');
+        const performanceChart = new Chart(perfCtx, {
+            type: 'bar',
+            data: performanceChartData,
+            options: {
+                scales: {
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: "Accuracy (%)" } },
+                    x: { title: { display: true, text: "Subject" } }
+                },
+                plugins: { title: { display: true, text: "Math vs. Reading Performance" } }
+            }
+        });
+
+        // Display question
+        function showQuestion() {
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                let html = `<p>${q.question}</p>`;
+                q.options.forEach(opt => {
+                    html += `<button class="option" onclick="checkAnswer('${opt}')">${opt}</button>`;
+                });
+                document.getElementById('question-area').innerHTML = html;
+            } else {
+                showPuzzle();
+            }
+        }
+
+        // Check answer
+        function checkAnswer(selected) {
+            const q = questions[currentQuestion];
+            if (selected === q.answer) {
+                gems += 1;
+                document.getElementById('gem-counter').textContent = `Gems: ${gems}`;
+                document.getElementById('feedback').textContent = "Great job, Alex! You earned a gem!";
+                if (q.type === "math") performance.mathCorrect++;
+                else if (q.type === "reading") performance.readingCorrect++;
+                currentQuestion++;
+                attempts = 0;
+                adjustDifficulty(true);
+                updateCharts();
+                updateDashboard();
+                showQuestion();
+            } else {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    document.getElementById('feedback').textContent = `Try again! Hint: ${q.hint}`;
+                } else {
+                    document.getElementById('feedback').textContent = `The answer was ${q.answer}. Let's move on!`;
+                    currentQuestion++;
+                    attempts = 0;
+                    adjustDifficulty(false);
+                    showQuestion();
+                }
+            }
+        }
+
+        // Adjust difficulty
+        function adjustDifficulty(correct) {
+            if (correct && difficulty === "easy") {
+                difficulty = "medium";
+                questions.forEach(q => {
+                    if (q.altQuestions.medium) {
+                        Object.assign(q, q.altQuestions.medium);
+                        q.difficulty = "medium";
+                    }
+                });
+            } else if (!correct && difficulty === "medium") {
+                difficulty = "easy";
+                questions.forEach(q => {
+                    if (q.altQuestions.easy) {
+                        Object.assign(q, q.altQuestions.easy);
+                        q.difficulty = "easy";
+                    }
+                });
+            } else if (correct && difficulty === "medium") {
+                difficulty = "hard";
+                questions.forEach(q => {
+                    if (q.altQuestions.hard) {
+                        Object.assign(q, q.altQuestions.hard);
+                        q.difficulty = "hard";
+                    }
+                });
+            }
+        }
+
+        // Update charts
+        function updateCharts() {
+            gemsChartData.datasets[0].data[1] = gems;
+            gemsChart.update();
+            performanceChartData.datasets[0].data[0] = (performance.mathCorrect / performance.mathTotal * 100).toFixed(1);
+            performanceChartData.datasets[0].data[1] = (performance.readingCorrect / performance.readingTotal * 100).toFixed(1);
+            performanceChart.update();
+        }
+
+        // Show puzzle
+        function showPuzzle() {
+            document.getElementById('question-area').innerHTML = "";
+            let html = `<p>Match each item to its owner!</p>`;
+            html += `<div>Items: `;
+            puzzle.items.forEach(item => {
+                html += `<span class="draggable" draggable="true" ondragstart="drag(event)" id="${item}">${item}</span>`;
+            });
+            html += `</div><div>Owners: `;
+            puzzle.owners.forEach(owner => {
+                html += `<div class="dropzone" ondrop="drop(event, '${owner}')" ondragover="allowDrop(event)">${owner}</div>`;
+            });
+            html += `</div>`;
+            document.getElementById('puzzle-area').innerHTML = html;
+        }
+
+        // Drag and drop
+        function allowDrop(ev) {
+            ev.preventDefault();
+        }
+
+        function drag(ev) {
+            ev.dataTransfer.setData("text", ev.target.id);
+        }
+
+        function drop(ev, owner) {
+            ev.preventDefault();
+            const item = ev.dataTransfer.getData("text");
+            if (puzzle.correctMatches[item] === owner) {
+                gems += 2;
+                performance.puzzleCorrect++;
+                document.getElementById('gem-counter').textContent = `Gems: ${gems}`;
+                document.getElementById('feedback').textContent = "Perfect match! You earned 2 gems!";
+                updateCharts();
+                updateDashboard();
+                document.getElementById('puzzle-area').innerHTML = "<p>Level Complete! You saved the stream!</p>";
+                document.getElementById('question-area').innerHTML = "<button onclick='restartGame()'>Play Again</button>";
+            } else {
+                document.getElementById('feedback').textContent = "Try again! Hint: The fish owns the Blue Crystal.";
+            }
+        }
+
+        // Parent dashboard
+        function updateDashboard() {
+            const mathAccuracy = (performance.mathCorrect / performance.mathTotal * 100).toFixed(1);
+            const readingAccuracy = (performance.readingCorrect / performance.readingTotal * 100).toFixed(1);
+            const puzzleAccuracy = (performance.puzzleCorrect / performance.puzzleTotal * 100).toFixed(1);
+            document.getElementById('dashboard-stats').innerHTML = `
+                <p>Total Gems: ${gems}</p>
+                <p>Math Accuracy: ${mathAccuracy}% (${performance.mathCorrect}/${performance.mathTotal})</p>
+                <p>Reading Accuracy: ${readingAccuracy}% (${performance.readingCorrect}/${performance.readingTotal})</p>
+                <p>Puzzle Accuracy: ${puzzleAccuracy}% (${performance.puzzleCorrect}/${performance.puzzleTotal})</p>
+                <p>Current Difficulty: ${difficulty}</p>
+            `;
+        }
+
+        function toggleDashboard() {
+            const game = document.getElementById('game-container');
+            const dashboard = document.getElementById('dashboard');
+            if (game.style.display === 'none') {
+                game.style.display = 'block';
+                dashboard.style.display = 'none';
+            } else {
+                game.style.display = 'none';
+                dashboard.style.display = 'block';
+            }
+        }
+
+        function restartGame() {
+            gems = 0;
+            currentQuestion = 0;
+            attempts = 0;
+            difficulty = "easy";
+            performance = { mathCorrect: 0, mathTotal: 4, readingCorrect: 0, readingTotal: 2, puzzleCorrect: 0, puzzleTotal: 1 };
+            questions.forEach(q => {
+                if (q.altQuestions.easy) {
+                    Object.assign(q, q.altQuestions.easy || {});
+                    q.difficulty = "easy";
+                }
+            });
+            document.getElementById('gem-counter').textContent = `Gems: ${gems}`;
+            document.getElementById('feedback').textContent = "";
+            document.getElementById('puzzle-area').innerHTML = "";
+            showQuestion();
+            updateCharts();
+            updateDashboard();
+        }
+
+        // Initialize
+        document.getElementById('toggle-dashboard').onclick = toggleDashboard;
+        showQuestion();
+        updateDashboard();
+    </script>
+</body>
+</html>

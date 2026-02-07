@@ -1,0 +1,1491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Twenty Little Wonder Stories - Grade 2</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    :root {
+      --bg: #f9fafb;
+      --card-bg: #ffffff;
+      --accent: #2563eb;
+      --accent-soft: #dbeafe;
+      --text-main: #111827;
+      --text-soft: #4b5563;
+      --border-soft: #e5e7eb;
+      --questions-bg: #ecfdf5;
+      --questions-border: #22c55e;
+      --vocab-bg: #eff6ff;
+      --vocab-border: #3b82f6;
+      --highlight: #f97316;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #eff6ff, #fefce8 50%, #f9fafb 80%);
+      color: var(--text-main);
+      line-height: 1.5;
+    }
+
+    .page {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding: 1.25rem 1rem 1.5rem;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 1rem;
+      border: 1px solid var(--border-soft);
+      box-shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+    }
+
+    header h1 {
+      margin: 0 0 0.25rem;
+      font-size: 1.9rem;
+      letter-spacing: 0.02em;
+      color: var(--accent);
+    }
+
+    header p {
+      margin: 0.15rem 0;
+      color: var(--text-soft);
+      font-size: 0.95rem;
+    }
+
+    .subtitle {
+      font-weight: 600;
+      color: var(--highlight);
+    }
+
+    /* Layout */
+
+    .layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.1fr) minmax(0, 2fr);
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    @media (max-width: 800px) {
+      .layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* TOC */
+
+    .toc {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 1rem;
+      border: 1px solid var(--border-soft);
+      padding: 1rem 1rem 1.25rem;
+      max-height: 80vh;
+      overflow-y: auto;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      position: sticky;
+      top: 1.25rem;
+    }
+
+    .toc h2 {
+      font-size: 1.1rem;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      color: var(--text-main);
+    }
+
+    .toc p {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin: 0 0 0.75rem;
+    }
+
+    .toc ol {
+      list-style: none;
+      margin: 0;
+      padding: 0;
+      font-size: 0.9rem;
+    }
+
+    .toc li {
+      margin: 0.1rem 0;
+    }
+
+    .toc a {
+      display: block;
+      text-decoration: none;
+      color: var(--text-soft);
+      padding: 0.25rem 0.4rem;
+      border-radius: 0.5rem;
+      transition: all 0.15s ease-out;
+    }
+
+    .toc a span {
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-right: 0.25rem;
+      font-weight: 600;
+    }
+
+    .toc a:hover {
+      background: var(--accent-soft);
+      color: var(--accent);
+    }
+
+    .toc a.active {
+      background: var(--accent);
+      color: #ffffff;
+    }
+
+    .toc a.active span {
+      color: #bfdbfe;
+    }
+
+    /* Main content */
+
+    .content {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 1rem;
+      border: 1px solid var(--border-soft);
+      padding: 1.25rem 1.25rem 1.75rem;
+      box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08);
+      max-height: 80vh;
+      overflow-y: auto;
+      scroll-behavior: smooth;
+    }
+
+    .story {
+      margin-bottom: 2rem;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px dashed #e5e7eb;
+    }
+
+    .story:last-of-type {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+    }
+
+    .story-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .story-title {
+      font-size: 1.25rem;
+      margin: 0;
+      color: var(--accent);
+    }
+
+    .story-number {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-soft);
+      font-weight: 600;
+    }
+
+    .reading-level {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin-bottom: 0.8rem;
+    }
+
+    .story p {
+      margin: 0.2rem 0;
+      font-size: 1rem;
+    }
+
+    .story p span.sentence-number {
+      font-weight: 600;
+      color: var(--accent);
+      margin-right: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    /* Boxes */
+
+    .box {
+      border-radius: 0.8rem;
+      padding: 0.65rem 0.75rem 0.75rem;
+      margin-top: 0.7rem;
+      font-size: 0.95rem;
+    }
+
+    .box h3 {
+      margin: 0 0 0.4rem;
+      font-size: 0.95rem;
+    }
+
+    .box ul {
+      margin: 0.1rem 0 0;
+      padding-left: 1.1rem;
+    }
+
+    .box li {
+      margin: 0.1rem 0;
+    }
+
+    .questions {
+      background: var(--questions-bg);
+      border: 1px solid var(--questions-border);
+    }
+
+    .questions h3 {
+      color: #15803d;
+    }
+
+    .vocab {
+      background: var(--vocab-bg);
+      border: 1px solid var(--vocab-border);
+    }
+
+    .vocab h3 {
+      color: var(--accent);
+    }
+
+    .vocab-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      margin-top: 0.2rem;
+    }
+
+    .vocab-table th,
+    .vocab-table td {
+      border: 1px solid #d1d5db;
+      padding: 0.3rem 0.4rem;
+    }
+
+    .vocab-table th {
+      background: #e5edff;
+      text-align: left;
+    }
+
+    /* Navigation buttons (inside content) */
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+    }
+
+    .nav-buttons button {
+      flex: 1;
+      border-radius: 999px;
+      border: 1px solid var(--border-soft);
+      padding: 0.4rem 0.6rem;
+      background: #f3f4f6;
+      cursor: pointer;
+      color: var(--text-soft);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      transition: all 0.15s ease-out;
+    }
+
+    .nav-buttons button:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .nav-buttons button:disabled {
+      opacity: 0.45;
+      cursor: default;
+      background: #f9fafb;
+    }
+
+    /* Scrollbar styling for nicer reading */
+
+    .content::-webkit-scrollbar,
+    .toc::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .content::-webkit-scrollbar-track,
+    .toc::-webkit-scrollbar-track {
+      background: #f3f4f6;
+      border-radius: 999px;
+    }
+
+    .content::-webkit-scrollbar-thumb,
+    .toc::-webkit-scrollbar-thumb {
+      background: #cbd5f5;
+      border-radius: 999px;
+    }
+
+    .content::-webkit-scrollbar-thumb:hover,
+    .toc::-webkit-scrollbar-thumb:hover {
+      background: #93c5fd;
+    }
+
+    /* Small helper text */
+
+    .helper {
+      font-size: 0.8rem;
+      color: var(--text-soft);
+      margin-top: 0.3rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Twenty Little Wonder Stories</h1>
+      <p class="subtitle">A Gentle Reading Journey for Grade 2</p>
+      <p>Click a story title on the left to jump, or use the <strong>Next</strong>/<strong>Back</strong> buttons under each story.</p>
+    </header>
+
+    <div class="layout">
+      <!-- TABLE OF CONTENTS -->
+      <nav class="toc" aria-label="Table of contents">
+        <h2>Story Guide</h2>
+        <p>Start at Story 1 and move forward, or choose any story that looks interesting.</p>
+        <ol>
+          <li><a href="#story-1"><span>1</span> Mila Finds a Tiny Seed</a></li>
+          <li><a href="#story-2"><span>2</span> Liam and the Friendly Wind</a></li>
+          <li><a href="#story-3"><span>3</span> Nia’s Magical Paintbrush</a></li>
+          <li><a href="#story-4"><span>4</span> The Day the Classroom Grew Wings</a></li>
+          <li><a href="#story-5"><span>5</span> Jonas and the Midnight Garden</a></li>
+          <li><a href="#story-6"><span>6</span> Ava and the Helpful Shadow</a></li>
+          <li><a href="#story-7"><span>7</span> Tariq and the Cloud That Followed Him</a></li>
+          <li><a href="#story-8"><span>8</span> The Library That Woke Up at Night</a></li>
+          <li><a href="#story-9"><span>9</span> Maya and the Moonlit Message</a></li>
+          <li><a href="#story-10"><span>10</span> Zara and the Whispering Shell</a></li>
+          <li><a href="#story-11"><span>11</span> Diego and the Forest of Echoes</a></li>
+          <li><a href="#story-12"><span>12</span> Lila and the Lantern of Wishes</a></li>
+          <li><a href="#story-13"><span>13</span> Kofi and the Drum That Spoke in Beats</a></li>
+          <li><a href="#story-14"><span>14</span> Sofia and the Snowflake Parade</a></li>
+          <li><a href="#story-15"><span>15</span> Jaden and the Robot with a Kind Heart</a></li>
+          <li><a href="#story-16"><span>16</span> Emi and the Rainbow Bridge</a></li>
+          <li><a href="#story-17"><span>17</span> Noah and the Clock That Paused Time</a></li>
+          <li><a href="#story-18"><span>18</span> Hana and the Garden of Talking Leaves</a></li>
+          <li><a href="#story-19"><span>19</span> Ariel and the Mountain That Hummed</a></li>
+          <li><a href="#story-20"><span>20</span> The Day the Stars Came to Visit</a></li>
+        </ol>
+        <p class="helper">Tip: She can scroll the stories on the right and come back here anytime.</p>
+      </nav>
+
+      <!-- MAIN CONTENT -->
+      <main class="content">
+        <!-- STORY 1 -->
+        <section id="story-1" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Mila Finds a Tiny Seed</h2>
+            <span class="story-number">Story 1 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Mila found a tiny brown seed resting quietly under a big shady tree today.</p>
+          <p><span class="sentence-number">2.</span> She held the seed gently and wondered what kind of plant it might become.</p>
+          <p><span class="sentence-number">3.</span> Her teacher said every seed carries a secret waiting patiently for the right moment.</p>
+          <p><span class="sentence-number">4.</span> Mila placed the seed carefully inside a small pot filled with soft dark soil.</p>
+          <p><span class="sentence-number">5.</span> She pressed the soil lightly so the seed felt safe, warm, and tucked in.</p>
+          <p><span class="sentence-number">6.</span> Mila added a little water, watching it soak slowly into the thirsty ground.</p>
+          <p><span class="sentence-number">7.</span> She placed the pot near the window where bright sunlight shone through each morning.</p>
+          <p><span class="sentence-number">8.</span> Every day, Mila checked the pot and whispered encouraging words to the hidden seed.</p>
+          <p><span class="sentence-number">9.</span> She wondered if the seed could somehow hear her gentle voice and friendly hopes.</p>
+          <p><span class="sentence-number">10.</span> One morning, Mila noticed a tiny green sprout pushing bravely through the soft soil.</p>
+          <p><span class="sentence-number">11.</span> She felt proud because her careful work helped the seed begin its growing journey.</p>
+          <p><span class="sentence-number">12.</span> The sprout stretched toward the warm sunlight like a dancer reaching for the sky.</p>
+          <p><span class="sentence-number">13.</span> Mila promised to keep watering it gently so it stayed strong, healthy, and growing.</p>
+          <p><span class="sentence-number">14.</span> She imagined the sprout becoming a tall plant with bright leaves waving happily.</p>
+          <p><span class="sentence-number">15.</span> Mila learned that small actions, done patiently, can help something wonderful slowly grow.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What helped the tiny seed begin growing into a sprout?</li>
+              <li>Why do you think Mila felt proud when she saw the sprout?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>sprout</td><td>a small new plant just beginning to grow</td></tr>
+              <tr><td>soil</td><td>the dirt where plants grow</td></tr>
+              <tr><td>sunlight</td><td>the bright light that comes from the sun</td></tr>
+              <tr><td>gently</td><td>softly and carefully</td></tr>
+              <tr><td>journey</td><td>a path or process of going from one stage to another</td></tr>
+              <tr><td>proud</td><td>feeling happy about something you did</td></tr>
+              <tr><td>secret</td><td>something hidden or not yet known</td></tr>
+              <tr><td>encourage</td><td>to give support or confidence</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button disabled>Back</button>
+            <button onclick="goToStory(2)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 2 -->
+        <section id="story-2" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Liam and the Friendly Wind</h2>
+            <span class="story-number">Story 2 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Liam stepped outside and felt a soft morning wind brushing gently across his cheeks.</p>
+          <p><span class="sentence-number">2.</span> The wind carried tiny leaves that danced happily around him like playful little friends.</p>
+          <p><span class="sentence-number">3.</span> Liam closed his eyes and listened to the wind whispering secrets through the tall trees.</p>
+          <p><span class="sentence-number">4.</span> He imagined the wind traveling far away, visiting mountains, oceans, and bright sunny fields.</p>
+          <p><span class="sentence-number">5.</span> Liam stretched out his arms and let the cool breeze swirl gently around his body.</p>
+          <p><span class="sentence-number">6.</span> The wind lifted his kite string, tugging softly as if inviting him to start playing.</p>
+          <p><span class="sentence-number">7.</span> Liam ran across the yard, watching his colorful kite rise slowly into the sky.</p>
+          <p><span class="sentence-number">8.</span> The wind grew stronger, helping the kite climb higher until it fluttered proudly above him.</p>
+          <p><span class="sentence-number">9.</span> Liam laughed because the wind felt like a friendly partner guiding the kite’s smooth flight.</p>
+          <p><span class="sentence-number">10.</span> He wondered how the wind could move without being seen by anyone at all.</p>
+          <p><span class="sentence-number">11.</span> His teacher once said wind is moving air that travels from one place to another.</p>
+          <p><span class="sentence-number">12.</span> Liam thought that made sense because he could feel it even though it stayed invisible.</p>
+          <p><span class="sentence-number">13.</span> The kite dipped slightly, but the wind quickly lifted it again with gentle steady strength.</p>
+          <p><span class="sentence-number">14.</span> Liam thanked the wind for helping him enjoy such a peaceful and joyful morning.</p>
+          <p><span class="sentence-number">15.</span> He learned that even invisible things can make a big difference in our everyday lives.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>How did the wind help Liam enjoy his morning?</li>
+              <li>What invisible things can you think of that still make life better?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>breeze</td><td>a soft, gentle wind</td></tr>
+              <tr><td>invisible</td><td>something you cannot see</td></tr>
+              <tr><td>steady</td><td>strong and even, without stopping</td></tr>
+              <tr><td>flutter</td><td>to move lightly and quickly in the air</td></tr>
+              <tr><td>partner</td><td>someone or something that works with you</td></tr>
+              <tr><td>tug</td><td>to pull gently</td></tr>
+              <tr><td>whisper</td><td>to speak very softly</td></tr>
+              <tr><td>travel</td><td>to move from one place to another</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(1)">Back</button>
+            <button onclick="goToStory(3)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 3 -->
+        <section id="story-3" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Nia’s Magical Paintbrush</h2>
+            <span class="story-number">Story 3 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Nia loved painting pictures because colors helped her imagine wonderful stories inside her mind.</p>
+          <p><span class="sentence-number">2.</span> One morning, she found a shiny paintbrush resting quietly beside her favorite watercolor set.</p>
+          <p><span class="sentence-number">3.</span> The brush sparkled softly, almost as if tiny stars were hiding inside its smooth bristles.</p>
+          <p><span class="sentence-number">4.</span> Nia dipped the brush into blue paint and gently swept it across her paper.</p>
+          <p><span class="sentence-number">5.</span> To her surprise, the blue paint shimmered brightly like sunlight dancing across calm ocean waves.</p>
+          <p><span class="sentence-number">6.</span> She added green paint, and suddenly the color glowed like fresh leaves after gentle spring rain.</p>
+          <p><span class="sentence-number">7.</span> Nia giggled because the magical brush made every color look brighter, warmer, and more alive.</p>
+          <p><span class="sentence-number">8.</span> She painted a tall tree, and the branches seemed to sway slightly in the breeze.</p>
+          <p><span class="sentence-number">9.</span> Then she painted a small bird, and its wings sparkled as if ready to flutter.</p>
+          <p><span class="sentence-number">10.</span> Nia felt amazed because her artwork looked like it wanted to leap off the page.</p>
+          <p><span class="sentence-number">11.</span> She whispered a thank‑you to the brush for helping her create such beautiful pictures.</p>
+          <p><span class="sentence-number">12.</span> The brush glowed softly, almost like it understood her gratitude and felt happy to help.</p>
+          <p><span class="sentence-number">13.</span> Nia promised to use the brush kindly and paint pictures that made people smile.</p>
+          <p><span class="sentence-number">14.</span> She cleaned the brush carefully, knowing magical tools deserved gentle care and respect.</p>
+          <p><span class="sentence-number">15.</span> Nia learned that creativity grows strongest when you treat your tools with love and patience.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What made Nia’s paintbrush feel magical?</li>
+              <li>How do you think Nia showed respect for her painting tools?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>shimmer</td><td>to shine softly with small moving lights</td></tr>
+              <tr><td>bristles</td><td>the hairs on a brush</td></tr>
+              <tr><td>gratitude</td><td>a feeling of thankfulness</td></tr>
+              <tr><td>sway</td><td>to move gently back and forth</td></tr>
+              <tr><td>flutter</td><td>to move wings quickly and lightly</td></tr>
+              <tr><td>create</td><td>to make something new</td></tr>
+              <tr><td>respect</td><td>to treat something with care</td></tr>
+              <tr><td>watercolor</td><td>paint that mixes with water to make soft colors</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(2)">Back</button>
+            <button onclick="goToStory(4)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 4 -->
+        <section id="story-4" class="story">
+          <div class="story-header">
+            <h2 class="story-title">The Day the Classroom Grew Wings</h2>
+            <span class="story-number">Story 4 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> During morning reading time, the classroom suddenly shook gently like something exciting was happening.</p>
+          <p><span class="sentence-number">2.</span> The windows rattled softly, and colorful posters fluttered as if touched by invisible playful hands.</p>
+          <p><span class="sentence-number">3.</span> Ms. Rivera smiled calmly and told everyone to stay seated and keep breathing slowly.</p>
+          <p><span class="sentence-number">4.</span> A warm golden glow filled the room, making the walls shimmer like sunlight on water.</p>
+          <p><span class="sentence-number">5.</span> Then the entire classroom lifted slightly, rising gently above the school playground outside.</p>
+          <p><span class="sentence-number">6.</span> The children gasped, but the room felt steady, safe, and surprisingly comfortable in the air.</p>
+          <p><span class="sentence-number">7.</span> They peeked outside and saw tiny houses below, looking like colorful blocks in a game.</p>
+          <p><span class="sentence-number">8.</span> Birds flew beside the windows, chirping happily as if welcoming the floating classroom.</p>
+          <p><span class="sentence-number">9.</span> Ms. Rivera explained that imagination can lift learning higher when everyone works together kindly.</p>
+          <p><span class="sentence-number">10.</span> The classroom drifted slowly across the sky, passing fluffy clouds shaped like animals and castles.</p>
+          <p><span class="sentence-number">11.</span> The children pointed excitedly, naming shapes and laughing at the cloud creatures drifting nearby.</p>
+          <p><span class="sentence-number">12.</span> After a peaceful journey, the classroom gently floated back down to its usual place.</p>
+          <p><span class="sentence-number">13.</span> Everything settled quietly, and the golden glow faded like a dream ending softly.</p>
+          <p><span class="sentence-number">14.</span> Ms. Rivera reminded them that learning feels magical when curiosity and teamwork fill the room.</p>
+          <p><span class="sentence-number">15.</span> The children agreed, feeling proud that their imaginations helped the classroom soar so beautifully.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>Why do you think the classroom floated into the sky?</li>
+              <li>How can teamwork make learning feel magical?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>shimmer</td><td>to shine softly with moving light</td></tr>
+              <tr><td>drift</td><td>to move slowly without effort</td></tr>
+              <tr><td>steady</td><td>firm and not shaking</td></tr>
+              <tr><td>curiosity</td><td>wanting to learn or know more</td></tr>
+              <tr><td>imagination</td><td>the ability to create ideas in your mind</td></tr>
+              <tr><td>flutter</td><td>to move lightly and quickly</td></tr>
+              <tr><td>glow</td><td>a warm, soft light</td></tr>
+              <tr><td>teamwork</td><td>working together to reach a goal</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(3)">Back</button>
+            <button onclick="goToStory(5)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 5 -->
+        <section id="story-5" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Jonas and the Midnight Garden</h2>
+            <span class="story-number">Story 5 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Jonas woke up quietly and noticed a soft silver light shining through his bedroom window.</p>
+          <p><span class="sentence-number">2.</span> Curious, he followed the glow outside and discovered a hidden garden behind the tall fence.</p>
+          <p><span class="sentence-number">3.</span> The garden sparkled gently, as if tiny stars had fallen and landed on every leaf.</p>
+          <p><span class="sentence-number">4.</span> Jonas stepped carefully, feeling the cool grass tickle his toes like playful little feathers.</p>
+          <p><span class="sentence-number">5.</span> Flowers opened slowly, glowing bright colors that changed each time he blinked his eyes.</p>
+          <p><span class="sentence-number">6.</span> A small rabbit hopped forward, its fur shining softly like moonlight on fresh snow.</p>
+          <p><span class="sentence-number">7.</span> Jonas knelt down, and the rabbit nudged his hand kindly, inviting him to explore more.</p>
+          <p><span class="sentence-number">8.</span> He followed the rabbit along a winding path lined with glowing stones and whispering plants.</p>
+          <p><span class="sentence-number">9.</span> The plants rustled softly, sounding like friendly voices greeting Jonas as he walked by.</p>
+          <p><span class="sentence-number">10.</span> At the center of the garden, a tall tree shimmered with silver leaves and golden fruit.</p>
+          <p><span class="sentence-number">11.</span> Jonas touched the tree gently, feeling warmth spread through his hands like a comforting hug.</p>
+          <p><span class="sentence-number">12.</span> The rabbit nodded proudly, as if showing Jonas a secret place meant only for kind hearts.</p>
+          <p><span class="sentence-number">13.</span> Jonas promised to return someday and protect the magical garden from harm or carelessness.</p>
+          <p><span class="sentence-number">14.</span> As he walked home, the garden’s glow faded slowly, leaving a peaceful memory behind.</p>
+          <p><span class="sentence-number">15.</span> Jonas learned that special places appear when you explore with kindness, curiosity, and courage.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>Why do you think the garden only appeared at night?</li>
+              <li>What made Jonas a good visitor to the magical garden?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>rustle</td><td>a soft, gentle sound made by leaves</td></tr>
+              <tr><td>winding</td><td>twisting or curving in different directions</td></tr>
+              <tr><td>nudge</td><td>a small, gentle push</td></tr>
+              <tr><td>shimmer</td><td>to shine with soft moving light</td></tr>
+              <tr><td>courage</td><td>bravery when doing something new</td></tr>
+              <tr><td>explore</td><td>to look around and discover things</td></tr>
+              <tr><td>feathers</td><td>soft body covering of birds</td></tr>
+              <tr><td>harm</td><td>damage or hurt</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(4)">Back</button>
+            <button onclick="goToStory(6)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 6 -->
+        <section id="story-6" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Ava and the Helpful Shadow</h2>
+            <span class="story-number">Story 6 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Ava noticed her shadow following her closely as she walked across the sunny playground.</p>
+          <p><span class="sentence-number">2.</span> She waved her arms, and her shadow copied every movement like a loyal dancing partner.</p>
+          <p><span class="sentence-number">3.</span> When Ava skipped forward, the shadow skipped too, landing softly beside her feet.</p>
+          <p><span class="sentence-number">4.</span> Ava giggled because the shadow seemed extra lively and cheerful that bright morning.</p>
+          <p><span class="sentence-number">5.</span> Suddenly, the shadow pointed toward a lonely soccer ball resting near the tall fence.</p>
+          <p><span class="sentence-number">6.</span> Ava understood the hint and walked over to pick up the forgotten ball gently.</p>
+          <p><span class="sentence-number">7.</span> She carried it to a younger student who looked sad and unsure what to do.</p>
+          <p><span class="sentence-number">8.</span> The student’s face brightened instantly when Ava offered the ball with a friendly smile.</p>
+          <p><span class="sentence-number">9.</span> Ava’s shadow stretched proudly, almost as if celebrating her thoughtful and kind decision.</p>
+          <p><span class="sentence-number">10.</span> Later, the shadow pointed again, this time toward a classmate struggling with heavy books.</p>
+          <p><span class="sentence-number">11.</span> Ava hurried over and helped carry the books, making the classmate feel supported and appreciated.</p>
+          <p><span class="sentence-number">12.</span> The shadow grew taller, glowing faintly like it was filled with warm, happy light.</p>
+          <p><span class="sentence-number">13.</span> Ava realized her shadow wasn’t magical; it simply reminded her to notice people’s needs.</p>
+          <p><span class="sentence-number">14.</span> She promised to keep helping others, even when her shadow wasn’t pointing the way.</p>
+          <p><span class="sentence-number">15.</span> Ava learned that kindness grows stronger each time you choose to help someone around you.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>How did Ava’s shadow help her make kind choices?</li>
+              <li>What are small ways you can help someone today?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>partner</td><td>someone who works or plays with you</td></tr>
+              <tr><td>thoughtful</td><td>caring about other people’s feelings</td></tr>
+              <tr><td>appreciate</td><td>to feel thankful for something</td></tr>
+              <tr><td>decision</td><td>a choice you make</td></tr>
+              <tr><td>brighten</td><td>to make someone feel happier</td></tr>
+              <tr><td>loyal</td><td>always staying with someone</td></tr>
+              <tr><td>cheerful</td><td>happy and positive</td></tr>
+              <tr><td>supported</td><td>helped or cared for</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(5)">Back</button>
+            <button onclick="goToStory(7)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 7 -->
+        <section id="story-7" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Tariq and the Cloud That Followed Him</h2>
+            <span class="story-number">Story 7 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Tariq noticed a tiny white cloud floating low above him during his morning walk.</p>
+          <p><span class="sentence-number">2.</span> The cloud drifted gently, staying close as if it wanted to keep him company.</p>
+          <p><span class="sentence-number">3.</span> Tariq waved politely, and the cloud puffed happily like it understood his friendly greeting.</p>
+          <p><span class="sentence-number">4.</span> When Tariq walked faster, the cloud floated quicker, matching his steps with playful energy.</p>
+          <p><span class="sentence-number">5.</span> He stopped suddenly, and the cloud paused too, hovering quietly like a patient friend.</p>
+          <p><span class="sentence-number">6.</span> Tariq pointed toward the park, and the cloud drifted forward, inviting him to follow.</p>
+          <p><span class="sentence-number">7.</span> At the swings, the cloud lowered slightly, shading Tariq from the warm afternoon sun.</p>
+          <p><span class="sentence-number">8.</span> He felt grateful because the cloud made the day cooler and more comfortable for playing.</p>
+          <p><span class="sentence-number">9.</span> When Tariq climbed the slide, the cloud rose higher, cheering him on with soft puffs.</p>
+          <p><span class="sentence-number">10.</span> Children nearby giggled, amazed that a cloud seemed to be following Tariq everywhere.</p>
+          <p><span class="sentence-number">11.</span> Tariq explained that maybe the cloud liked kindness and wanted to stay near friendly people.</p>
+          <p><span class="sentence-number">12.</span> The cloud puffed proudly, almost glowing as sunlight sparkled through its fluffy edges.</p>
+          <p><span class="sentence-number">13.</span> When it was time to go home, the cloud floated slowly toward the evening sky.</p>
+          <p><span class="sentence-number">14.</span> Tariq waved goodbye, knowing the cloud would return whenever he needed gentle company.</p>
+          <p><span class="sentence-number">15.</span> He learned that friendship can appear in surprising forms when your heart stays open.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>Why do you think the cloud chose to follow Tariq?</li>
+              <li>How can kindness attract new friends?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>drift</td><td>to move slowly through the air</td></tr>
+              <tr><td>hover</td><td>to stay in one place while floating</td></tr>
+              <tr><td>grateful</td><td>feeling thankful</td></tr>
+              <tr><td>edges</td><td>the outer parts of something</td></tr>
+              <tr><td>puff</td><td>a small burst of air or movement</td></tr>
+              <tr><td>shade</td><td>to block sunlight</td></tr>
+              <tr><td>friendly</td><td>kind and welcoming</td></tr>
+              <tr><td>appear</td><td>to show up or become visible</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(6)">Back</button>
+            <button onclick="goToStory(8)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 8 -->
+        <section id="story-8" class="story">
+          <div class="story-header">
+            <h2 class="story-title">The Library That Woke Up at Night</h2>
+            <span class="story-number">Story 8 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Every night, the town library grew quiet as the last visitors left for their homes.</p>
+          <p><span class="sentence-number">2.</span> But when the clock struck midnight, the books stretched softly like waking animals.</p>
+          <p><span class="sentence-number">3.</span> Shelves creaked gently as stories whispered to one another about their exciting adventures.</p>
+          <p><span class="sentence-number">4.</span> A brave chapter book hopped down first, landing lightly on the smooth wooden floor.</p>
+          <p><span class="sentence-number">5.</span> Picture books fluttered open, showing bright illustrations that glowed like tiny lanterns.</p>
+          <p><span class="sentence-number">6.</span> The books gathered in a circle, sharing tales about dragons, oceans, and faraway planets.</p>
+          <p><span class="sentence-number">7.</span> A shy poetry book read a gentle poem that sounded like wind through tall grass.</p>
+          <p><span class="sentence-number">8.</span> The other books listened quietly, enjoying the peaceful rhythm of the soft words.</p>
+          <p><span class="sentence-number">9.</span> Suddenly, a map book unfolded itself, revealing mountains, rivers, and sparkling treasure paths.</p>
+          <p><span class="sentence-number">10.</span> The books cheered, excited to imagine new journeys they might share with future readers.</p>
+          <p><span class="sentence-number">11.</span> They practiced opening smoothly so children could turn pages easily during reading time.</p>
+          <p><span class="sentence-number">12.</span> They dusted each other carefully, wanting to look neat and welcoming for tomorrow’s visitors.</p>
+          <p><span class="sentence-number">13.</span> As dawn approached, the books hurried back to their shelves, settling into perfect rows.</p>
+          <p><span class="sentence-number">14.</span> When the librarian arrived, everything looked normal, though the room felt extra warm.</p>
+          <p><span class="sentence-number">15.</span> The books knew their nighttime meeting helped them stay ready to inspire curious minds.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>Why do the books prepare themselves for the next day?</li>
+              <li>What kinds of stories do you think the books shared?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>illustrations</td><td>pictures in a book</td></tr>
+              <tr><td>rhythm</td><td>a pattern of sounds or movements</td></tr>
+              <tr><td>treasure</td><td>something valuable or special</td></tr>
+              <tr><td>dawn</td><td>the early morning light</td></tr>
+              <tr><td>inspire</td><td>to encourage someone to imagine or create</td></tr>
+              <tr><td>creak</td><td>a soft, squeaky sound</td></tr>
+              <tr><td>unfold</td><td>to open something that was folded</td></tr>
+              <tr><td>gather</td><td>to come together</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(7)">Back</button>
+            <button onclick="goToStory(9)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 9 -->
+        <section id="story-9" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Maya and the Moonlit Message</h2>
+            <span class="story-number">Story 9 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Maya loved looking at the moon because its gentle glow made her feel peaceful inside.</p>
+          <p><span class="sentence-number">2.</span> One night, she noticed a tiny sparkle moving across the moon’s bright surface.</p>
+          <p><span class="sentence-number">3.</span> The sparkle grew brighter until it formed a small glowing shape that looked like a letter.</p>
+          <p><span class="sentence-number">4.</span> Maya blinked twice, wondering if the moon was trying to send her a secret message.</p>
+          <p><span class="sentence-number">5.</span> Slowly, the glowing shape stretched into words that shimmered softly in the night sky.</p>
+          <p><span class="sentence-number">6.</span> The message said, “Keep shining kindly,” written in beautiful silver moonlight letters.</p>
+          <p><span class="sentence-number">7.</span> Maya felt surprised but also warm, like the moon understood her gentle heart.</p>
+          <p><span class="sentence-number">8.</span> She whispered a thank‑you, hoping the moon could somehow hear her quiet voice.</p>
+          <p><span class="sentence-number">9.</span> The moonlight brightened slightly, as if nodding proudly at her thoughtful response.</p>
+          <p><span class="sentence-number">10.</span> Maya remembered times she helped friends, shared toys, and comforted classmates feeling lonely.</p>
+          <p><span class="sentence-number">11.</span> She realized the moon’s message encouraged her to continue spreading kindness everywhere she went.</p>
+          <p><span class="sentence-number">12.</span> Maya promised to shine brightly by choosing helpful, caring actions every single day.</p>
+          <p><span class="sentence-number">13.</span> The moon’s glow softened, wrapping her in a peaceful blanket of silver light.</p>
+          <p><span class="sentence-number">14.</span> Maya went to bed smiling, feeling guided by the moon’s gentle, encouraging message.</p>
+          <p><span class="sentence-number">15.</span> She learned that even small acts of kindness can light up the world around her.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What message did the moon give Maya?</li>
+              <li>How can small acts of kindness brighten someone’s day?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>shimmer</td><td>to shine with soft, moving light</td></tr>
+              <tr><td>message</td><td>words that share information</td></tr>
+              <tr><td>encourage</td><td>to give support or confidence</td></tr>
+              <tr><td>peaceful</td><td>calm and quiet</td></tr>
+              <tr><td>sparkle</td><td>a small point of bright light</td></tr>
+              <tr><td>surface</td><td>the outside part of something</td></tr>
+              <tr><td>comfort</td><td>to help someone feel better</td></tr>
+              <tr><td>brighten</td><td>to make something lighter or happier</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(8)">Back</button>
+            <button onclick="goToStory(10)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 10 -->
+        <section id="story-10" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Zara and the Whispering Shell</h2>
+            <span class="story-number">Story 10 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Zara found a shiny seashell on the beach that sparkled softly under the warm sunlight.</p>
+          <p><span class="sentence-number">2.</span> When she held it close, she heard a gentle whisper coming from inside the shell.</p>
+          <p><span class="sentence-number">3.</span> The whisper sounded like tiny waves singing a peaceful song just for her ears.</p>
+          <p><span class="sentence-number">4.</span> Zara sat down on the sand, curious about what the magical shell might tell her.</p>
+          <p><span class="sentence-number">5.</span> The whisper grew clearer, describing colorful fish swimming happily through bright coral gardens.</p>
+          <p><span class="sentence-number">6.</span> Zara imagined the underwater world, filled with shimmering plants and friendly sea creatures.</p>
+          <p><span class="sentence-number">7.</span> The shell whispered about dolphins leaping gracefully, splashing water that glittered like diamonds.</p>
+          <p><span class="sentence-number">8.</span> Zara smiled, feeling like she was visiting the ocean’s secret world without getting wet.</p>
+          <p><span class="sentence-number">9.</span> She thanked the shell for sharing such beautiful stories from deep beneath the waves.</p>
+          <p><span class="sentence-number">10.</span> The shell hummed softly, almost as if it appreciated her kind and gentle gratitude.</p>
+          <p><span class="sentence-number">11.</span> Zara promised to protect the beach and keep the ocean clean for all sea life.</p>
+          <p><span class="sentence-number">12.</span> She picked up small pieces of trash, knowing even tiny actions could help the environment.</p>
+          <p><span class="sentence-number">13.</span> The shell glowed faintly, proud of Zara’s thoughtful and caring decision.</p>
+          <p><span class="sentence-number">14.</span> Zara placed the shell safely in her pocket, feeling connected to the ocean’s magic.</p>
+          <p><span class="sentence-number">15.</span> She learned that nature shares its stories when you listen with a caring heart.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What stories did the shell share with Zara?</li>
+              <li>How can we help protect the ocean?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>shimmer</td><td>to shine softly with moving light</td></tr>
+              <tr><td>coral</td><td>colorful underwater structures made by tiny sea animals</td></tr>
+              <tr><td>graceful</td><td>smooth and beautiful in movement</td></tr>
+              <tr><td>environment</td><td>the natural world around us</td></tr>
+              <tr><td>gratitude</td><td>feeling thankful</td></tr>
+              <tr><td>protect</td><td>to keep something safe</td></tr>
+              <tr><td>creature</td><td>a living animal</td></tr>
+              <tr><td>whisper</td><td>a very soft sound</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(9)">Back</button>
+            <button onclick="goToStory(11)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 11 -->
+        <section id="story-11" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Diego and the Forest of Echoes</h2>
+            <span class="story-number">Story 11 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Diego entered the forest and noticed every sound he made echoed gently around him.</p>
+          <p><span class="sentence-number">2.</span> When he clapped his hands, the forest clapped back softly like a friendly companion.</p>
+          <p><span class="sentence-number">3.</span> Diego laughed, and the echo repeated his laughter with a warm, cheerful tone.</p>
+          <p><span class="sentence-number">4.</span> He whispered “hello,” and the forest answered with a tiny, playful “hello” in return.</p>
+          <p><span class="sentence-number">5.</span> Birds chirped above him, and their songs bounced through the trees like musical ripples.</p>
+          <p><span class="sentence-number">6.</span> Diego followed a winding path covered with soft leaves that crunched lightly under his shoes.</p>
+          <p><span class="sentence-number">7.</span> Each crunch echoed, sounding like tiny footsteps walking beside him through the forest.</p>
+          <p><span class="sentence-number">8.</span> Diego felt safe, knowing the forest was listening kindly and keeping him company.</p>
+          <p><span class="sentence-number">9.</span> He reached a small pond where frogs croaked, their voices echoing like bouncing rubber balls.</p>
+          <p><span class="sentence-number">10.</span> Diego tossed a pebble into the water, watching circles spread across the calm surface.</p>
+          <p><span class="sentence-number">11.</span> The echo repeated the splash, making it sound like two pebbles landed together.</p>
+          <p><span class="sentence-number">12.</span> Diego realized the forest wasn’t copying him; it was celebrating every sound he made.</p>
+          <p><span class="sentence-number">13.</span> He thanked the forest for being such a fun and friendly place to explore.</p>
+          <p><span class="sentence-number">14.</span> The echo replied softly, almost like it was saying “you’re welcome” with a smile.</p>
+          <p><span class="sentence-number">15.</span> Diego learned that nature can feel alive when you listen closely and appreciate its sounds.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>Why did Diego enjoy the forest echoes?</li>
+              <li>What sounds do you think would echo in a forest?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>echo</td><td>a sound that repeats after bouncing off surfaces</td></tr>
+              <tr><td>ripple</td><td>small waves moving across water</td></tr>
+              <tr><td>companion</td><td>someone or something that keeps you company</td></tr>
+              <tr><td>surface</td><td>the top layer of something</td></tr>
+              <tr><td>celebrate</td><td>to show happiness or appreciation</td></tr>
+              <tr><td>croak</td><td>the sound a frog makes</td></tr>
+              <tr><td>winding</td><td>curving or twisting</td></tr>
+              <tr><td>appreciate</td><td>to feel thankful for something</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(10)">Back</button>
+            <button onclick="goToStory(12)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 12 -->
+        <section id="story-12" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Lila and the Lantern of Wishes</h2>
+            <span class="story-number">Story 12 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Lila discovered a small lantern glowing softly on her porch during a quiet evening.</p>
+          <p><span class="sentence-number">2.</span> The lantern flickered gently, as if inviting her to pick it up and explore.</p>
+          <p><span class="sentence-number">3.</span> When Lila touched it, warm light spread across her hands like a comforting blanket.</p>
+          <p><span class="sentence-number">4.</span> A tiny voice whispered, “Make a wish,” sounding kind, gentle, and full of hope.</p>
+          <p><span class="sentence-number">5.</span> Lila wished for courage to try new things that sometimes felt a little scary.</p>
+          <p><span class="sentence-number">6.</span> The lantern glowed brighter, filling her heart with warm, brave energy.</p>
+          <p><span class="sentence-number">7.</span> She imagined herself raising her hand in class, even when unsure of the answer.</p>
+          <p><span class="sentence-number">8.</span> She pictured joining games at recess, even when she felt shy or nervous.</p>
+          <p><span class="sentence-number">9.</span> The lantern’s light wrapped around her, reminding her she was stronger than she believed.</p>
+          <p><span class="sentence-number">10.</span> Lila whispered another wish, hoping her friends would feel brave and confident too.</p>
+          <p><span class="sentence-number">11.</span> The lantern sparkled happily, sending tiny golden lights drifting into the evening air.</p>
+          <p><span class="sentence-number">12.</span> Lila felt proud, knowing her wishes were kind and meant to help others.</p>
+          <p><span class="sentence-number">13.</span> She placed the lantern gently on the porch, thanking it for its warm encouragement.</p>
+          <p><span class="sentence-number">14.</span> The lantern dimmed slowly, resting peacefully after sharing its magical bravery.</p>
+          <p><span class="sentence-number">15.</span> Lila learned that courage grows when you believe in yourself and wish good things for others.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What did Lila wish for?</li>
+              <li>How can courage help you try new things?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>courage</td><td>bravery when facing something difficult</td></tr>
+              <tr><td>flicker</td><td>to shine with quick, small movements</td></tr>
+              <tr><td>confident</td><td>feeling sure of yourself</td></tr>
+              <tr><td>encourage</td><td>to give support or hope</td></tr>
+              <tr><td>nervous</td><td>feeling worried or unsure</td></tr>
+              <tr><td>lantern</td><td>a light you can carry</td></tr>
+              <tr><td>explore</td><td>to discover new places or ideas</td></tr>
+              <tr><td>energy</td><td>strength or power to do something</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(11)">Back</button>
+            <button onclick="goToStory(13)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 13 -->
+        <section id="story-13" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Kofi and the Drum That Spoke in Beats</h2>
+            <span class="story-number">Story 13 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Kofi found a small wooden drum in his grandmother’s attic covered with colorful painted patterns.</p>
+          <p><span class="sentence-number">2.</span> When he tapped it gently, the drum answered with a warm, friendly beat.</p>
+          <p><span class="sentence-number">3.</span> Kofi tapped again, and the drum responded with a rhythm that sounded like happy footsteps.</p>
+          <p><span class="sentence-number">4.</span> He smiled, realizing the drum wanted to communicate through music instead of words.</p>
+          <p><span class="sentence-number">5.</span> Kofi played a soft pattern, and the drum echoed it with joyful energy.</p>
+          <p><span class="sentence-number">6.</span> Birds outside chirped along, creating a cheerful song that filled the entire room.</p>
+          <p><span class="sentence-number">7.</span> Kofi tapped faster, and the drum encouraged him with strong, steady beats.</p>
+          <p><span class="sentence-number">8.</span> He felt brave enough to try a new rhythm he had never played before.</p>
+          <p><span class="sentence-number">9.</span> The drum responded proudly, sounding like it approved of his creative idea.</p>
+          <p><span class="sentence-number">10.</span> Kofi imagined sharing the drum’s music with friends during recess at school.</p>
+          <p><span class="sentence-number">11.</span> He pictured everyone dancing together, moving happily to the drum’s lively beat.</p>
+          <p><span class="sentence-number">12.</span> The drum hummed softly, almost like it enjoyed being part of Kofi’s imagination.</p>
+          <p><span class="sentence-number">13.</span> Kofi thanked the drum for helping him feel confident and excited about music.</p>
+          <p><span class="sentence-number">14.</span> He promised to practice kindly so the drum’s voice stayed strong and beautiful.</p>
+          <p><span class="sentence-number">15.</span> Kofi learned that music can speak clearly even when no words are used at all.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>How did the drum communicate with Kofi?</li>
+              <li>Why do you think music can express feelings?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>rhythm</td><td>a pattern of beats or sounds</td></tr>
+              <tr><td>steady</td><td>even and regular</td></tr>
+              <tr><td>attic</td><td>a room at the top of a house</td></tr>
+              <tr><td>lively</td><td>full of energy</td></tr>
+              <tr><td>creative</td><td>using imagination to make something new</td></tr>
+              <tr><td>pattern</td><td>a repeated design or sequence</td></tr>
+              <tr><td>encourage</td><td>to support or cheer someone on</td></tr>
+              <tr><td>confident</td><td>feeling sure of yourself</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(12)">Back</button>
+            <button onclick="goToStory(14)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 14 -->
+        <section id="story-14" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Sofia and the Snowflake Parade</h2>
+            <span class="story-number">Story 14 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Sofia woke up to a gentle snowfall covering her neighborhood in soft white sparkles.</p>
+          <p><span class="sentence-number">2.</span> She stepped outside and noticed snowflakes swirling around her like tiny dancing performers.</p>
+          <p><span class="sentence-number">3.</span> One snowflake drifted close, shimmering brightly as if inviting her to follow its path.</p>
+          <p><span class="sentence-number">4.</span> Sofia walked carefully, watching the snowflake lead her toward the quiet town square.</p>
+          <p><span class="sentence-number">5.</span> Suddenly, hundreds of snowflakes gathered, forming a beautiful swirling parade in the air.</p>
+          <p><span class="sentence-number">6.</span> They twirled gracefully, creating shapes that looked like stars, flowers, and playful animals.</p>
+          <p><span class="sentence-number">7.</span> Sofia clapped happily, amazed by the snowflakes’ delicate and magical performance.</p>
+          <p><span class="sentence-number">8.</span> The snowflakes responded by forming a sparkling archway for her to walk beneath.</p>
+          <p><span class="sentence-number">9.</span> Sofia stepped through, feeling cool, gentle snowflakes brush her cheeks like soft feathers.</p>
+          <p><span class="sentence-number">10.</span> The parade continued, drifting around her in patterns that felt joyful and welcoming.</p>
+          <p><span class="sentence-number">11.</span> Sofia whispered thank‑you, and the snowflakes shimmered proudly at her kind appreciation.</p>
+          <p><span class="sentence-number">12.</span> Slowly, the parade floated upward, returning to the sky as the snowfall lightened.</p>
+          <p><span class="sentence-number">13.</span> Sofia watched until the last snowflake disappeared into the bright winter morning.</p>
+          <p><span class="sentence-number">14.</span> She felt grateful for the magical moment she shared with the dancing snowflakes.</p>
+          <p><span class="sentence-number">15.</span> Sofia learned that beauty appears when you slow down and notice the world around you.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What shapes did the snowflakes form during the parade?</li>
+              <li>How can slowing down help you notice beautiful things?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>delicate</td><td>soft and easily broken</td></tr>
+              <tr><td>twirl</td><td>to spin around lightly</td></tr>
+              <tr><td>drift</td><td>to move slowly through the air</td></tr>
+              <tr><td>archway</td><td>a curved shape you can walk under</td></tr>
+              <tr><td>grateful</td><td>feeling thankful</td></tr>
+              <tr><td>sparkle</td><td>to shine with tiny bright flashes</td></tr>
+              <tr><td>perform</td><td>to show a dance, song, or action</td></tr>
+              <tr><td>pattern</td><td>a repeated design or movement</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(13)">Back</button>
+            <button onclick="goToStory(15)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 15 -->
+        <section id="story-15" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Jaden and the Robot with a Kind Heart</h2>
+            <span class="story-number">Story 15 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Jaden built a small robot using spare parts he found in his father’s workshop.</p>
+          <p><span class="sentence-number">2.</span> When he switched it on, the robot blinked its bright eyes and smiled warmly.</p>
+          <p><span class="sentence-number">3.</span> Jaden taught the robot simple tasks like stacking blocks and sorting colorful buttons.</p>
+          <p><span class="sentence-number">4.</span> The robot learned quickly, moving carefully so it wouldn’t knock anything over.</p>
+          <p><span class="sentence-number">5.</span> One day, Jaden noticed the robot gently comforting his little sister when she felt sad.</p>
+          <p><span class="sentence-number">6.</span> It offered her a toy and played soft music to help her feel better.</p>
+          <p><span class="sentence-number">7.</span> Jaden realized the robot wasn’t just smart; it also understood kindness.</p>
+          <p><span class="sentence-number">8.</span> He programmed new actions that encouraged the robot to help others even more.</p>
+          <p><span class="sentence-number">9.</span> The robot practiced carrying books, opening doors, and handing out cheerful stickers.</p>
+          <p><span class="sentence-number">10.</span> Jaden’s classmates loved the robot because it always acted politely and thoughtfully.</p>
+          <p><span class="sentence-number">11.</span> The robot beeped happily whenever someone thanked it for being helpful.</p>
+          <p><span class="sentence-number">12.</span> Jaden felt proud knowing he created something that made people smile.</p>
+          <p><span class="sentence-number">13.</span> He promised to keep improving the robot so it stayed gentle and responsible.</p>
+          <p><span class="sentence-number">14.</span> The robot blinked proudly, almost like it understood Jaden’s caring promise.</p>
+          <p><span class="sentence-number">15.</span> Jaden learned that inventions become meaningful when they help others feel supported and happy.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>How did Jaden’s robot show kindness?</li>
+              <li>What inventions can help people in everyday life?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>responsible</td><td>careful and trustworthy</td></tr>
+              <tr><td>invention</td><td>something new that someone creates</td></tr>
+              <tr><td>polite</td><td>showing good manners</td></tr>
+              <tr><td>comfort</td><td>to help someone feel better</td></tr>
+              <tr><td>program</td><td>to give instructions to a machine</td></tr>
+              <tr><td>thoughtful</td><td>caring about others’ feelings</td></tr>
+              <tr><td>spare parts</td><td>extra pieces used to build something</td></tr>
+              <tr><td>support</td><td>to help or encourage</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(14)">Back</button>
+            <button onclick="goToStory(16)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 16 -->
+        <section id="story-16" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Emi and the Rainbow Bridge</h2>
+            <span class="story-number">Story 16 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Emi loved rainy days because they often ended with bright rainbows stretching across the sky.</p>
+          <p><span class="sentence-number">2.</span> One afternoon, she spotted a rainbow that looked lower and brighter than usual.</p>
+          <p><span class="sentence-number">3.</span> Curious, Emi walked closer until she noticed a glowing bridge forming beneath the colors.</p>
+          <p><span class="sentence-number">4.</span> The bridge shimmered gently, inviting her to step onto its warm, colorful path.</p>
+          <p><span class="sentence-number">5.</span> Emi placed one foot forward and felt the bridge lift her lightly into the air.</p>
+          <p><span class="sentence-number">6.</span> She walked carefully, watching the colors swirl beneath her like moving rivers of light.</p>
+          <p><span class="sentence-number">7.</span> Birds flew beside her, chirping happily as if guiding her along the rainbow path.</p>
+          <p><span class="sentence-number">8.</span> Emi reached the top and saw the whole town glowing softly beneath the bright sky.</p>
+          <p><span class="sentence-number">9.</span> She felt peaceful, knowing she was standing on something rare, magical, and beautiful.</p>
+          <p><span class="sentence-number">10.</span> A gentle breeze whispered, reminding her to appreciate moments that appear only briefly.</p>
+          <p><span class="sentence-number">11.</span> Emi continued walking until the bridge slowly lowered her back to the grassy hill.</p>
+          <p><span class="sentence-number">12.</span> The rainbow faded, leaving a warm memory glowing inside her heart.</p>
+          <p><span class="sentence-number">13.</span> Emi thanked the sky for sharing such a special adventure with her.</p>
+          <p><span class="sentence-number">14.</span> She promised to look for magic in everyday places, even when it wasn’t obvious.</p>
+          <p><span class="sentence-number">15.</span> Emi learned that beauty often appears when you follow your curiosity with an open heart.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>Why was the rainbow bridge special for Emi?</li>
+              <li>What magical things can curiosity help you discover?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>shimmer</td><td>to shine with soft, moving light</td></tr>
+              <tr><td>curious</td><td>wanting to learn or explore</td></tr>
+              <tr><td>peaceful</td><td>calm and gentle</td></tr>
+              <tr><td>breeze</td><td>a soft wind</td></tr>
+              <tr><td>appreciate</td><td>to feel thankful for something</td></tr>
+              <tr><td>rare</td><td>not common or usual</td></tr>
+              <tr><td>swirl</td><td>to move in circles</td></tr>
+              <tr><td>adventure</td><td>an exciting experience</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(15)">Back</button>
+            <button onclick="goToStory(17)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 17 -->
+        <section id="story-17" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Noah and the Clock That Paused Time</h2>
+            <span class="story-number">Story 17 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Noah found an old pocket watch in his grandfather’s drawer with tiny gears inside.</p>
+          <p><span class="sentence-number">2.</span> When he pressed the top button, the watch ticked loudly and glowed bright gold.</p>
+          <p><span class="sentence-number">3.</span> Suddenly, everything around him froze, including falling leaves and chirping birds.</p>
+          <p><span class="sentence-number">4.</span> Noah looked around, amazed that time had paused while he could still move freely.</p>
+          <p><span class="sentence-number">5.</span> He walked through the yard, watching a leaf hang perfectly still in midair.</p>
+          <p><span class="sentence-number">6.</span> Noah gently touched it, feeling its cool surface without disturbing its frozen position.</p>
+          <p><span class="sentence-number">7.</span> He realized the watch gave him a chance to notice small details he usually missed.</p>
+          <p><span class="sentence-number">8.</span> Noah studied tiny raindrops on a flower petal, sparkling like tiny glass beads.</p>
+          <p><span class="sentence-number">9.</span> He admired a butterfly’s wings, frozen in a beautiful pattern of bright colors.</p>
+          <p><span class="sentence-number">10.</span> After exploring, Noah pressed the button again, and time continued smoothly around him.</p>
+          <p><span class="sentence-number">11.</span> The leaves fell, the birds chirped, and everything returned to its natural rhythm.</p>
+          <p><span class="sentence-number">12.</span> Noah felt grateful for the quiet moment that helped him appreciate the world’s beauty.</p>
+          <p><span class="sentence-number">13.</span> He promised to slow down sometimes, even without the magical watch.</p>
+          <p><span class="sentence-number">14.</span> The watch dimmed softly, as if proud of Noah’s thoughtful decision.</p>
+          <p><span class="sentence-number">15.</span> Noah learned that paying attention can make ordinary moments feel extraordinary.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What did Noah discover while time was paused?</li>
+              <li>How can slowing down help you notice new things?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>frozen</td><td>stopped completely</td></tr>
+              <tr><td>admire</td><td>to look at with appreciation</td></tr>
+              <tr><td>rhythm</td><td>a steady pattern of movement</td></tr>
+              <tr><td>detail</td><td>a small part of something</td></tr>
+              <tr><td>surface</td><td>the outside layer</td></tr>
+              <tr><td>explore</td><td>to look around and learn</td></tr>
+              <tr><td>gears</td><td>small wheels inside a machine</td></tr>
+              <tr><td>ordinary</td><td>normal or everyday</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(16)">Back</button>
+            <button onclick="goToStory(18)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 18 -->
+        <section id="story-18" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Hana and the Garden of Talking Leaves</h2>
+            <span class="story-number">Story 18 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Hana visited her grandmother’s garden, where plants grew tall and colorful in every corner.</p>
+          <p><span class="sentence-number">2.</span> As she walked, she heard a soft whisper coming from a bright green leaf.</p>
+          <p><span class="sentence-number">3.</span> The leaf greeted her kindly, surprising Hana with its gentle, friendly voice.</p>
+          <p><span class="sentence-number">4.</span> Soon, more leaves rustled, each one eager to share stories about the garden.</p>
+          <p><span class="sentence-number">5.</span> A sunflower told her how it followed the sun across the sky each day.</p>
+          <p><span class="sentence-number">6.</span> A tomato plant proudly described how it grew juicy fruit for the family’s meals.</p>
+          <p><span class="sentence-number">7.</span> The mint leaves giggled, explaining how their fresh smell helped people feel calm.</p>
+          <p><span class="sentence-number">8.</span> Hana listened carefully, amazed by how much the plants wanted to teach her.</p>
+          <p><span class="sentence-number">9.</span> She promised to water them gently and protect them from harsh weather.</p>
+          <p><span class="sentence-number">10.</span> The leaves rustled happily, grateful for Hana’s thoughtful promise.</p>
+          <p><span class="sentence-number">11.</span> A small vine wrapped softly around her wrist, thanking her for caring.</p>
+          <p><span class="sentence-number">12.</span> Hana felt connected to the garden, understanding how every plant played an important role.</p>
+          <p><span class="sentence-number">13.</span> She realized plants communicate through movement, scent, and growth, even without magical voices.</p>
+          <p><span class="sentence-number">14.</span> Hana waved goodbye, knowing she would return to learn more from the garden.</p>
+          <p><span class="sentence-number">15.</span> She learned that nature shares wisdom when you listen with patience and kindness.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What stories did the plants share with Hana?</li>
+              <li>How can we take good care of nature?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>rustle</td><td>a soft sound made by leaves</td></tr>
+              <tr><td>vine</td><td>a plant with long, climbing stems</td></tr>
+              <tr><td>wisdom</td><td>helpful knowledge or understanding</td></tr>
+              <tr><td>protect</td><td>to keep something safe</td></tr>
+              <tr><td>scent</td><td>a smell</td></tr>
+              <tr><td>juicy</td><td>full of liquid</td></tr>
+              <tr><td>harsh</td><td>rough or difficult</td></tr>
+              <tr><td>patient</td><td>able to wait calmly</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(17)">Back</button>
+            <button onclick="goToStory(19)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 19 -->
+        <section id="story-19" class="story">
+          <div class="story-header">
+            <h2 class="story-title">Ariel and the Mountain That Hummed</h2>
+            <span class="story-number">Story 19 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Ariel loved hiking because the mountains always felt peaceful and full of gentle surprises.</p>
+          <p><span class="sentence-number">2.</span> One morning, she heard a soft humming sound coming from the tallest mountain nearby.</p>
+          <p><span class="sentence-number">3.</span> Curious, Ariel followed the sound along a rocky path lined with tiny purple flowers.</p>
+          <p><span class="sentence-number">4.</span> The humming grew louder, sounding warm and deep like a friendly giant singing softly.</p>
+          <p><span class="sentence-number">5.</span> Ariel placed her hand on a large boulder and felt it gently vibrating beneath her palm.</p>
+          <p><span class="sentence-number">6.</span> She realized the mountain was humming a calm melody that echoed through the valley.</p>
+          <p><span class="sentence-number">7.</span> Birds perched on branches listened quietly, enjoying the mountain’s soothing song.</p>
+          <p><span class="sentence-number">8.</span> Ariel sat down and closed her eyes, letting the peaceful humming fill her heart.</p>
+          <p><span class="sentence-number">9.</span> She imagined the mountain sharing stories about ancient trees, strong roots, and flowing rivers.</p>
+          <p><span class="sentence-number">10.</span> The humming shifted slightly, sounding like encouragement for Ariel to keep exploring bravely.</p>
+          <p><span class="sentence-number">11.</span> She whispered thank‑you, hoping the mountain understood her gratitude and respect.</p>
+          <p><span class="sentence-number">12.</span> The humming softened, wrapping her in a warm, comforting feeling.</p>
+          <p><span class="sentence-number">13.</span> Ariel promised to protect nature and treat every place she visited with kindness.</p>
+          <p><span class="sentence-number">14.</span> As she walked home, the humming faded, leaving a calm memory behind.</p>
+          <p><span class="sentence-number">15.</span> Ariel learned that nature speaks in many ways when you listen with patience and care.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What did Ariel learn from the humming mountain?</li>
+              <li>How can nature communicate without using words?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>melody</td><td>a gentle musical tune</td></tr>
+              <tr><td>vibrate</td><td>to move back and forth quickly</td></tr>
+              <tr><td>ancient</td><td>very old</td></tr>
+              <tr><td>valley</td><td>low land between mountains</td></tr>
+              <tr><td>encourage</td><td>to give support or confidence</td></tr>
+              <tr><td>gratitude</td><td>feeling thankful</td></tr>
+              <tr><td>protect</td><td>to keep something safe</td></tr>
+              <tr><td>explore</td><td>to discover new places</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(18)">Back</button>
+            <button onclick="goToStory(20)">Next story</button>
+          </div>
+        </section>
+
+        <!-- STORY 20 -->
+        <section id="story-20" class="story">
+          <div class="story-header">
+            <h2 class="story-title">The Day the Stars Came to Visit</h2>
+            <span class="story-number">Story 20 of 20</span>
+          </div>
+          <p class="reading-level">About 15 sentences &middot; Grade 2 reading</p>
+
+          <p><span class="sentence-number">1.</span> Malik sat on his porch one night, watching stars twinkle brightly in the dark sky.</p>
+          <p><span class="sentence-number">2.</span> Suddenly, one star drifted downward, glowing like a tiny lantern floating through the air.</p>
+          <p><span class="sentence-number">3.</span> Malik gasped as more stars followed, forming a sparkling path toward his front yard.</p>
+          <p><span class="sentence-number">4.</span> The stars hovered gently, shining warm light that made everything look magical and peaceful.</p>
+          <p><span class="sentence-number">5.</span> Malik stepped closer, feeling the soft glow wrap around him like a friendly hug.</p>
+          <p><span class="sentence-number">6.</span> One star floated near his hand, humming softly like a tiny musical heartbeat.</p>
+          <p><span class="sentence-number">7.</span> Malik whispered hello, and the star brightened as if greeting him back happily.</p>
+          <p><span class="sentence-number">8.</span> The stars formed shapes in the air, creating pictures of animals, mountains, and swirling galaxies.</p>
+          <p><span class="sentence-number">9.</span> Malik watched in awe, amazed by the beautiful stories the stars were silently sharing.</p>
+          <p><span class="sentence-number">10.</span> A star circled him gently, encouraging him to dream big and believe in himself.</p>
+          <p><span class="sentence-number">11.</span> Malik felt brave, imagining all the wonderful things he could learn and create someday.</p>
+          <p><span class="sentence-number">12.</span> Slowly, the stars drifted upward, returning to their places in the night sky.</p>
+          <p><span class="sentence-number">13.</span> Malik waved goodbye, feeling grateful for the magical visit.</p>
+          <p><span class="sentence-number">14.</span> The sky sparkled brighter than before, as if the stars were smiling down at him.</p>
+          <p><span class="sentence-number">15.</span> Malik learned that dreams shine brightest when you believe in your own possibilities.</p>
+
+          <div class="box questions">
+            <h3>Think and talk</h3>
+            <ul>
+              <li>What message did the stars share with Malik?</li>
+              <li>How can believing in yourself help you reach your dreams?</li>
+            </ul>
+          </div>
+
+          <div class="box vocab">
+            <h3>New words</h3>
+            <table class="vocab-table">
+              <tr><th>Word</th><th>Meaning</th></tr>
+              <tr><td>galaxy</td><td>a huge group of stars in space</td></tr>
+              <tr><td>drift</td><td>to move slowly through the air</td></tr>
+              <tr><td>glow</td><td>a warm, soft light</td></tr>
+              <tr><td>heartbeat</td><td>a steady, rhythmic beat</td></tr>
+              <tr><td>possibilities</td><td>things that could happen or be achieved</td></tr>
+              <tr><td>awe</td><td>a feeling of wonder</td></tr>
+              <tr><td>sparkle</td><td>to shine with tiny bright flashes</td></tr>
+              <tr><td>dream</td><td>something you hope to do someday</td></tr>
+            </table>
+          </div>
+
+          <div class="nav-buttons">
+            <button onclick="goToStory(19)">Back</button>
+            <button disabled>Last story</button>
+          </div>
+        </section>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    function goToStory(n) {
+      const el = document.getElementById("story-" + n);
+      if (!el) return;
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+
+      // update TOC active state
+      const links = document.querySelectorAll(".toc a");
+      links.forEach(link => link.classList.remove("active"));
+      const active = document.querySelector('.toc a[href="#story-' + n + '"]');
+      if (active) active.classList.add("active");
+    }
+
+    // optional: highlight correct TOC item on manual scroll
+    const storySections = document.querySelectorAll(".story");
+    const tocLinks = document.querySelectorAll(".toc a");
+
+    const observer = new IntersectionObserver(
+      entries => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const id = entry.target.id;
+            tocLinks.forEach(link => {
+              link.classList.toggle(
+                "active",
+                link.getAttribute("href") === "#" + id
+              );
+            });
+          }
+        });
+      },
+      {
+        root: document.querySelector(".content"),
+        threshold: 0.3
+      }
+    );
+
+    storySections.forEach(sec => observer.observe(sec));
+  </script>
+</body>
+</html>

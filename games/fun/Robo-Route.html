@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Robo-Route: Logic Builder</title>
+    <style>
+        :root {
+            --bg-color: #f0f4f8;
+            --grid-color: #d1d5db;
+            --robot-color: #3b82f6;
+            --goal-color: #10b981;
+            --wall-color: #4b5563;
+            --block-move: #3b82f6;
+            --block-left: #8b5cf6;
+            --block-right: #f59e0b;
+        }
+
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            box-sizing: border-box;
+            touch-action: manipulation;
+        }
+
+        h1 {
+            color: #1e293b;
+            margin: 0 0 10px 0;
+            font-size: 1.8rem;
+        }
+
+        .game-container {
+            display: flex;
+            gap: 20px;
+            background: white;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 1000px;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        /* --- Left Side: Game Board --- */
+        .board-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        #grid-container {
+            display: grid;
+            gap: 4px;
+            background-color: var(--grid-color);
+            padding: 4px;
+            border-radius: 8px;
+            position: relative;
+        }
+
+        .cell {
+            width: 60px;
+            height: 60px;
+            background-color: white;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            position: relative;
+        }
+
+        .wall {
+            background-color: var(--wall-color);
+            border-radius: 4px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+        }
+
+        .goal::after {
+            content: '🚩';
+            font-size: 32px;
+        }
+
+        .robot {
+            position: absolute;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            z-index: 10;
+        }
+
+        .robot-inner {
+            width: 40px;
+            height: 40px;
+            background-color: var(--robot-color);
+            border-radius: 8px;
+            position: relative;
+            box-shadow: 0 4px 0 #1d4ed8;
+            transition: transform 0.4s;
+        }
+
+        /* Robot Eyes */
+        .robot-inner::before {
+            content: '';
+            position: absolute;
+            top: 10px;
+            right: 5px; /* Facing Right by default */
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 12px 0 white; /* Second eye */
+        }
+
+        /* Rotations */
+        .facing-0 .robot-inner { transform: rotate(0deg); }   /* East */
+        .facing-1 .robot-inner { transform: rotate(90deg); }  /* South */
+        .facing-2 .robot-inner { transform: rotate(180deg); } /* West */
+        .facing-3 .robot-inner { transform: rotate(270deg); } /* North */
+
+        /* --- Right Side: Controls --- */
+        .control-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: #f8fafc;
+            border-radius: 12px;
+            padding: 15px;
+            border: 1px solid #e2e8f0;
+            min-width: 300px;
+        }
+
+        .panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .level-badge {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .command-palette {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .cmd-btn {
+            border: none;
+            padding: 15px 5px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: white;
+            font-size: 1.2rem; /* Icons */
+            transition: transform 0.1s, opacity 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.15);
+        }
+
+        .cmd-btn:active {
+            transform: translateY(4px);
+            box-shadow: none;
+        }
+
+        .cmd-btn span {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+        }
+
+        .btn-move { background-color: var(--block-move); }
+        .btn-left { background-color: var(--block-left); }
+        .btn-right { background-color: var(--block-right); }
+
+        .program-queue {
+            flex-grow: 1;
+            background: white;
+            border: 2px dashed #cbd5e1;
+            border-radius: 8px;
+            padding: 10px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            position: relative;
+        }
+
+        .program-queue:empty::after {
+            content: 'Drag or click commands to add them here...';
+            color: #94a3b8;
+            font-style: italic;
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .queue-item {
+            padding: 10px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.9rem;
+            animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+        }
+
+        .queue-item:hover::after {
+            content: '×';
+            margin-left: auto;
+            font-size: 1.2rem;
+        }
+
+        @keyframes popIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .queue-item.active {
+            box-shadow: 0 0 0 3px #fbbf24; /* Highlight current running step */
+            transform: scale(1.02);
+        }
+
+        .move { background-color: var(--block-move); }
+        .left { background-color: var(--block-left); }
+        .right { background-color: var(--block-right); }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            font-size: 1rem;
+        }
+
+        .btn-run {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 4px 0 #059669;
+        }
+        .btn-run:active { transform: translateY(4px); box-shadow: none; }
+
+        .btn-clear {
+            background-color: #ef4444;
+            color: white;
+            box-shadow: 0 4px 0 #b91c1c;
+        }
+        .btn-clear:active { transform: translateY(4px); box-shadow: none; }
+
+        /* --- Modals --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            backdrop-filter: blur(2px);
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            max-width: 400px;
+            animation: slideUp 0.3s ease-out;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        .hidden { display: none !important; }
+
+        .btn-next {
+            margin-top: 20px;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+        }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            .board-section { flex: 1; min-height: 50vh; }
+            .control-section { flex: 1; }
+            .cell { width: 40px; height: 40px; }
+            .robot { width: 40px; height: 40px; }
+            .robot-inner { width: 28px; height: 28px; }
+            .robot-inner::before { width: 6px; height: 6px; top: 6px; right: 3px; box-shadow: 0 8px 0 white; }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>🤖 Robo-Route</h1>
+    
+    <div class="game-container">
+        <!-- Game Board -->
+        <div class="board-section">
+            <div id="grid-container">
+                <!-- Grid generated by JS -->
+                <div id="robot" class="robot facing-0">
+                    <div class="robot-inner"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="control-section">
+            <div class="panel-header">
+                <strong>Command Center</strong>
+                <span class="level-badge" id="level-display">Level 1</span>
+            </div>
+
+            <div class="command-palette">
+                <button class="cmd-btn btn-left" onclick="addCommand('left')">
+                    ↺ <span>Left</span>
+                </button>
+                <button class="cmd-btn btn-move" onclick="addCommand('move')">
+                    ⬆ <span>Move</span>
+                </button>
+                <button class="cmd-btn btn-right" onclick="addCommand('right')">
+                    ↻ <span>Right</span>
+                </button>
+            </div>
+
+            <div class="program-queue" id="program-queue">
+                <!-- Commands appear here -->
+            </div>
+
+            <div class="action-buttons">
+                <button class="action-btn btn-clear" onclick="clearQueue()">Reset</button>
+                <button class="action-btn btn-run" onclick="runProgram()">Run Program</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Win Modal -->
+    <div id="win-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="color: #10b981; font-size: 2rem; margin: 0 0 10px 0;">Success!</h2>
+            <p>You guided the robot to the goal.</p>
+            <div style="font-size: 3rem; margin: 20px 0;">⭐ ⭐ ⭐</div>
+            <button class="btn-next" onclick="nextLevel()">Next Level</button>
+        </div>
+    </div>
+
+    <!-- Fail Modal -->
+    <div id="fail-modal" class="modal-overlay hidden">
+        <div class="modal">
+            <h2 style="color: #ef4444; margin: 0 0 10px 0;">Crash!</h2>
+            <p id="fail-message">The robot hit a wall.</p>
+            <button class="btn-next" style="background: #ef4444;" onclick="resetLevel()">Try Again</button>
+        </div>
+    </div>
+
+    <script>
+        // --- Game Configuration ---
+        const GRID_SIZE = 6;
+        const CELL_SIZE = 60; // Must match CSS .cell width
+
+        // Level Definitions
+        // 0: Empty, 1: Wall, 9: Goal, S: Start (handled by startPos)
+        const levels = [
+            {
+                layout: [
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ],
+                start: {x: 0, y: 0, dir: 0}, // Dir: 0=East, 1=South, 2=West, 3=North
+                goal: {x: 5, y: 0}
+            },
+            {
+                layout: [
+                    [0, 0, 0, 1, 0, 0],
+                    [0, 1, 0, 1, 0, 0],
+                    [0, 1, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ],
+                start: {x: 0, y: 0, dir: 1},
+                goal: {x: 2, y: 2}
+            },
+            {
+                layout: [
+                    [0, 0, 0, 0, 0, 0],
+                    [1, 1, 1, 1, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ],
+                start: {x: 0, y: 0, dir: 0},
+                goal: {x: 0, y: 4}
+            },
+             {
+                layout: [
+                    [0, 1, 0, 0, 0, 0],
+                    [0, 1, 0, 1, 1, 0],
+                    [0, 0, 0, 1, 0, 0],
+                    [1, 1, 1, 1, 0, 1],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                ],
+                start: {x: 0, y: 0, dir: 1},
+                goal: {x: 4, y: 2}
+            },
+            {
+                layout: [
+                    [1, 1, 1, 1, 1, 0],
+                    [0, 0, 0, 0, 1, 0],
+                    [0, 1, 1, 0, 1, 0],
+                    [0, 1, 0, 0, 0, 0],
+                    [0, 1, 1, 1, 1, 1],
+                    [0, 0, 0, 0, 0, 0]
+                ],
+                start: {x: 0, y: 1, dir: 0},
+                goal: {x: 0, y: 5}
+            }
+        ];
+
+        // --- State ---
+        let currentLevelIdx = 0;
+        let queue = [];
+        let isRunning = false;
+        
+        let robotState = {
+            x: 0,
+            y: 0,
+            dir: 0
+        };
+
+        // --- DOM Elements ---
+        const gridContainer = document.getElementById('grid-container');
+        const robotEl = document.getElementById('robot');
+        const queueEl = document.getElementById('program-queue');
+        const levelBadge = document.getElementById('level-display');
+
+        // --- Init ---
+        function initLevel(levelIdx) {
+            currentLevelIdx = levelIdx;
+            const level = levels[currentLevelIdx];
+            
+            // Reset State
+            queue = [];
+            isRunning = false;
+            updateQueueUI();
+            levelBadge.textContent = `Level ${levelIdx + 1}`;
+            
+            // Render Grid
+            gridContainer.innerHTML = ''; // Clear old grid
+            gridContainer.style.gridTemplateColumns = `repeat(${GRID_SIZE}, 1fr)`;
+            
+            for(let y=0; y<GRID_SIZE; y++) {
+                for(let x=0; x<GRID_SIZE; x++) {
+                    const cell = document.createElement('div');
+                    cell.className = 'cell';
+                    if (level.layout[y][x] === 1) cell.classList.add('wall');
+                    if (x === level.goal.x && y === level.goal.y) cell.classList.add('goal');
+                    gridContainer.appendChild(cell);
+                }
+            }
+
+            // Add Robot back to DOM
+            gridContainer.appendChild(robotEl);
+            
+            // Set Robot Start
+            robotState = { ...level.start };
+            updateRobotVisuals(false); // No animation on init
+        }
+
+        // --- Robot Logic ---
+        
+        function updateRobotVisuals(animate = true) {
+            const cellWidth = gridContainer.children[0].offsetWidth; // Dynamic width based on screen
+            const gap = 4; // CSS gap
+            
+            // Calculate pixel position relative to grid
+            const pixelX = robotState.x * (cellWidth + gap) + 4; // +4 for padding
+            const pixelY = robotState.y * (cellWidth + gap) + 4;
+            
+            robotEl.style.transition = animate ? 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)' : 'none';
+            robotEl.style.left = `${pixelX}px`;
+            robotEl.style.top = `${pixelY}px`;
+            
+            // Rotation class
+            robotEl.className = `robot facing-${robotState.dir}`;
+            
+            // Mobile responsiveness fix: recalculate on resize
+            robotEl.style.width = `${cellWidth}px`;
+            robotEl.style.height = `${cellWidth}px`;
+        }
+
+        function addCommand(type) {
+            if (isRunning) return;
+            queue.push(type);
+            updateQueueUI();
+        }
+
+        function removeCommand(index) {
+            if (isRunning) return;
+            queue.splice(index, 1);
+            updateQueueUI();
+        }
+
+        function clearQueue() {
+            if (isRunning) return;
+            queue = [];
+            resetLevel(); // Also resets robot position
+        }
+
+        function updateQueueUI() {
+            queueEl.innerHTML = '';
+            queue.forEach((cmd, idx) => {
+                const el = document.createElement('div');
+                el.className = `queue-item ${cmd}`;
+                el.id = `cmd-${idx}`;
+                
+                let icon = '';
+                let text = '';
+                if(cmd === 'move') { icon = '⬆'; text = 'Move Forward'; }
+                if(cmd === 'left') { icon = '↺'; text = 'Turn Left'; }
+                if(cmd === 'right') { icon = '↻'; text = 'Turn Right'; }
+                
+                el.innerHTML = `<span>${icon}</span> ${text}`;
+                el.onclick = () => removeCommand(idx);
+                queueEl.appendChild(el);
+            });
+        }
+
+        async function runProgram() {
+            if (isRunning || queue.length === 0) return;
+            isRunning = true;
+            
+            // Reset position before running just in case
+            robotState = { ...levels[currentLevelIdx].start };
+            updateRobotVisuals(false);
+            
+            // Wait a tiny bit
+            await new Promise(r => setTimeout(r, 200));
+
+            for (let i = 0; i < queue.length; i++) {
+                if (!isRunning) break; // Emergency stop
+
+                // Highlight command
+                document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('active'));
+                const currCmdEl = document.getElementById(`cmd-${i}`);
+                if(currCmdEl) currCmdEl.classList.add('active');
+
+                const cmd = queue[i];
+                await executeCommand(cmd);
+                
+                // Check win/loss after every move
+                const status = checkStatus();
+                if (status === 'win') {
+                    document.getElementById('win-modal').classList.remove('hidden');
+                    isRunning = false;
+                    return;
+                } else if (status === 'wall') {
+                    showFail('You hit a wall!');
+                    return;
+                } else if (status === 'bounds') {
+                    showFail('You went off the grid!');
+                    return;
+                }
+                
+                await new Promise(r => setTimeout(r, 500)); // Delay between steps
+            }
+            
+            // If finished queue and didn't win
+            if (isRunning) {
+                 showFail('Program finished, but goal not reached.');
+            }
+            isRunning = false;
+        }
+
+        function executeCommand(cmd) {
+            return new Promise(resolve => {
+                if (cmd === 'left') {
+                    robotState.dir = (robotState.dir + 3) % 4; // -1 equivalent
+                } else if (cmd === 'right') {
+                    robotState.dir = (robotState.dir + 1) % 4;
+                } else if (cmd === 'move') {
+                    // 0=East, 1=South, 2=West, 3=North
+                    if (robotState.dir === 0) robotState.x++;
+                    if (robotState.dir === 1) robotState.y++;
+                    if (robotState.dir === 2) robotState.x--;
+                    if (robotState.dir === 3) robotState.y--;
+                }
+                updateRobotVisuals(true);
+                setTimeout(resolve, 400); // Wait for animation
+            });
+        }
+
+        function checkStatus() {
+            const level = levels[currentLevelIdx];
+            
+            // Bounds Check
+            if (robotState.x < 0 || robotState.x >= GRID_SIZE || 
+                robotState.y < 0 || robotState.y >= GRID_SIZE) {
+                return 'bounds';
+            }
+
+            // Wall Check
+            if (level.layout[robotState.y][robotState.x] === 1) {
+                return 'wall';
+            }
+
+            // Goal Check
+            if (robotState.x === level.goal.x && robotState.y === level.goal.y) {
+                return 'win';
+            }
+
+            return 'ok';
+        }
+
+        function showFail(msg) {
+            isRunning = false;
+            document.getElementById('fail-message').innerText = msg;
+            document.getElementById('fail-modal').classList.remove('hidden');
+        }
+
+        function resetLevel() {
+            document.getElementById('fail-modal').classList.add('hidden');
+            document.getElementById('win-modal').classList.add('hidden');
+            robotState = { ...levels[currentLevelIdx].start };
+            updateRobotVisuals(false); // Snap back
+            isRunning = false;
+            document.querySelectorAll('.queue-item').forEach(el => el.classList.remove('active'));
+        }
+
+        function nextLevel() {
+            document.getElementById('win-modal').classList.add('hidden');
+            if (currentLevelIdx < levels.length - 1) {
+                initLevel(currentLevelIdx + 1);
+            } else {
+                alert("You finished all levels! Great job!");
+                initLevel(0);
+            }
+        }
+
+        // Handle window resize
+        window.addEventListener('resize', () => {
+             updateRobotVisuals(false);
+        });
+
+        // Start
+        initLevel(0);
+
+    </script>
+</body>
+</html>

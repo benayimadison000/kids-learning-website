@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Adventure Game (5-10 Words)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+        }
+        #sentence {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px;
+            text-align: center;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+        }
+        #nextButton {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #backButton {
+            background-color: #2196F3;
+            color: white;
+        }
+        #playSoundButton {
+            background-color: #FF9800;
+            color: white;
+        }
+        #nextButton:hover {
+            background-color: #45a049;
+        }
+        #backButton:hover {
+            background-color: #1976D2;
+        }
+        #playSoundButton:hover {
+            background-color: #F57C00;
+        }
+        #backButton:disabled, #nextButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="sentence">Click Next to start!</div>
+    <div>
+        <button id="backButton" class="button" disabled>Back</button>
+        <button id="playSoundButton" class="button">Play Sound</button>
+        <button id="nextButton" class="button">Next</button>
+    </div>
+
+    <script>
+        const sentences = [
+            "The cat jumps high.",
+            "Birds sing sweet songs.",
+            "I love to read.",
+            "The sun shines brightly.",
+            "Dogs chase their tails.",
+            "Flowers bloom in spring.",
+            "We play fun games.",
+            "The moon glows softly.",
+            "Stars twinkle at night.",
+            "I draw colorful pictures.",
+            "The wind blows gently.",
+            "Trees grow tall and strong.",
+            "Fish swim in water.",
+            "I eat juicy apples.",
+            "The sky is blue.",
+            "Kites fly so high.",
+            "I see green frogs.",
+            "Rain falls on roofs.",
+            "I hear loud thunder.",
+            "Boats sail on rivers.",
+            "The dog barks loudly.",
+            "I smell fresh cookies.",
+            "Clouds float in sky.",
+            "I touch soft blankets.",
+            "Bees buzz around flowers.",
+            "The car moves fast.",
+            "I taste sweet candy.",
+            "Horses gallop in fields.",
+            "The clock ticks loudly.",
+            "I climb tall trees.",
+            "Balloons float above us.",
+            "The river flows quickly.",
+            "I run very fast.",
+            "Butterflies flutter their wings.",
+            "The bell rings clearly.",
+            "I paint with colors.",
+            "The cow eats grass.",
+            "I hear chirping birds.",
+            "The train moves swiftly.",
+            "I hug my teddy.",
+            "The frog jumps far.",
+            "I see bright rainbows.",
+            "The wind feels cool.",
+            "I plant tiny seeds.",
+            "The sun feels warm.",
+            "I wave to friends.",
+            "The moon looks round.",
+            "I count shiny stars.",
+            "The dog wags tail.",
+            "I read fun books.",
+            "The kite soars high.",
+            "I draw happy faces.",
+            "The rain sounds nice.",
+            "I love soft pillows.",
+            "The bird flies high.",
+            "I smell sweet flowers.",
+            "The cat sleeps quietly.",
+            "I hear loud music.",
+            "The tree stands tall.",
+            "I taste yummy pizza.",
+            "The horse runs fast.",
+            "I see colorful balloons.",
+            "The wind blows leaves.",
+            "I touch smooth stones.",
+            "The frog hops quickly.",
+            "I climb steep hills.",
+            "The sun sets slowly.",
+            "I wave at boats.",
+            "The moon shines bright.",
+            "I count five apples.",
+            "The dog chases cats.",
+            "I read big books.",
+            "The kite flies straight.",
+            "I draw tall trees.",
+            "The rain feels wet.",
+            "I love my dog.",
+            "The bird sings loudly.",
+            "I smell fresh bread.",
+            "The cat runs fast.",
+            "I hear soft whispers.",
+            "The tree grows slowly.",
+            "I taste sweet oranges.",
+            "The horse gallops far.",
+            "I see bright stars.",
+            "The wind feels chilly.",
+            "I touch soft fur.",
+            "The frog leaps high.",
+            "I climb big rocks.",
+            "The sun rises early.",
+            "I wave at planes.",
+            "The moon looks big.",
+            "I count ten flowers.",
+            "The dog sleeps well.",
+            "I read new stories.",
+            "The kite dances high.",
+            "I draw fun shapes.",
+            "The rain falls gently.",
+            "I love my cat.",
+            "The bird nests high.",
+            "I smell tasty soup.",
+            "The cat jumps quickly.",
+            "I hear fun songs.",
+            "The tree sways gently.",
+            "I taste ripe berries.",
+            "The horse trots fast.",
+            "I see flying kites.",
+            "The wind carries leaves.",
+            "I touch cold water.",
+            "The frog croaks loudly.",
+            "I climb high ladders.",
+            "The sun sparkles brightly.",
+            "I wave at cars.",
+            "The moon looks pretty.",
+            "I count nine clouds.",
+            "The dog fetches balls.",
+            "I read funny comics.",
+            "The kite spins wildly.",
+            "I draw green forests.",
+            "The rain drips slowly.",
+            "I love my fish.",
+            "The bird soars high.",
+            "I smell fresh rain.",
+            "The cat purrs softly.",
+            "I hear loud drums.",
+            "The tree stands firm.",
+            "I taste crunchy carrots.",
+            "The horse gallops loudly.",
+            "I see bright fireworks.",
+            "The wind blows strongly.",
+            "I touch soft grass.",
+            "The frog jumps high.",
+            "I climb tall towers.",
+            "The sun shines warmly.",
+            "I wave at birds.",
+            "The moon looks pretty.",
+            "I count eight balloons.",
+            "The dog plays happily.",
+            "I read adventure books.",
+            "The kite flies smoothly.",
+            "I draw blue oceans.",
+            "The rain falls fast.",
+            "I love my hamster.",
+            "The bird tweets happily.",
+            "I smell sweet fruit.",
+            "The cat leaps high.",
+            "I hear soft bells.",
+            "The tree grows tall.",
+            "I taste juicy grapes.",
+            "The horse runs smoothly.",
+            "I see colorful rainbows.",
+            "The wind feels nice.",
+            "I touch smooth shells.",
+            "The frog hops far.",
+            "I climb high hills.",
+            "The sun sets beautifully.",
+            "I wave at kites.",
+            "The moon shines softly.",
+            "I count six stars.",
+            "The dog barks happily.",
+            "I read exciting tales.",
+            "The kite soars gracefully.",
+            "I draw fun animals.",
+            "The rain sounds soothing.",
+            "I love my turtle.",
+            "The bird flies fast.",
+            "I smell fresh air.",
+            "The cat sleeps soundly.",
+            "I hear joyful music.",
+            "The tree sways softly.",
+            "I taste sweet peaches.",
+            "The horse trots happily.",
+            "I see bright clouds.",
+            "The wind blows gently.",
+            "I touch cool water.",
+            "The frog leaps far.",
+            "I climb big mountains.",
+            "The sun rises slowly.",
+            "I wave at friends.",
+            "The moon glows brightly."
+        ];
+
+        let currentIndex = -1; // Start at -1 to align with initial "Click Next to start!"
+        const sentenceElement = document.getElementById('sentence');
+        const nextButton = document.getElementById('nextButton');
+        const backButton = document.getElementById('backButton');
+        const playSoundButton = document.getElementById('playSoundButton');
+
+        function speakSentence(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            const voices = speechSynthesis.getVoices();
+            const femaleVoice = voices.find(voice => voice.name.includes('Female') || voice.name.includes('Samantha') || voice.name.includes('Victoria') || voice.gender === 'female') || voices[0];
+            utterance.voice = femaleVoice;
+            utterance.rate = 0.9;
+            speechSynthesis.speak(utterance);
+        }
+
+        speechSynthesis.onvoiceschanged = () => {};
+
+        function updateButtons() {
+            backButton.disabled = currentIndex <= 0;
+            nextButton.disabled = currentIndex >= sentences.length - 1;
+            playSoundButton.disabled = currentIndex < 0 || currentIndex >= sentences.length;
+        }
+
+        nextButton.addEventListener('click', () => {
+            if (currentIndex < sentences.length - 1) {
+                currentIndex++;
+                sentenceElement.textContent = sentences[currentIndex] || "Great job! You finished!";
+                updateButtons();
+            } else {
+                sentenceElement.textContent = "Great job! You finished!";
+                updateButtons();
+            }
+        });
+
+        backButton.addEventListener('click', () => {
+            if (currentIndex > -1) {
+                currentIndex--;
+                sentenceElement.textContent = currentIndex >= 0 ? sentences[currentIndex] : "Click Next to start!";
+                updateButtons();
+            }
+        });
+
+        playSoundButton.addEventListener('click', () => {
+            if (currentIndex >= 0 && currentIndex < sentences.length) {
+                speakSentence(sentences[currentIndex]);
+            }
+        });
+
+        updateButtons();
+    </script>
+</body>
+</html>

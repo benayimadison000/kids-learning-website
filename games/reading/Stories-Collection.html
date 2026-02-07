@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Gentle Reading Stories</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <style>
+    body {
+      font-family: Georgia, "Times New Roman", serif;
+      margin: 0;
+      padding: 0;
+      background: #fdfcf9;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 1.5rem 1.2rem 3rem;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    header h1 {
+      font-size: 1.8rem;
+      margin: 0.2rem 0;
+    }
+
+    header p {
+      margin: 0.2rem 0;
+      font-size: 0.95rem;
+      color: #555;
+    }
+
+    .story-counter {
+      text-align: center;
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: #444;
+    }
+
+    .story {
+      display: none;
+      margin-top: 1.5rem;
+    }
+
+    .story.active {
+      display: block;
+    }
+
+    .story h2 {
+      font-size: 1.3rem;
+      margin-bottom: 1rem;
+      text-align: center;
+    }
+
+    .story p {
+      margin-bottom: 0.6rem;
+      font-size: 1.02rem;
+    }
+
+    .nav-buttons {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 2rem;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      font-size: 0.98rem;
+      border-radius: 4px;
+      border: 1px solid #888;
+      background: #f5f5f5;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #ececec;
+    }
+
+    button:disabled {
+      opacity: 0.4;
+      cursor: default;
+    }
+
+    .jump {
+      flex: 1 1 100%;
+      text-align: center;
+      margin-top: 0.75rem;
+      font-size: 0.9rem;
+    }
+
+    .jump select {
+      font-size: 0.9rem;
+      padding: 0.2rem 0.5rem;
+    }
+
+    @media print {
+      body {
+        background: white;
+      }
+      .nav-buttons,
+      .story-counter,
+      header p,
+      .jump {
+        display: none;
+      }
+      .story {
+        display: block !important;
+        page-break-after: always;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gentle Reading Stories</h1>
+      <p>Use the buttons below to go back and forth between stories.</p>
+      <div class="story-counter" id="storyCounter">
+        Story 1 of 20
+      </div>
+    </header>
+
+    <!-- Story 1 -->
+    <section class="story active">
+      <h2>Story 1: The Balloon That Would Not Pop</h2>
+      <p>
+        On a bright and cheerful morning, a shiny red balloon floated gently above the park, tied to a wooden bench with a thin white string.
+      </p>
+      <p>
+        Children ran and laughed all around it, their happy voices rising into the air like music that danced with the drifting clouds.
+      </p>
+      <p>
+        One curious girl walked over to the balloon and tapped it lightly with her finger, surprised at how soft and smooth it felt under her touch.
+      </p>
+      <p>
+        She wondered if the balloon might pop, but it simply bounced back and kept its perfect round shape as if it were quietly smiling.
+      </p>
+      <p>
+        A gentle breeze passed through the park, making the balloon sway from side to side like it was enjoying a slow and graceful dance.
+      </p>
+      <p>
+        A boy with a bright blue hat joined the girl, and together they watched the balloon wiggle happily without fear, even when the wind grew stronger.
+      </p>
+      <p>
+        A small bird landed on the back of the bench and tilted its head, seeming to study the balloon with calm and curious eyes.
+      </p>
+      <p>
+        The balloon stayed strong and steady, refusing to pop even when a playful dog barked loudly nearby and jumped in circles around the bench.
+      </p>
+      <p>
+        As the sun moved higher in the sky, the balloon’s red color shone even brighter, filling the children with a feeling of warm joy and safety.
+      </p>
+      <p>
+        When it was finally time to leave, the girl untied the string and held it gently, grateful for a brave little balloon that never gave up.
+      </p>
+    </section>
+
+    <!-- Story 2 -->
+    <section class="story">
+      <h2>Story 2: The Quiet Cloud That Learned to Rain</h2>
+      <p>
+        High above the busy town, a small gray cloud drifted slowly across the sky, watching the people and cars move about their day.
+      </p>
+      <p>
+        The cloud felt shy and quiet, unsure of when it should release its raindrops, so it simply floated along without making a sound.
+      </p>
+      <p>
+        Below, the trees stretched their branches upward, their leaves a little dry and dusty as they waited patiently for a refreshing drink.
+      </p>
+      <p>
+        A wise old cloud nearby noticed the small gray cloud and whispered gently that sometimes the world needs the courage of a little rain.
+      </p>
+      <p>
+        The small cloud listened carefully, wondering if it was brave enough to let its raindrops fall and touch the earth below.
+      </p>
+      <p>
+        With a soft sigh, the cloud gathered its strength and released a few tiny drops that landed softly on the warm ground.
+      </p>
+      <p>
+        The trees trembled with happiness as the raindrops kissed their leaves, washing away the dust and bringing cool relief to their roots.
+      </p>
+      <p>
+        Encouraged by the grateful trees, the cloud released more raindrops, creating a gentle shower that patted rooftops and sidewalks like a friendly rhythm.
+      </p>
+      <p>
+        Children stepped outside with bright umbrellas, spinning in slow circles as they enjoyed the calm and peaceful rain.
+      </p>
+      <p>
+        When the shower finally ended, the small cloud felt lighter and proud, knowing it had learned to share its rain with the world in a kind and gentle way.
+      </p>
+    </section>
+
+    <!-- Story 3 -->
+    <section class="story">
+      <h2>Story 3: The Little Book That Waited Patiently</h2>
+      <p>
+        On a quiet shelf in a small library, a little blue book sat between taller books, waiting patiently for someone to notice it.
+      </p>
+      <p>
+        Its cover was simple but bright, with tiny golden letters that shimmered gently whenever the afternoon sun shone through the high windows.
+      </p>
+      <p>
+        Every day, children came and went, choosing books with colorful pictures and exciting titles that seemed to call out to them.
+      </p>
+      <p>
+        The little blue book watched them hopefully, dreaming of the day when a curious hand would reach out and gently lift it from the shelf.
+      </p>
+      <p>
+        One rainy afternoon, a quiet girl walked slowly down the aisle, her eyes scanning each row as she searched for something special to read.
+      </p>
+      <p>
+        When she saw the little blue book, she paused, drawn to its soft color and the way its golden letters glowed in the dim light.
+      </p>
+      <p>
+        She reached out carefully, and the book felt a rush of happiness as it finally left the shelf and rested in her hands.
+      </p>
+      <p>
+        The girl carried it to a cozy corner, opened the cover, and discovered gentle stories that made her feel calm, brave, and thoughtful.
+      </p>
+      <p>
+        As she turned each page, the book felt proud to share its words, grateful that someone was listening at last.
+      </p>
+      <p>
+        When it was time to go home, the girl hugged the little blue book close, promising to return so they could continue their quiet adventure together.
+      </p>
+    </section>
+
+    <!-- Story 4 -->
+    <section class="story">
+      <h2>Story 4: The Lamp That Watched Over Homework</h2>
+      <p>
+        On a sturdy wooden desk near the window, a small yellow lamp stood quietly, ready to shine its warm light whenever it was needed.
+      </p>
+      <p>
+        Every evening, when the sky outside began to darken, the lamp waited for the soft click that would bring it to life.
+      </p>
+      <p>
+        One day, a determined boy sat down at the desk with his schoolbooks, feeling a little tired but wanting to finish his homework well.
+      </p>
+      <p>
+        As he flipped the switch, the lamp glowed gently, casting a comforting circle of light across the pages in front of him.
+      </p>
+      <p>
+        The lamp watched carefully as the boy read each problem, his eyes moving slowly while his pencil scratched quiet answers onto the paper.
+      </p>
+      <p>
+        Whenever the boy rubbed his forehead in frustration, the lamp seemed to shine a little brighter, as if whispering that he could keep going.
+      </p>
+      <p>
+        Outside, the night grew darker, but inside the lamp’s glow, the desk felt like a safe and steady island of focus and calm.
+      </p>
+      <p>
+        Little by little, the boy’s work began to make more sense, and his careful effort turned confusion into understanding.
+      </p>
+      <p>
+        When he finally finished, he smiled with quiet pride, thanking the lamp with a soft pat on its base.
+      </p>
+      <p>
+        The lamp flickered happily for a moment, then settled back into stillness, ready to watch over the boy’s next evening of brave and thoughtful work.
+      </p>
+    </section>
+
+    <!-- Story 5 -->
+    <section class="story">
+      <h2>Story 5: The Shoes That Loved to Learn</h2>
+      <p>
+        Sitting neatly by the door, a pair of small brown shoes waited patiently for the start of another school day.
+      </p>
+      <p>
+        They remembered all the steps they had taken through hallways, playgrounds, and classrooms filled with curious minds and bright ideas.
+      </p>
+      <p>
+        One early morning, a girl slipped her feet into the shoes, and they felt her wiggle her toes as she prepared for the day ahead.
+      </p>
+      <p>
+        The shoes hugged her feet gently, proud to carry her as she walked with determination toward the big school building.
+      </p>
+      <p>
+        Along the sidewalk, they counted each step, feeling the rhythm of her excitement and the steady beat of her brave little heart.
+      </p>
+      <p>
+        Inside the classroom, the shoes rested quietly under her desk while she listened to her teacher explain new words and interesting ideas.
+      </p>
+      <p>
+        When it was time to stand and read aloud, the shoes supported her firmly, helping her feel grounded even when she felt nervous.
+      </p>
+      <p>
+        They felt her weight shift as she took a deep breath and spoke clearly, sounding out each word with patience and care.
+      </p>
+      <p>
+        Her shoulders relaxed as she finished, and the shoes sensed her quiet pride as the teacher smiled warmly in her direction.
+      </p>
+      <p>
+        At the end of the day, as they walked home together, the shoes felt grateful to be part of every step she took on her journey to learn and grow.
+      </p>
+    </section>
+
+    <!-- Story 6 -->
+    <section class="story">
+      <h2>Story 6: The Garden That Woke Up Slowly</h2>
+      <p>
+        In the early morning light, the quiet garden stretched sleepily beneath the soft sky, waiting for the first warm rays of sunshine to arrive.
+      </p>
+      <p>
+        A tiny ladybug crawled across a cool leaf, wondering when the flowers would open their colorful petals and greet the new day.
+      </p>
+      <p>
+        The roses yawned gently as the sunlight touched them, spreading a sweet fragrance that drifted softly through the peaceful garden air.
+      </p>
+      <p>
+        Nearby, a shy sunflower lifted its heavy head, slowly turning toward the bright sky as if gathering courage to stand tall again.
+      </p>
+      <p>
+        A small rabbit hopped carefully between the plants, pausing to listen to the gentle hum of bees waking up inside their cozy hive.
+      </p>
+      <p>
+        The bees buzzed happily as they stretched their delicate wings, ready to explore every blossom and collect golden pollen for their hive.
+      </p>
+      <p>
+        A soft breeze moved through the garden, brushing past the leaves and carrying the quiet sounds of nature waking up together.
+      </p>
+      <p>
+        The ladybug watched proudly as each plant and creature found its place in the morning, creating a beautiful rhythm of life and movement.
+      </p>
+      <p>
+        As the sun climbed higher, the garden glowed with color, filling the air with warmth, hope, and the promise of a bright new day.
+      </p>
+      <p>
+        By the time everything was fully awake, the garden felt alive and joyful, grateful for another chance to grow, shine, and share its beauty.
+      </p>
+    </section>
+
+    <!-- Story 7 -->
+    <section class="story">
+      <h2>Story 7: The Kite That Wanted to Fly Higher</h2>
+      <p>
+        On a bright and breezy afternoon, a colorful kite lay quietly on the soft grass, waiting for someone to help it rise into the open sky.
+      </p>
+      <p>
+        A boy named Theo picked up the kite carefully, admiring its long ribbon tail that shimmered beautifully in the warm sunlight.
+      </p>
+      <p>
+        As he ran across the field, the kite lifted slowly, catching the wind and beginning its graceful climb toward the drifting clouds above.
+      </p>
+      <p>
+        The wind grew stronger, carrying the kite higher and higher until it felt as though it could almost touch the bright blue sky.
+      </p>
+      <p>
+        Theo held the string tightly, feeling proud as he watched the kite dance and swirl with confidence in the wide open air.
+      </p>
+      <p>
+        The kite loved the feeling of freedom, imagining it could soar across mountains, rivers, and forests if the wind stayed strong enough.
+      </p>
+      <p>
+        A gentle gust pushed the kite sideways, making it wobble for a moment before it steadied itself and continued its smooth flight.
+      </p>
+      <p>
+        Theo encouraged the kite softly, telling it that every wobble was just a chance to learn how to fly even better than before.
+      </p>
+      <p>
+        The kite felt braver with every passing second, stretching its colorful wings as far as it could while the wind carried it gracefully.
+      </p>
+      <p>
+        When the sun began to set, Theo slowly guided the kite back down, grateful for a joyful afternoon filled with courage, laughter, and bright imagination.
+      </p>
+    </section>
+
+    <!-- Story 8 -->
+    <section class="story">
+      <h2>Story 8: The Friendly Shadow in the Park</h2>
+      <p>
+        Late one sunny afternoon, a little girl named Nia walked through the park, watching her long shadow stretch across the bright green grass.
+      </p>
+      <p>
+        She giggled softly as her shadow followed her every step, copying her movements as if it were a playful friend trying to keep up.
+      </p>
+      <p>
+        When she lifted her arms high above her head, her shadow did the same, creating a tall and wiggly shape that made her laugh even more.
+      </p>
+      <p>
+        Nia skipped along the path, noticing how her shadow bounced beside her, staying close no matter how quickly she moved forward.
+      </p>
+      <p>
+        A gentle breeze rustled the leaves above her, and the shifting sunlight made her shadow grow shorter, wider, and sometimes a little fuzzy.
+      </p>
+      <p>
+        Curious about the changes, Nia experimented by turning in circles, watching her shadow spin around her like a partner in a joyful dance.
+      </p>
+      <p>
+        She crouched low to the ground and saw her shadow shrink into a tiny shape, reminding her that even small things can be interesting and fun.
+      </p>
+      <p>
+        As she walked toward a tall tree, her shadow stretched far ahead, reaching toward the trunk as if it wanted to climb the branches first.
+      </p>
+      <p>
+        Nia smiled at the thought of her shadow being brave and adventurous, always ready to explore new places right beside her.
+      </p>
+      <p>
+        When the sun began to set, her shadow grew faint and soft, and Nia whispered a gentle goodbye, grateful for a simple moment filled with imagination.
+      </p>
+    </section>
+
+    <!-- Story 9 -->
+    <section class="story">
+      <h2>Story 9: The Secret Song of the Forest</h2>
+      <p>
+        Deep inside the quiet forest, a soft melody drifted through the trees, sounding like a gentle song carried by the cool morning air.
+      </p>
+      <p>
+        A young boy named Kofi followed the mysterious sound, stepping carefully over roots and fallen leaves as he searched for its source.
+      </p>
+      <p>
+        The deeper he walked, the more the melody wrapped around him, filling the forest with a peaceful feeling that made him smile.
+      </p>
+      <p>
+        Sunlight filtered through the branches above, creating golden patterns on the ground that seemed to dance along with the beautiful music.
+      </p>
+      <p>
+        Kofi paused beside a small stream and listened closely, noticing how the water’s gentle trickling blended perfectly with the forest’s soft song.
+      </p>
+      <p>
+        A bright blue bird perched on a nearby branch, singing a clear and cheerful tune that added sparkle to the magical melody.
+      </p>
+      <p>
+        Kofi felt as if the entire forest were alive with music, each creature and leaf contributing its own quiet voice to the harmony.
+      </p>
+      <p>
+        He closed his eyes for a moment, letting the peaceful sound fill his heart with calmness, courage, and a sense of gentle wonder.
+      </p>
+      <p>
+        When he opened his eyes again, he realized the forest had taught him something important about listening carefully and appreciating small, quiet moments.
+      </p>
+      <p>
+        Kofi walked home slowly, carrying the forest’s secret song in his memory, grateful for a morning filled with beauty, mystery, and peaceful joy.
+      </p>
+    </section>
+
+    <!-- Story 10 -->
+    <section class="story">
+      <h2>Story 10: The Clock That Loved the Morning</h2>
+      <p>
+        In a quiet little house at the end of the street, a small silver clock sat proudly on a wooden shelf near the window.
+      </p>
+      <p>
+        Every morning, the clock woke before everyone else, listening to the soft sounds of the world stretching awake outside.
+      </p>
+      <p>
+        It loved the moment when the first ray of sunlight touched its shiny face, making it glow warmly like a tiny rising sun.
+      </p>
+      <p>
+        Birds outside chirped cheerful greetings, and the clock ticked happily along with their rhythm, feeling like part of their morning song.
+      </p>
+      <p>
+        A gentle breeze slipped through the open window, carrying the fresh smell of dew and making the clock feel calm and peaceful.
+      </p>
+      <p>
+        As the family began to stir, the clock felt excited, knowing it played an important role in helping everyone start their day on time.
+      </p>
+      <p>
+        The little girl of the house always smiled at the clock, whispering a soft good morning before heading to the kitchen for breakfast.
+      </p>
+      <p>
+        The clock ticked proudly whenever she did that, feeling appreciated and happy to be part of her warm and familiar routine.
+      </p>
+      <p>
+        When the sun finally filled the room with bright light, the clock felt ready for another day of steady ticking and quiet responsibility.
+      </p>
+      <p>
+        By the time the house was fully awake, the clock glowed with joy, grateful for the simple beauty of each new morning it welcomed.
+      </p>
+    </section>
+
+    <!-- Story 11 -->
+    <section class="story">
+      <h2>Story 11: The Rainbow That Followed the Girl</h2>
+      <p>
+        After a gentle rain shower, a bright rainbow stretched across the sky, glowing with colors so vivid that they looked almost magical.
+      </p>
+      <p>
+        A cheerful girl named Ama walked along the path, noticing how the rainbow seemed to shine a little brighter whenever she stepped forward.
+      </p>
+      <p>
+        She waved playfully at it, and to her surprise, the rainbow appeared to follow her, bending slightly as if trying to stay close.
+      </p>
+      <p>
+        Ama laughed softly, feeling delighted that something so beautiful might want to share her quiet afternoon walk through the neighborhood.
+      </p>
+      <p>
+        Birds fluttered above her, chirping happily as if they, too, were amazed by the rainbow’s gentle movement across the sky.
+      </p>
+      <p>
+        As Ama continued walking, the rainbow arched lower, casting a warm and colorful glow that made the world around her feel peaceful and bright.
+      </p>
+      <p>
+        She imagined the rainbow whispering encouraging words, reminding her that even small steps forward could lead to wonderful discoveries.
+      </p>
+      <p>
+        A soft breeze brushed her cheeks, carrying the fresh smell of rain and making the colors shimmer like sparkling ribbons in the air.
+      </p>
+      <p>
+        When Ama finally reached the end of the path, the rainbow slowly lifted higher, returning to the sky as if saying a gentle goodbye.
+      </p>
+      <p>
+        Ama smiled warmly, grateful for a magical moment that made her believe the world was full of friendly surprises waiting to be noticed.
+      </p>
+    </section>
+
+    <!-- Story 12 -->
+    <section class="story">
+      <h2>Story 12: The Little Train That Didn’t Give Up</h2>
+      <p>
+        Early one misty morning, a small red train waited quietly on the tracks, hoping it could complete its long journey across the countryside.
+      </p>
+      <p>
+        The train felt nervous because the hills ahead looked tall and challenging, but it reminded itself that every big task begins with one small step.
+      </p>
+      <p>
+        As the conductor climbed aboard, he patted the train gently, encouraging it to stay brave and steady no matter how difficult the path became.
+      </p>
+      <p>
+        The train puffed forward slowly, releasing soft clouds of steam that floated into the cool air like tiny white balloons drifting upward.
+      </p>
+      <p>
+        When it reached the first hill, the train pushed with all its strength, repeating a quiet rhythm that helped it stay focused and determined.
+      </p>
+      <p>
+        Birds flying overhead cheered for the little train, singing bright melodies that made the climb feel less lonely and more hopeful.
+      </p>
+      <p>
+        Halfway up the hill, the train felt tired, but it remembered how far it had already come and decided not to give up.
+      </p>
+      <p>
+        With one final burst of courage, it reached the top, feeling proud as it looked out over the wide fields stretching peacefully below.
+      </p>
+      <p>
+        The rest of the journey felt easier, and the train rolled smoothly along the tracks, enjoying the warm sunlight and gentle breeze.
+      </p>
+      <p>
+        By the time it reached the station, the little train felt stronger than ever, grateful that it had believed in itself even when the path seemed hard.
+      </p>
+    </section>
+
+    <!-- Story 13 -->
+    <section class="story">
+      <h2>Story 13: The Moon That Wanted to Stay Awake</h2>
+      <p>
+        High above the quiet town, the moon hung softly in the night sky, glowing with a gentle silver light that touched every rooftop.
+      </p>
+      <p>
+        The moon loved watching children dream, imagining the wonderful stories that filled their minds as they slept peacefully in their warm beds.
+      </p>
+      <p>
+        One night, the moon felt curious and decided it wanted to stay awake long enough to see the very first colors of morning.
+      </p>
+      <p>
+        It watched the stars twinkle around it, each one whispering that staying awake until sunrise would be difficult but also very exciting.
+      </p>
+      <p>
+        A cool breeze drifted through the sky, carrying the soft sound of rustling leaves and making the moon feel calm and determined.
+      </p>
+      <p>
+        As the night grew quieter, the moon noticed an owl gliding gracefully through the air, its wings moving silently like shadows.
+      </p>
+      <p>
+        The owl hooted a friendly greeting, encouraging the moon to stay strong and enjoy the peaceful beauty of the sleeping world below.
+      </p>
+      <p>
+        Slowly, the sky began to change, and the moon saw faint hints of pink and gold stretching across the horizon.
+      </p>
+      <p>
+        The moon felt proud, knowing it had stayed awake long enough to witness the magical moment when night gently transforms into day.
+      </p>
+      <p>
+        When the sun finally rose, the moon drifted away to rest, grateful for a night filled with courage, curiosity, and quiet wonder.
+      </p>
+    </section>
+
+    <!-- Story 14 -->
+    <section class="story">
+      <h2>Story 14: The Shell That Held a Secret</h2>
+      <p>
+        On a warm afternoon by the quiet beach, a small seashell lay half-buried in the sand, waiting patiently for someone curious to discover it.
+      </p>
+      <p>
+        A thoughtful girl named Sena wandered along the shore, listening to the soft waves as they rolled gently across the sand with a calming rhythm.
+      </p>
+      <p>
+        When she spotted the seashell, she picked it up carefully, admiring the smooth swirls of pink and white that decorated its shiny surface.
+      </p>
+      <p>
+        She held the shell close to her ear and heard a soft whooshing sound, almost like a tiny ocean whispering a secret only she could hear.
+      </p>
+      <p>
+        The sound made her smile, and she imagined the shell telling stories about deep underwater caves filled with glowing fish and hidden treasures.
+      </p>
+      <p>
+        A friendly crab scurried nearby, waving its claws as if encouraging Sena to keep exploring the beach with curiosity and excitement.
+      </p>
+      <p>
+        Sena walked along the shoreline, holding the shell gently and wondering how something so small could carry such a magical and peaceful sound.
+      </p>
+      <p>
+        The warm breeze brushed her face, carrying the salty smell of the sea and making the moment feel even more special and unforgettable.
+      </p>
+      <p>
+        As the sun began to set, the sky turned shades of orange and purple, and the shell glowed softly in the fading light.
+      </p>
+      <p>
+        Sena tucked the shell safely into her pocket, grateful for a simple treasure that reminded her to listen closely to the quiet wonders around her.
+      </p>
+    </section>
+
+    <!-- Story 15 -->
+    <section class="story">
+      <h2>Story 15: The Backpack That Loved Adventures</h2>
+      <p>
+        On the first day of vacation, a bright blue backpack sat proudly on the bed, excited for all the adventures it hoped to experience.
+      </p>
+      <p>
+        A boy named Jalen carefully packed his favorite book, a small snack, a water bottle, and a tiny flashlight that always made him feel brave.
+      </p>
+      <p>
+        The backpack felt important as each item was placed inside, knowing it would help Jalen explore new places with confidence and curiosity.
+      </p>
+      <p>
+        When they stepped outside, the warm sun touched the backpack’s fabric, making it feel ready for a long and exciting day ahead.
+      </p>
+      <p>
+        Jalen walked toward the nearby woods, listening to the crunch of leaves beneath his shoes and the cheerful chirping of birds above him.
+      </p>
+      <p>
+        The backpack bounced gently with each step, enjoying the rhythm of the walk and the peaceful sounds of nature surrounding them.
+      </p>
+      <p>
+        As they reached a small clearing, Jalen sat on a fallen log and opened the backpack, grateful for the snack and water waiting inside.
+      </p>
+      <p>
+        After resting, he used the flashlight to peek into a tiny hollow tree, imagining what small creatures might be hiding quietly inside.
+      </p>
+      <p>
+        The backpack felt proud to be part of Jalen’s discoveries, helping him feel prepared, safe, and excited during every moment of the adventure.
+      </p>
+      <p>
+        When they finally returned home, the backpack rested happily on the bed, knowing it had shared a wonderful day filled with exploration and joy.
+      </p>
+    </section>
+
+    <!-- Story 16 -->
+    <section class="story">
+      <h2>Story 16: The Snowflake With a Big Dream</h2>
+      <p>
+        High above the winter clouds, a tiny snowflake formed quietly, shaping itself into a delicate pattern more unique than anything around it.
+      </p>
+      <p>
+        The snowflake felt excited as it drifted downward, wondering where it would land and what wonderful sights it might see along the way.
+      </p>
+      <p>
+        Cold winds carried it gently across the sky, spinning it slowly so it could admire the sparkling world stretching far beneath its tiny edges.
+      </p>
+      <p>
+        As it floated lower, the snowflake noticed children playing in the snow, their laughter rising like music that warmed the chilly air.
+      </p>
+      <p>
+        One little girl reached out her mittened hand, hoping to catch a snowflake, and the tiny traveler felt drawn to her bright, joyful smile.
+      </p>
+      <p>
+        The snowflake landed softly on her mitten, amazed by how warm and safe it felt resting in the gentle curve of her small hand.
+      </p>
+      <p>
+        The girl leaned closer, admiring the snowflake’s beautiful shape, and whispered that it looked like a tiny star made of frozen light.
+      </p>
+      <p>
+        Hearing her kind words made the snowflake feel proud, knowing its delicate design had brought a moment of wonder to someone’s day.
+      </p>
+      <p>
+        As the warmth of the mitten slowly melted it, the snowflake felt peaceful, grateful that its short journey had been filled with beauty and kindness.
+      </p>
+      <p>
+        It drifted into a tiny drop of water, dreaming happily of joining the clouds again someday and beginning another magical adventure.
+      </p>
+    </section>
+
+    <!-- Story 17 -->
+    <section class="story">
+      <h2>Story 17: The Pencil That Drew Its Own Path</h2>
+      <p>
+        On a quiet school morning, a bright yellow pencil lay on the desk, waiting patiently for someone to pick it up and begin creating something new.
+      </p>
+      <p>
+        A thoughtful boy named Kwame reached for the pencil, feeling excited because he loved drawing pictures that told stories about his imagination.
+      </p>
+      <p>
+        As soon as he touched it, the pencil felt a warm spark of energy, as if it had been waiting for this exact moment to shine.
+      </p>
+      <p>
+        Kwame placed the pencil on a blank sheet of paper, and together they began drawing gentle lines that curved like soft waves in the ocean.
+      </p>
+      <p>
+        The pencil glided smoothly, creating shapes that slowly formed a peaceful village with tiny houses, tall trees, and smiling people.
+      </p>
+      <p>
+        Kwame imagined the pencil whispering ideas, guiding his hand to add details like birds in the sky and flowers blooming near the houses.
+      </p>
+      <p>
+        The more he drew, the more confident he felt, realizing that creativity grows stronger when you trust your imagination and keep practicing.
+      </p>
+      <p>
+        The pencil enjoyed every moment, proud to help Kwame express his thoughts in a way that felt joyful, calm, and full of possibility.
+      </p>
+      <p>
+        When the drawing was finished, Kwame looked at it with pride, amazed at how a simple pencil could help bring such a beautiful scene to life.
+      </p>
+      <p>
+        He placed the pencil gently back on the desk, grateful for a quiet moment of creativity that made him feel brave, inspired, and ready for more.
+      </p>
+    </section>
+
+    <!-- Story 18 -->
+    <section class="story">
+      <h2>Story 18: The Chair That Loved Storytime</h2>
+      <p>
+        In a cozy corner of the living room, a soft blue chair sat quietly, waiting for someone to curl up and enjoy a peaceful moment.
+      </p>
+      <p>
+        The chair loved storytime more than anything, especially when a child settled into its cushions with a book full of imagination and adventure.
+      </p>
+      <p>
+        One rainy afternoon, a girl named Adjoa climbed into the chair, bringing a thick blanket and her favorite story about brave explorers.
+      </p>
+      <p>
+        As she opened the book, the chair felt warm and proud, knowing it would help her stay comfortable while she practiced her reading skills.
+      </p>
+      <p>
+        Raindrops tapped gently against the window, creating a soothing rhythm that made the room feel calm, safe, and perfect for learning.
+      </p>
+      <p>
+        Adjoa read slowly and carefully, sounding out each word with determination while the chair supported her back like a patient, loyal friend.
+      </p>
+      <p>
+        Whenever she stumbled on a tricky word, she paused, took a deep breath, and tried again until the sentence made sense in her mind.
+      </p>
+      <p>
+        The chair admired her courage, feeling inspired by the way she refused to give up even when the story became challenging.
+      </p>
+      <p>
+        As the rain softened, Adjoa finished the chapter and smiled proudly, knowing she had grown a little stronger and more confident as a reader.
+      </p>
+      <p>
+        The chair held her gently for a moment longer, grateful to be part of a quiet afternoon filled with learning, comfort, and imagination.
+      </p>
+    </section>
+
+    <!-- Story 19 -->
+    <section class="story">
+      <h2>Story 19: The Balloon That Wanted to See the World</h2>
+      <p>
+        On a bright market morning, a shiny red balloon floated gently above a small stand, tied loosely to a wooden post beside colorful flowers.
+      </p>
+      <p>
+        A curious boy named Taye noticed the balloon swaying softly in the breeze, almost as if it were trying to whisper a secret to him.
+      </p>
+      <p>
+        When he untied the string, the balloon tugged upward with excitement, eager to rise into the open sky and explore new places.
+      </p>
+      <p>
+        Taye held the string carefully, letting the balloon drift higher while still keeping it close enough to feel safe and connected.
+      </p>
+      <p>
+        As they walked through the market, the balloon admired the busy stalls filled with fruits, spices, and handmade treasures that sparkled in the sunlight.
+      </p>
+      <p>
+        A gentle wind lifted the balloon even higher, giving it a wide view of the bustling crowd and the cheerful sounds of people talking and laughing.
+      </p>
+      <p>
+        Taye imagined the balloon dreaming about faraway mountains, deep forests, and quiet rivers it might someday float above with graceful ease.
+      </p>
+      <p>
+        The balloon felt grateful for Taye’s steady hand, knowing that exploring the world was easier when someone kind walked beside you.
+      </p>
+      <p>
+        When they reached a quiet hill outside the market, Taye released the string slowly, allowing the balloon to rise freely into the sky.
+      </p>
+      <p>
+        The balloon drifted upward with joy, carrying the memory of a gentle friend and a beautiful morning filled with wonder, kindness, and possibility.
+      </p>
+    </section>
+
+    <!-- Story 20 -->
+    <section class="story">
+      <h2>Story 20: The Star That Learned to Shine Brighter</h2>
+      <p>
+        Far above the quiet night sky, a tiny star twinkled softly, feeling a little unsure of itself as it watched the bigger stars glow with confidence.
+      </p>
+      <p>
+        The tiny star wished it could shine just as brightly, but every time it tried, its light flickered gently like a candle in a soft breeze.
+      </p>
+      <p>
+        One evening, a passing comet noticed the star’s shy glow and paused to offer a warm, encouraging smile from across the sky.
+      </p>
+      <p>
+        The comet told the star that every light in the universe mattered, no matter how small, because even the faintest glow could guide someone in the dark.
+      </p>
+      <p>
+        Hearing those words made the tiny star feel hopeful, and it decided to try shining again, this time with a little more courage in its heart.
+      </p>
+      <p>
+        As it focused on its warmest, happiest memories, the star felt its light grow steadier, glowing with a gentle strength it had never felt before.
+      </p>
+      <p>
+        The nearby stars noticed the change and twinkled proudly, cheering for their small friend as it discovered its own special brightness.
+      </p>
+      <p>
+        Down on Earth, a child looking out her window spotted the tiny star and whispered that it was her favorite because it sparkled in such a kind and comforting way.
+      </p>
+      <p>
+        The star heard her soft voice and felt a burst of joy, realizing that its gentle glow was exactly what someone needed in that quiet moment.
+      </p>
+      <p>
+        From that night on, the tiny star shone with confidence, grateful for the reminder that every light has a purpose and every heart has a place in the sky.
+      </p>
+    </section>
+
+    <div class="nav-buttons">
+      <button id="prevBtn">Back</button>
+      <button id="nextBtn">Next</button>
+      <div class="jump">
+        Jump to story:
+        <select id="storySelect">
+          <option value="0">Story 1</option>
+          <option value="1">Story 2</option>
+          <option value="2">Story 3</option>
+          <option value="3">Story 4</option>
+          <option value="4">Story 5</option>
+          <option value="5">Story 6</option>
+          <option value="6">Story 7</option>
+          <option value="7">Story 8</option>
+          <option value="8">Story 9</option>
+          <option value="9">Story 10</option>
+          <option value="10">Story 11</option>
+          <option value="11">Story 12</option>
+          <option value="12">Story 13</option>
+          <option value="13">Story 14</option>
+          <option value="14">Story 15</option>
+          <option value="15">Story 16</option>
+          <option value="16">Story 17</option>
+          <option value="17">Story 18</option>
+          <option value="18">Story 19</option>
+          <option value="19">Story 20</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const stories = document.querySelectorAll('.story');
+    const prevBtn = document.getElementById('prevBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const storyCounter = document.getElementById('storyCounter');
+    const storySelect = document.getElementById('storySelect');
+
+    let currentIndex = 0;
+    const totalStories = stories.length;
+
+    function updateView(index) {
+      stories.forEach((story, i) => {
+        story.classList.toggle('active', i === index);
+      });
+
+      currentIndex = index;
+      storyCounter.textContent = 'Story ' + (currentIndex + 1) + ' of ' + totalStories;
+      storySelect.value = String(currentIndex);
+
+      prevBtn.disabled = currentIndex === 0;
+      nextBtn.disabled = currentIndex === totalStories - 1;
+      window.scrollTo(0, 0);
+    }
+
+    prevBtn.addEventListener('click', () => {
+      if (currentIndex > 0) {
+        updateView(currentIndex - 1);
+      }
+    });
+
+    nextBtn.addEventListener('click', () => {
+      if (currentIndex < totalStories - 1) {
+        updateView(currentIndex + 1);
+      }
+    });
+
+    storySelect.addEventListener('change', (e) => {
+      const idx = parseInt(e.target.value, 10);
+      if (!isNaN(idx)) {
+        updateView(idx);
+      }
+    });
+
+    updateView(0);
+  </script>
+</body>
+</html>

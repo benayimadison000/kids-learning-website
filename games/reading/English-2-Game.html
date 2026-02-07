@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Word Quest: The Magic Library</title>
+    <style>
+        body {
+            font-family: 'Comic Sans MS', Arial, sans-serif;
+            background: url('https://images.unsplash.com/photo-1512820790803-83ca3b5b664b?ixlib=rb-4.0.3&auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
+            background-size: cover;
+            color: #333;
+            text-align: center;
+            margin: 0;
+            padding: 20px;
+        }
+        #game-container, #dashboard {
+            max-width: 600px;
+            margin: auto;
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            animation: fadeIn 1s ease-in;
+        }
+        #dashboard {
+            display: none;
+            margin-top: 20px;
+        }
+        button {
+            background-color: #0288D1;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px;
+            font-size: 16px;
+            transition: transform 0.2s, background-color 0.2s;
+        }
+        button:hover {
+            background-color: #0277BD;
+            transform: scale(1.1);
+        }
+        #question-area {
+            margin: 20px 0;
+            animation: slideIn 0.5s ease-in;
+        }
+        #star-counter {
+            font-size: 1.5em;
+            color: #FFD700;
+            text-shadow: 1px 1px 2px #000;
+        }
+        #progress-bar {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #feedback {
+            font-size: 1.2em;
+            color: #D81B60;
+        }
+        .option {
+            display: block;
+            margin: 10px auto;
+            width: 250px;
+            font-size: 16px;
+        }
+        canvas {
+            margin-top: 20px;
+        }
+        #story {
+            font-style: italic;
+            margin-bottom: 20px;
+            color: #1B5E20;
+        }
+        #toggle-dashboard {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background-color: #F57C00;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div id="game-container">
+        <h1>Word Quest: The Magic Library</h1>
+        <h2>Level 1: The Storybook Shelf</h2>
+        <p id="star-counter">Stars: 0</p>
+        <p id="progress-bar">Question 1/50</p>
+        <div id="story">Emma enters the Magic Library, but the books are locked by enchanted seals. Answer 50 questions to unlock them all!</div>
+        <div id="question-area"></div>
+        <div id="feedback"></div>
+        <canvas id="stars-chart" width="400" height="200"></canvas>
+        <canvas id="performance-chart" width="400" height="200"></canvas>
+        <button id="toggle-dashboard">Parent Dashboard</button>
+    </div>
+    <div id="dashboard">
+        <h2>Parent Dashboard</h2>
+        <p id="dashboard-stats"></p>
+        <button onclick="toggleDashboard()">Back to Game</button>
+    </div>
+
+    <script>
+        let stars = 0;
+        let currentQuestion = 0;
+        let attempts = 0;
+        let maxAttempts = 2;
+        let difficulty = "easy"; // easy, medium, hard
+        let performance = {
+            vocabCorrect: 0, vocabTotal: 15,
+            sentenceCorrect: 0, sentenceTotal: 15,
+            fillCorrect: 0, fillTotal: 15,
+            synAntCorrect: 0, synAntTotal: 10
+        };
+
+        // 50 questions: 15 vocab & opposites, 15 sentence building, 15 fill in the blanks, 5 synonyms, 5 antonyms
+        const questions = [
+            // Vocabulary & Opposites (15)
+            { type: "vocab", question: "What does 'brilliant' mean? Example: 'The book glowed with a brilliant light.'", answer: "Very bright", options: ["Very dark", "Very bright", "Very heavy", "Very quiet"], hint: "The book was glowing, so what kind of light would it have?", difficulty: "easy", altQuestions: { medium: { question: "What does 'radiant' mean? Example: 'The book shone with a radiant glow.'", answer: "Bright and shining", options: ["Dull", "Bright and shining", "Heavy", "Silent"] }, hard: { question: "What does 'luminous' mean? Example: 'The book was luminous in the dark.'", answer: "Glowing", options: ["Fading", "Glowing", "Rough", "Cold"] } } },
+            { type: "vocab", question: "What is the opposite of 'big'?", answer: "Small", options: ["Tall", "Small", "Fast", "Heavy"], hint: "Think of something not large.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'huge'?", answer: "Tiny", options: ["Big", "Tiny", "Wide", "Long"] }, hard: { question: "What is the opposite of 'enormous'?", answer: "Tiny", options: ["Giant", "Tiny", "Bright", "Heavy"] } } },
+            { type: "vocab", question: "What does 'predict' mean? Example: 'Emma tried to predict the story’s ending.'", answer: "Guess what will happen", options: ["Write a story", "Guess what will happen", "Read a book", "Hide something"], hint: "Emma was thinking about the story’s ending.", difficulty: "easy", altQuestions: { medium: { question: "What does 'forecast' mean? Example: 'Emma forecasted the plot twist.'", answer: "Predict", options: ["Write", "Predict", "Draw", "Sing"] }, hard: { question: "What does 'anticipate' mean? Example: 'Emma anticipated a surprise.'", answer: "Expect something", options: ["Forget", "Expect something", "Lose", "Break"] } } },
+            { type: "vocab", question: "What is the opposite of 'happy'?", answer: "Sad", options: ["Happy", "Sad", "Fast", "Big"], hint: "Think of a feeling that is not joyful.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'joyful'?", answer: "Miserable", options: ["Happy", "Miserable", "Quick", "Large"] }, hard: { question: "What is the opposite of 'ecstatic'?", answer: "Depressed", options: ["Excited", "Depressed", "Tall", "Bright"] } } },
+            { type: "vocab", question: "What does 'enormous' mean? Example: 'The book was enormous and heavy.'", answer: "Very large", options: ["Very small", "Very large", "Very old", "Very light"], hint: "The book was also heavy, so what size might it be?", difficulty: "easy", altQuestions: { medium: { question: "What does 'gigantic' mean? Example: 'The book was gigantic.'", answer: "Huge", options: ["Tiny", "Huge", "Soft", "Quiet"] }, hard: { question: "What does 'immense' mean? Example: 'The book was immense.'", answer: "Very large", options: ["Small", "Very large", "Cold", "Dark"] } } },
+            { type: "vocab", question: "What is the opposite of 'fast'?", answer: "Slow", options: ["Quick", "Slow", "Big", "Light"], hint: "Think of something not speedy.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'swift'?", answer: "Slow", options: ["Fast", "Slow", "Tall", "Heavy"] }, hard: { question: "What is the opposite of 'rapid'?", answer: "Sluggish", options: ["Quick", "Sluggish", "Bright", "Large"] } } },
+            { type: "vocab", question: "What does 'curious' mean? Example: 'Emma was curious about the book.'", answer: "Eager to learn", options: ["Angry", "Eager to learn", "Tired", "Sad"], hint: "Emma wanted to know more about the book.", difficulty: "easy", altQuestions: { medium: { question: "What does 'inquisitive' mean? Example: 'Emma was inquisitive.'", answer: "Curious", options: ["Bored", "Curious", "Sleepy", "Loud"] }, hard: { question: "What does 'probing' mean? Example: 'Emma’s probing mind solved mysteries.'", answer: "Investigative", options: ["Lazy", "Investigative", "Quiet", "Slow"] } } },
+            { type: "vocab", question: "What is the opposite of 'hot'?", answer: "Cold", options: ["Warm", "Cold", "Fast", "Big"], hint: "Think of a temperature not warm.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'scorching'?", answer: "Freezing", options: ["Hot", "Freezing", "Dry", "Small"] }, hard: { question: "What is the opposite of 'blazing'?", answer: "Icy", options: ["Warm", "Icy", "Bright", "Tall"] } } },
+            { type: "vocab", question: "What does 'brave' mean? Example: 'Emma was brave to open the book.'", answer: "Courageous", options: ["Scared", "Courageous", "Tired", "Small"], hint: "Emma wasn’t afraid to act.", difficulty: "easy", altQuestions: { medium: { question: "What does 'valiant' mean? Example: 'Emma was valiant.'", answer: "Brave", options: ["Weak", "Brave", "Sad", "Quiet"] }, hard: { question: "What does 'gallant' mean? Example: 'Emma was gallant in her quest.'", answer: "Heroic", options: ["Cowardly", "Heroic", "Slow", "Dark"] } } },
+            { type: "vocab", question: "What is the opposite of 'loud'?", answer: "Quiet", options: ["Noisy", "Quiet", "Big", "Fast"], hint: "Think of a sound that is not noisy.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'boisterous'?", answer: "Calm", options: ["Loud", "Calm", "Bright", "Heavy"] }, hard: { question: "What is the opposite of 'clamorous'?", answer: "Silent", options: ["Noisy", "Silent", "Tall", "Hot"] } } },
+            { type: "vocab", question: "What does 'gentle' mean? Example: 'Emma handled the book gently.'", answer: "Soft or kind", options: ["Rough", "Soft or kind", "Loud", "Fast"], hint: "Emma was careful with the book.", difficulty: "easy", altQuestions: { medium: { question: "What does 'tender' mean? Example: 'Emma’s touch was tender.'", answer: "Gentle", options: ["Harsh", "Gentle", "Heavy", "Cold"] }, hard: { question: "What does 'delicate' mean? Example: 'Emma’s handling was delicate.'", answer: "Careful", options: ["Rough", "Careful", "Loud", "Big"] } } },
+            { type: "vocab", question: "What is the opposite of 'up'?", answer: "Down", options: ["High", "Down", "Fast", "Big"], hint: "Think of a direction not upward.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'ascend'?", answer: "Descend", options: ["Rise", "Descend", "Run", "Large"] }, hard: { question: "What is the opposite of 'elevate'?", answer: "Lower", options: ["Lift", "Lower", "Bright", "Fast"] } } },
+            { type: "vocab", question: "What does 'tidy' mean? Example: 'Emma kept the library tidy.'", answer: "Neat", options: ["Messy", "Neat", "Loud", "Fast"], hint: "The library was clean and organized.", difficulty: "easy", altQuestions: { medium: { question: "What does 'orderly' mean? Example: 'The library was orderly.'", answer: "Organized", options: ["Chaotic", "Organized", "Dark", "Cold"] }, hard: { question: "What does 'meticulous' mean? Example: 'Emma was meticulous.'", answer: "Very careful", options: ["Careless", "Very careful", "Quick", "Small"] } } },
+            { type: "vocab", question: "What is the opposite of 'strong'?", answer: "Weak", options: ["Powerful", "Weak", "Big", "Fast"], hint: "Think of something not powerful.", difficulty: "easy", altQuestions: { medium: { question: "What is the opposite of 'sturdy'?", answer: "Fragile", options: ["Strong", "Fragile", "Tall", "Bright"] }, hard: { question: "What is the opposite of 'robust'?", answer: "Frail", options: ["Healthy", "Frail", "Large", "Loud"] } } },
+            { type: "vocab", question: "What does 'joyful' mean? Example: 'Emma felt joyful reading the book.'", answer: "Happy", options: ["Sad", "Happy", "Tired", "Small"], hint: "Emma was excited about the book.", difficulty: "easy", altQuestions: { medium: { question: "What does 'cheerful' mean? Example: 'Emma was cheerful.'", answer: "Happy", options: ["Gloomy", "Happy", "Fast", "Big"] }, hard: { question: "What does 'elated' mean? Example: 'Emma was elated by the story.'", answer: "Very happy", options: ["Sad", "Very happy", "Slow", "Dark"] } } },
+            // Simple Sentence Building (15)
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ a book.", answer: "Emma reads a book.", options: ["Emma book a reads.", "Emma a book reads.", "Emma reads a book.", "Book Emma a reads."], hint: "The subject (Emma) comes first, then the verb, then the object.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The librarian ____ the shelf.", answer: "The librarian organizes the shelf.", options: ["The shelf librarian organizes.", "The librarian organizes the shelf.", "Organizes the librarian shelf.", "The librarian shelf organizes."] }, hard: { question: "Choose the correct sentence: Emma ____ a mystery.", answer: "Emma solves a mystery.", options: ["Emma a mystery solves.", "Solves Emma a mystery.", "Emma solves a mystery.", "Mystery Emma a solves."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The book ____ on the shelf.", answer: "The book sits on the shelf.", options: ["The book on the shelf sits.", "Sits the book on the shelf.", "The book sits on the shelf.", "On the shelf the book sits."], hint: "Start with the subject (The book), then the verb, then the rest.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The story ____ in the library.", answer: "The story begins in the library.", options: ["The story in the library begins.", "Begins the story in the library.", "The story begins in the library.", "In the library the story begins."] }, hard: { question: "Choose the correct sentence: The tale ____ in the book.", answer: "The tale unfolds in the book.", options: ["The tale in the book unfolds.", "Unfolds the tale in the book.", "The tale unfolds in the book.", "In the book the tale unfolds."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ the story.", answer: "Emma loves the story.", options: ["Emma the story loves.", "Loves Emma the story.", "Emma loves the story.", "The story Emma loves."], hint: "The subject comes before the verb.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ the bookcase.", answer: "Emma cleans the bookcase.", options: ["Emma the bookcase cleans.", "Cleans Emma the bookcase.", "Emma cleans the bookcase.", "The bookcase Emma cleans."] }, hard: { question: "Choose the correct sentence: Emma ____ the puzzle.", answer: "Emma solves the puzzle.", options: ["Emma the puzzle solves.", "Solves Emma the puzzle.", "Emma solves the puzzle.", "The puzzle Emma solves."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The library ____ quiet.", answer: "The library is quiet.", options: ["The library quiet is.", "Is the library quiet.", "The library is quiet.", "Quiet the library is."], hint: "Use 'is' to describe the library.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The room ____ peaceful.", answer: "The room is peaceful.", options: ["The room peaceful is.", "Is the room peaceful.", "The room is peaceful.", "Peaceful the room is."] }, hard: { question: "Choose the correct sentence: The library ____ tranquil.", answer: "The library is tranquil.", options: ["The library tranquil is.", "Is the library tranquil.", "The library is tranquil.", "Tranquil the library is."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ a page.", answer: "Emma turns a page.", options: ["Emma a page turns.", "Turns Emma a page.", "Emma turns a page.", "A page Emma turns."], hint: "The subject (Emma) comes first.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ a chapter.", answer: "Emma reads a chapter.", options: ["Emma a chapter reads.", "Reads Emma a chapter.", "Emma reads a chapter.", "A chapter Emma reads."] }, hard: { question: "Choose the correct sentence: Emma ____ a tale.", answer: "Emma explores a tale.", options: ["Emma a tale explores.", "Explores Emma a tale.", "Emma explores a tale.", "A tale Emma explores."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The book ____ old.", answer: "The book is old.", options: ["The book old is.", "Is the book old.", "The book is old.", "Old the book is."], hint: "Use 'is' to describe the book.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The shelf ____ dusty.", answer: "The shelf is dusty.", options: ["The shelf dusty is.", "Is the shelf dusty.", "The shelf is dusty.", "Dusty the shelf is."] }, hard: { question: "Choose the correct sentence: The tome ____ ancient.", answer: "The tome is ancient.", options: ["The tome ancient is.", "Is the tome ancient.", "The tome is ancient.", "Ancient the tome is."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ the book.", answer: "Emma opens the book.", options: ["Emma the book opens.", "Opens Emma the book.", "Emma opens the book.", "The book Emma opens."], hint: "The subject comes before the verb.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ the story.", answer: "Emma reads the story.", options: ["Emma the story reads.", "Reads Emma the story.", "Emma reads the story.", "The story Emma reads."] }, hard: { question: "Choose the correct sentence: Emma ____ the mystery.", answer: "Emma unravels the mystery.", options: ["Emma the mystery unravels.", "Unravels Emma the mystery.", "Emma unravels the mystery.", "The mystery Emma unravels."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The story ____ exciting.", answer: "The story is exciting.", options: ["The story exciting is.", "Is the story exciting.", "The story is exciting.", "Exciting the story is."], hint: "Use 'is' to describe the story.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The tale ____ thrilling.", answer: "The tale is thrilling.", options: ["The tale thrilling is.", "Is the tale thrilling.", "The tale is thrilling.", "Thrilling the tale is."] }, hard: { question: "Choose the correct sentence: The book ____ captivating.", answer: "The book is captivating.", options: ["The book captivating is.", "Is the book captivating.", "The book is captivating.", "Captivating the book is."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ a friend.", answer: "Emma helps a friend.", options: ["Emma a friend helps.", "Helps Emma a friend.", "Emma helps a friend.", "A friend Emma helps."], hint: "The subject (Emma) comes first.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ a visitor.", answer: "Emma greets a visitor.", options: ["Emma a visitor greets.", "Greets Emma a visitor.", "Emma greets a visitor.", "A visitor Emma greets."] }, hard: { question: "Choose the correct sentence: Emma ____ a guest.", answer: "Emma assists a guest.", options: ["Emma a guest assists.", "Assists Emma a guest.", "Emma assists a guest.", "A guest Emma assists."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The library ____ books.", answer: "The library has books.", options: ["The library books has.", "Has the library books.", "The library has books.", "Books the library has."], hint: "Use 'has' to show possession.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The shelf ____ stories.", answer: "The shelf holds stories.", options: ["The shelf stories holds.", "Holds the shelf stories.", "The shelf holds stories.", "Stories the shelf holds."] }, hard: { question: "Choose the correct sentence: The bookcase ____ tales.", answer: "The bookcase contains tales.", options: ["The bookcase tales contains.", "Contains the bookcase tales.", "The bookcase contains tales.", "Tales the bookcase contains."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ quietly.", answer: "Emma reads quietly.", options: ["Emma quietly reads.", "Reads Emma quietly.", "Emma reads quietly.", "Quietly Emma reads."], hint: "The verb comes before the adverb.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ carefully.", answer: "Emma works carefully.", options: ["Emma carefully works.", "Works Emma carefully.", "Emma works carefully.", "Carefully Emma works."] }, hard: { question: "Choose the correct sentence: Emma ____ diligently.", answer: "Emma studies diligently.", options: ["Emma diligently studies.", "Studies Emma diligently.", "Emma studies diligently.", "Diligently Emma studies."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The book ____ magic.", answer: "The book has magic.", options: ["The book magic has.", "Has the book magic.", "The book has magic.", "Magic the book has."], hint: "Use 'has' to show possession.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The story ____ secrets.", answer: "The story holds secrets.", options: ["The story secrets holds.", "Holds the story secrets.", "The story holds secrets.", "Secrets the story holds."] }, hard: { question: "Choose the correct sentence: The tome ____ mysteries.", answer: "The tome contains mysteries.", options: ["The tome mysteries contains.", "Contains the tome mysteries.", "The tome contains mysteries.", "Mysteries the tome contains."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ the shelf.", answer: "Emma cleans the shelf.", options: ["Emma the shelf cleans.", "Cleans Emma the shelf.", "Emma cleans the shelf.", "The shelf Emma cleans."], hint: "The subject comes before the verb.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ the bookcase.", answer: "Emma organizes the bookcase.", options: ["Emma the bookcase organizes.", "Organizes Emma the bookcase.", "Emma organizes the bookcase.", "The bookcase Emma organizes."] }, hard: { question: "Choose the correct sentence: Emma ____ the library.", answer: "Emma arranges the library.", options: ["Emma the library arranges.", "Arranges Emma the library.", "Emma arranges the library.", "The library Emma arranges."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The story ____ fun.", answer: "The story is fun.", options: ["The story fun is.", "Is the story fun.", "The story is fun.", "Fun the story is."], hint: "Use 'is' to describe the story.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The tale ____ exciting.", answer: "The tale is exciting.", options: ["The tale exciting is.", "Is the tale exciting.", "The tale is exciting.", "Exciting the tale is."] }, hard: { question: "Choose the correct sentence: The book ____ thrilling.", answer: "The book is thrilling.", options: ["The book thrilling is.", "Is the book thrilling.", "The book is thrilling.", "Thrilling the book is."] } } },
+            { type: "sentence", question: "Choose the correct sentence: Emma ____ a book.", answer: "Emma finds a book.", options: ["Emma a book finds.", "Finds Emma a book.", "Emma finds a book.", "A book Emma finds."], hint: "The subject (Emma) comes first.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: Emma ____ a story.", answer: "Emma discovers a story.", options: ["Emma a story discovers.", "Discovers Emma a story.", "Emma discovers a story.", "A story Emma discovers."] }, hard: { question: "Choose the correct sentence: Emma ____ a tale.", answer: "Emma uncovers a tale.", options: ["Emma a tale uncovers.", "Uncovers Emma a tale.", "Emma uncovers a tale.", "A tale Emma uncovers."] } } },
+            { type: "sentence", question: "Choose the correct sentence: The library ____ big.", answer: "The library is big.", options: ["The library big is.", "Is the library big.", "The library is big.", "Big the library is."], hint: "Use 'is' to describe the library.", difficulty: "easy", altQuestions: { medium: { question: "Choose the correct sentence: The room ____ spacious.", answer: "The room is spacious.", options: ["The room spacious is.", "Is the room spacious.", "The room is spacious.", "Spacious the room is."] }, hard: { question: "Choose the correct sentence: The library ____ vast.", answer: "The library is vast.", options: ["The library vast is.", "Is the library vast.", "The library is vast.", "Vast the library is."] } } },
+            // Fill in the Blanks (15)
+            { type: "fill", question: "Fill in the blank: Emma ____ the book on the shelf.", answer: "put", options: ["put", "puts", "putting", "putted"], hint: "Use the past tense of 'put.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ the bookcase neatly.", answer: "arranged", options: ["arrange", "arranged", "arranging", "arranges"] }, hard: { question: "Fill in the blank: Emma ____ the library carefully.", answer: "organized", options: ["organize", "organized", "organizing", "organizes"] } } },
+            { type: "fill", question: "Fill in the blank: The book was very ____.", answer: "heavy", options: ["heavy", "heavier", "heaviest", "heavily"], hint: "Choose an adjective to describe the book.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The story was very ____.", answer: "exciting", options: ["exciting", "excited", "excite", "excites"] }, hard: { question: "Fill in the blank: The tale was very ____.", answer: "thrilling", options: ["thrilling", "thrilled", "thrill", "thrills"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ quietly in the library.", answer: "read", options: ["read", "reads", "reading", "readed"], hint: "Use the past tense of 'read.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ carefully in the library.", answer: "studied", options: ["study", "studied", "studying", "studies"] }, hard: { question: "Fill in the blank: Emma ____ diligently in the library.", answer: "worked", options: ["work", "worked", "working", "works"] } } },
+            { type: "fill", question: "Fill in the blank: The library was ____ and quiet.", answer: "calm", options: ["calm", "calmer", "calmest", "calmly"], hint: "Choose an adjective to describe the library.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The room was ____ and peaceful.", answer: "serene", options: ["serene", "serener", "serenest", "serenely"] }, hard: { question: "Fill in the blank: The library was ____ and tranquil.", answer: "peaceful", options: ["peaceful", "peacefuller", "peacefullest", "peacefully"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ a new story.", answer: "found", options: ["find", "found", "finding", "finds"], hint: "Use the past tense of 'find.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ a hidden book.", answer: "discovered", options: ["discover", "discovered", "discovering", "discovers"] }, hard: { question: "Fill in the blank: Emma ____ a secret tale.", answer: "uncovered", options: ["uncover", "uncovered", "uncovering", "uncovers"] } } },
+            { type: "fill", question: "Fill in the blank: The book was ____ to read.", answer: "fun", options: ["fun", "funnier", "funniest", "funnily"], hint: "Choose an adjective to describe the book.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The story was ____ to read.", answer: "exciting", options: ["exciting", "excited", "excite", "excites"] }, hard: { question: "Fill in the blank: The tale was ____ to read.", answer: "captivating", options: ["captivating", "captivated", "captivate", "captivates"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ the book carefully.", answer: "opened", options: ["open", "opened", "opening", "opens"], hint: "Use the past tense of 'open.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ the bookcase neatly.", answer: "arranged", options: ["arrange", "arranged", "arranging", "arranges"] }, hard: { question: "Fill in the blank: Emma ____ the library precisely.", answer: "organized", options: ["organize", "organized", "organizing", "organizes"] } } },
+            { type: "fill", question: "Fill in the blank: The library had many ____ books.", answer: "old", options: ["old", "older", "oldest", "oldly"], hint: "Choose an adjective to describe the books.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The library had many ____ stories.", answer: "ancient", options: ["ancient", "ancienter", "ancientest", "anciently"] }, hard: { question: "Fill in the blank: The library had many ____ tales.", answer: "venerable", options: ["venerable", "venerabler", "venerablest", "venerably"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ the story happily.", answer: "read", options: ["read", "reads", "reading", "readed"], hint: "Use the past tense of 'read.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ the tale eagerly.", answer: "explored", options: ["explore", "explored", "exploring", "explores"] }, hard: { question: "Fill in the blank: Emma ____ the mystery excitedly.", answer: "unraveled", options: ["unravel", "unraveled", "unraveling", "unravels"] } } },
+            { type: "fill", question: "Fill in the blank: The book was ____ and dusty.", answer: "old", options: ["old", "older", "oldest", "oldly"], hint: "Choose an adjective to describe the book.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The story was ____ and thrilling.", answer: "exciting", options: ["exciting", "excited", "excite", "excites"] }, hard: { question: "Fill in the blank: The tale was ____ and captivating.", answer: "intriguing", options: ["intriguing", "intrigued", "intrigue", "intrigues"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ the shelf neatly.", answer: "cleaned", options: ["clean", "cleaned", "cleaning", "cleans"], hint: "Use the past tense of 'clean.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ the bookcase carefully.", answer: "organized", options: ["organize", "organized", "organizing", "organizes"] }, hard: { question: "Fill in the blank: Emma ____ the library meticulously.", answer: "arranged", options: ["arrange", "arranged", "arranging", "arranges"] } } },
+            { type: "fill", question: "Fill in the blank: The library was very ____.", answer: "quiet", options: ["quiet", "quieter", "quietest", "quietly"], hint: "Choose an adjective to describe the library.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The room was very ____.", answer: "peaceful", options: ["peaceful", "peacefuller", "peacefullest", "peacefully"] }, hard: { question: "Fill in the blank: The library was very ____.", answer: "tranquil", options: ["tranquil", "tranquiler", "tranquilest", "tranquilly"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ a new book.", answer: "found", options: ["find", "found", "finding", "finds"], hint: "Use the past tense of 'find.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ a hidden story.", answer: "discovered", options: ["discover", "discovered", "discovering", "discovers"] }, hard: { question: "Fill in the blank: Emma ____ a secret tale.", answer: "uncovered", options: ["uncover", "uncovered", "uncovering", "uncovers"] } } },
+            { type: "fill", question: "Fill in the blank: The story was very ____.", answer: "fun", options: ["fun", "funnier", "funniest", "funnily"], hint: "Choose an adjective to describe the story.", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: The tale was very ____.", answer: "exciting", options: ["exciting", "excited", "excite", "excites"] }, hard: { question: "Fill in the blank: The book was very ____.", answer: "captivating", options: ["captivating", "captivated", "captivate", "captivates"] } } },
+            { type: "fill", question: "Fill in the blank: Emma ____ the book gently.", answer: "opened", options: ["open", "opened", "opening", "opens"], hint: "Use the past tense of 'open.'", difficulty: "easy", altQuestions: { medium: { question: "Fill in the blank: Emma ____ the bookcase neatly.", answer: "arranged", options: ["arrange", "arranged", "arranging", "arranges"] }, hard: { question: "Fill in the blank: Emma ____ the library carefully.", answer: "organized", options: ["organize", "organized", "organizing", "organizes"] } } },
+            // Synonyms (5)
+            { type: "synAnt", question: "What is a synonym for 'big'?", answer: "Large", options: ["Small", "Large", "Fast", "Quiet"], hint: "A synonym means the same thing. What means the same as 'big'?", difficulty: "easy", altQuestions: { medium: { question: "What is a synonym for 'huge'?", answer: "Enormous", options: ["Tiny", "Enormous", "Quick", "Soft"] }, hard: { question: "What is a synonym for 'gigantic'?", answer: "Immense", options: ["Small", "Immense", "Loud", "Cold"] } } },
+            { type: "synAnt", question: "What is a synonym for 'happy'?", answer: "Glad", options: ["Sad", "Glad", "Tired", "Big"], hint: "A synonym means the same thing. What means the same as 'happy'?", difficulty: "easy", altQuestions: { medium: { question: "What is a synonym for 'joyful'?", answer: "Cheerful", options: ["Gloomy", "Cheerful", "Fast", "Small"] }, hard: { question: "What is a synonym for 'elated'?", answer: "Thrilled", options: ["Sad", "Thrilled", "Slow", "Dark"] } } },
+            { type: "synAnt", question: "What is a synonym for 'fast'?", answer: "Quick", options: ["Slow", "Quick", "Big", "Light"], hint: "A synonym means the same thing. What means the same as 'fast'?", difficulty: "easy", altQuestions: { medium: { question: "What is a synonym for 'swift'?", answer: "Rapid", options: ["Slow", "Rapid", "Tall", "Heavy"] }, hard: { question: "What is a synonym for 'hasty'?", answer: "Speedy", options: ["Slow", "Speedy", "Bright", "Large"] } } },
+            { type: "synAnt", question: "What is a synonym for 'brave'?", answer: "Courageous", options: ["Scared", "Courageous", "Tired", "Small"], hint: "A synonym means the same thing. What means the same as 'brave'?", difficulty: "easy", altQuestions: { medium: { question: "What is a synonym for 'valiant'?", answer: "Heroic", options: ["Weak", "Heroic", "Sad", "Quiet"] }, hard: { question: "What is a synonym for 'gallant'?", answer: "Brave", options: ["Cowardly", "Brave", "Slow", "Dark"] } } },
+            { type: "synAnt", question: "What is a synonym for 'quiet'?", answer: "Silent", options: ["Loud", "Silent", "Big", "Fast"], hint: "A synonym means the same thing. What means the same as 'quiet'?", difficulty: "easy", altQuestions: { medium: { question: "What is a synonym for 'calm'?", answer: "Peaceful", options: ["Noisy", "Peaceful", "Bright", "Heavy"] }, hard: { question: "What is a synonym for 'tranquil'?", answer: "Serene", options: ["Loud", "Serene", "Tall", "Hot"] } } },
+            // Antonyms (5)
+            { type: "synAnt", question: "What is an antonym for 'big'?", answer: "Small", options: ["Large", "Small", "Fast", "Quiet"], hint: "An antonym means the opposite. What is the opposite of 'big'?", difficulty: "easy", altQuestions: { medium: { question: "What is an antonym for 'huge'?", answer: "Tiny", options: ["Enormous", "Tiny", "Quick", "Soft"] }, hard: { question: "What is an antonym for 'gigantic'?", answer: "Tiny", options: ["Immense", "Tiny", "Loud", "Cold"] } } },
+            { type: "synAnt", question: "What is an antonym for 'happy'?", answer: "Sad", options: ["Glad", "Sad", "Tired", "Big"], hint: "An antonym means the opposite. What is the opposite of 'happy'?", difficulty: "easy", altQuestions: { medium: { question: "What is an antonym for 'joyful'?", answer: "Miserable", options: ["Cheerful", "Miserable", "Fast", "Small"] }, hard: { question: "What is an antonym for 'elated'?", answer: "Depressed", options: ["Thrilled", "Depressed", "Slow", "Dark"] } } },
+            { type: "synAnt", question: "What is an antonym for 'fast'?", answer: "Slow", options: ["Quick", "Slow", "Big", "Light"], hint: "An antonym means the opposite. What is the opposite of 'fast'?", difficulty: "easy", altQuestions: { medium: { question: "What is an antonym for 'swift'?", answer: "Slow", options: ["Rapid", "Slow", "Tall", "Heavy"] }, hard: { question: "What is an antonym for 'hasty'?", answer: "Sluggish", options: ["Speedy", "Sluggish", "Bright", "Large"] } } },
+            { type: "synAnt", question: "What is an antonym for 'brave'?", answer: "Scared", options: ["Courageous", "Scared", "Tired", "Small"], hint: "An antonym means the opposite. What is the opposite of 'brave'?", difficulty: "easy", altQuestions: { medium: { question: "What is an antonym for 'valiant'?", answer: "Cowardly", options: ["Heroic", "Cowardly", "Sad", "Quiet"] }, hard: { question: "What is an antonym for 'gallant'?", answer: "Fearful", options: ["Brave", "Fearful", "Slow", "Dark"] } } },
+            { type: "synAnt", question: "What is an antonym for 'quiet'?", answer: "Loud", options: ["Silent", "Loud", "Big", "Fast"], hint: "An antonym means the opposite. What is the opposite of 'quiet'?", difficulty: "easy", altQuestions: { medium: { question: "What is an antonym for 'calm'?", answer: "Noisy", options: ["Peaceful", "Noisy", "Bright", "Heavy"] }, hard: { question: "What is an antonym for 'tranquil'?", answer: "Chaotic", options: ["Serene", "Chaotic", "Tall", "Hot"] } } }
+        ];
+
+        // Shuffle array function for randomizing options
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        // Stars chart
+        let starsChartData = {
+            labels: ["Level 0", "Level 1"],
+            datasets: [{
+                label: "Stars Earned",
+                data: [40, 0], // Level 0 = 40 (preset), Level 1 updated dynamically
+                backgroundColor: ["#0288D1", "#7B1FA2"],
+                borderColor: ["#0277BD", "#6A1B9A"],
+                borderWidth: 1
+            }]
+        };
+
+        // Performance chart (accuracy by category)
+        let performanceChartData = {
+            labels: ["Vocab & Opposites", "Sentence Building", "Fill in the Blanks", "Synonyms & Antonyms"],
+            datasets: [{
+                label: "Accuracy (%)",
+                data: [0, 0, 0, 0], // Updated dynamically
+                backgroundColor: ["#F57C00", "#388E3C", "#D81B60", "#0288D1"],
+                borderColor: ["#EF6C00", "#2E7D32", "#C2185B", "#0277BD"],
+                borderWidth: 1
+            }]
+        };
+
+        // Initialize charts
+        const starsCtx = document.getElementById('stars-chart').getContext('2d');
+        const starsChart = new Chart(starsCtx, {
+            type: 'bar',
+            data: starsChartData,
+            options: {
+                scales: {
+                    y: { beginAtZero: true, title: { display: true, text: "Stars Earned" } },
+                    x: { title: { display: true, text: "Level" } }
+                },
+                plugins: { title: { display: true, text: "Stars Earned in Magic Library" } }
+            }
+        });
+
+        const perfCtx = document.getElementById('performance-chart').getContext('2d');
+        const performanceChart = new Chart(perfCtx, {
+            type: 'bar',
+            data: performanceChartData,
+            options: {
+                scales: {
+                    y: { beginAtZero: true, max: 100, title: { display: true, text: "Accuracy (%)" } },
+                    x: { title: { display: true, text: "Category" } }
+                },
+                plugins: { title: { display: true, text: "Performance by Category" } }
+            }
+        });
+
+        // Display question with randomized options
+        function showQuestion() {
+            if (currentQuestion < questions.length) {
+                const q = questions[currentQuestion];
+                // Create a copy of options and shuffle
+                const shuffledOptions = shuffleArray([...q.options]);
+                let html = `<p>${q.question}</p>`;
+                shuffledOptions.forEach(opt => {
+                    html += `<button class="option" onclick="checkAnswer('${opt}')">${opt}</button>`;
+                });
+                document.getElementById('question-area').innerHTML = html;
+                document.getElementById('progress-bar').textContent = `Question ${currentQuestion + 1}/50`;
+            } else {
+                document.getElementById('question-area').innerHTML = "<p>Level Complete! You unlocked all the books!</p><button onclick='restartGame()'>Play Again</button>";
+                document.getElementById('progress-bar').textContent = "Level Complete!";
+            }
+        }
+
+        // Check answer
+        function checkAnswer(selected) {
+            const q = questions[currentQuestion];
+            if (selected === q.answer) {
+                stars += 1;
+                document.getElementById('star-counter').textContent = `Stars: ${stars}`;
+                document.getElementById('feedback').textContent = "Great job, Emma! You earned a star!";
+                if (q.type === "vocab") performance.vocabCorrect++;
+                else if (q.type === "sentence") performance.sentenceCorrect++;
+                else if (q.type === "fill") performance.fillCorrect++;
+                else if (q.type === "synAnt") performance.synAntCorrect++;
+                currentQuestion++;
+                attempts = 0;
+                adjustDifficulty(true);
+                updateCharts();
+                updateDashboard();
+                showQuestion();
+            } else {
+                attempts++;
+                if (attempts < maxAttempts) {
+                    document.getElementById('feedback').textContent = `Try again! Hint: ${q.hint}`;
+                } else {
+                    document.getElementById('feedback').textContent = `The answer was ${q.answer}. Let's move on!`;
+                    currentQuestion++;
+                    attempts = 0;
+                    adjustDifficulty(false);
+                    showQuestion();
+                }
+            }
+        }
+
+        // Adjust difficulty
+        function adjustDifficulty(correct) {
+            if (correct && difficulty === "easy") {
+                difficulty = "medium";
+                questions.forEach(q => {
+                    if (q.altQuestions.medium) {
+                        Object.assign(q, q.altQuestions.medium);
+                        q.difficulty = "medium";
+                    }
+                });
+            } else if (!correct && difficulty === "medium") {
+                difficulty = "easy";
+                questions.forEach(q => {
+                    if (q.altQuestions.easy) {
+                        Object.assign(q, q.altQuestions.easy);
+                        q.difficulty = "easy";
+                    }
+                });
+            } else if (correct && difficulty === "medium") {
+                difficulty = "hard";
+                questions.forEach(q => {
+                    if (q.altQuestions.hard) {
+                        Object.assign(q, q.altQuestions.hard);
+                        q.difficulty = "hard";
+                    }
+                });
+            }
+        }
+
+        // Update charts
+        function updateCharts() {
+            starsChartData.datasets[0].data[1] = stars;
+            starsChart.update();
+            performanceChartData.datasets[0].data[0] = (performance.vocabCorrect / performance.vocabTotal * 100).toFixed(1);
+            performanceChartData.datasets[0].data[1] = (performance.sentenceCorrect / performance.sentenceTotal * 100).toFixed(1);
+            performanceChartData.datasets[0].data[2] = (performance.fillCorrect / performance.fillTotal * 100).toFixed(1);
+            performanceChartData.datasets[0].data[3] = (performance.synAntCorrect / performance.synAntTotal * 100).toFixed(1);
+            performanceChart.update();
+        }
+
+        // Parent dashboard
+        function updateDashboard() {
+            const vocabAccuracy = (performance.vocabCorrect / performance.vocabTotal * 100).toFixed(1);
+            const sentenceAccuracy = (performance.sentenceCorrect / performance.sentenceTotal * 100).toFixed(1);
+            const fillAccuracy = (performance.fillCorrect / performance.fillTotal * 100).toFixed(1);
+            const synAntAccuracy = (performance.synAntCorrect / performance.synAntTotal * 100).toFixed(1);
+            document.getElementById('dashboard-stats').innerHTML = `
+                <p>Total Stars: ${stars}</p>
+                <p>Vocabulary & Opposites Accuracy: ${vocabAccuracy}% (${performance.vocabCorrect}/${performance.vocabTotal})</p>
+                <p>Sentence Building Accuracy: ${sentenceAccuracy}% (${performance.sentenceCorrect}/${performance.sentenceTotal})</p>
+                <p>Fill in the Blanks Accuracy: ${fillAccuracy}% (${performance.fillCorrect}/${performance.fillTotal})</p>
+                <p>Synonyms & Antonyms Accuracy: ${synAntAccuracy}% (${performance.synAntCorrect}/${performance.synAntTotal})</p>
+                <p>Current Difficulty: ${difficulty}</p>
+            `;
+        }
+
+        function toggleDashboard() {
+            const game = document.getElementById('game-container');
+            const dashboard = document.getElementById('dashboard');
+            if (game.style.display === 'none') {
+                game.style.display = 'block';
+                dashboard.style.display = 'none';
+            } else {
+                game.style.display = 'none';
+                dashboard.style.display = 'block';
+            }
+        }
+
+        function restartGame() {
+            stars = 0;
+            currentQuestion = 0;
+            attempts = 0;
+            difficulty = "easy";
+            performance = {
+                vocabCorrect: 0, vocabTotal: 15,
+                sentenceCorrect: 0, sentenceTotal: 15,
+                fillCorrect: 0, fillTotal: 15,
+                synAntCorrect: 0, synAntTotal: 10
+            };
+            questions.forEach(q => {
+                if (q.altQuestions.easy) {
+                    Object.assign(q, q.altQuestions.easy || {});
+                    q.difficulty = "easy";
+                }
+            });
+            document.getElementById('star-counter').textContent = `Stars: ${stars}`;
+            document.getElementById('feedback').textContent = "";
+            document.getElementById('progress-bar').textContent = `Question 1/50`;
+            showQuestion();
+            updateCharts();
+            updateDashboard();
+        }
+
+        // Initialize
+        document.getElementById('toggle-dashboard').onclick = toggleDashboard;
+        showQuestion();
+        updateDashboard();
+    </script>
+</body>
+</html>

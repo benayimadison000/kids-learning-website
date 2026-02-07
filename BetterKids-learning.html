@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kids Learning Arcade</title>
+    <style>
+        /* --- 1. GENERAL STYLES --- */
+        :root {
+            --math: #FF6B6B;       /* Red */
+            --reading: #4ECDC4;    /* Teal */
+            --fun: #A682FF;        /* Purple for Video Games */
+            --dark: #2F2F2F;
+            --light: #F7FFF7;
+            --gray: #e0e0e0;
+            --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            margin: 0;
+            font-family: var(--font-main);
+            background-color: var(--light);
+            color: var(--dark);
+        }
+
+        /* --- 2. HEADER --- */
+        header {
+            background-color: #333;
+            color: white;
+            padding: 2rem 1rem;
+            text-align: center;
+            background-image: linear-gradient(135deg, #333 0%, #555 100%);
+        }
+
+        h1 { margin: 0; font-size: 2.5rem; }
+        p.subtitle { margin-top: 0.5rem; color: #ddd; }
+
+        /* --- 3. FILTER SECTION --- */
+        .filter-container {
+            background: white;
+            padding: 1.5rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .filter-group {
+            max-width: 1000px;
+            margin: 0 auto 10px auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .filter-label {
+            font-weight: bold;
+            margin-right: 10px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            color: #777;
+        }
+
+        .btn {
+            border: 2px solid #ccc;
+            background: white;
+            border-radius: 20px;
+            padding: 8px 20px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #555;
+            transition: all 0.2s;
+        }
+
+        .btn:hover { background: #f0f0f0; }
+        
+        /* Active States */
+        .btn.active { 
+            background-color: var(--dark); 
+            color: white; 
+            border-color: var(--dark);
+            transform: scale(1.05);
+        }
+
+        /* --- 4. GAME GRID --- */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem 4rem;
+        }
+
+        .game-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 2rem;
+        }
+
+        .game-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+            border-top: 5px solid #ccc; /* Default border color */
+        }
+
+        .game-card:hover { transform: translateY(-5px); }
+
+        /* Color coding borders based on subject */
+        .game-card[data-subject="math"] { border-top-color: var(--math); }
+        .game-card[data-subject="reading"] { border-top-color: var(--reading); }
+        .game-card[data-subject="fun"] { border-top-color: var(--fun); }
+
+        .game-thumb {
+            height: 160px;
+            background-color: #eee;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 3rem;
+        }
+
+        .game-info {
+            padding: 1.5rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tags-row {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 10px;
+        }
+
+        .tag {
+            font-size: 0.75rem;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .tag.math { background-color: var(--math); }
+        .tag.reading { background-color: var(--reading); }
+        .tag.fun { background-color: var(--fun); }
+        .tag.grade { background-color: #555; }
+
+        .game-title { margin: 0 0 0.5rem 0; font-size: 1.3rem; }
+        .game-desc { font-size: 0.9rem; color: #666; margin-bottom: 1rem; line-height: 1.5; }
+
+        .play-btn {
+            margin-top: auto;
+            background-color: var(--dark);
+            color: white;
+            text-decoration: none;
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+        }
+        
+        .play-btn:hover { opacity: 0.9; }
+
+        .hidden { display: none; }
+        
+        /* Empty State Message */
+        .no-results {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 3rem;
+            color: #777;
+            display: none;
+        }
+        .no-results.visible { display: block; }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>🚀 Super Smart Arcade  🚀</h1>
+        <p class="subtitle">Math, Reading & Fun for K-4</p>
+    </header>
+
+    <div class="filter-container">
+        <div class="filter-group" id="gradeFilters">
+            <span class="filter-label">1. Pick Level:</span>
+            <button class="btn active" data-filter="all">All Grades</button>
+            <button class="btn" data-filter="k-2">Kindergarten - Grade 2</button>
+            <button class="btn" data-filter="2-4">Grade 2 - Grade 4</button>
+        </div>
+        
+        <div class="filter-group" id="subjectFilters">
+            <span class="filter-label">2. Pick Topic:</span>
+            <button class="btn active" data-filter="all">All Topics</button>
+            <button class="btn" data-filter="math">Math</button>
+            <button class="btn" data-filter="reading">Reading</button>
+            <button class="btn" data-filter="fun">Video Games</button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="game-grid">
+            
+            <div class="no-results" id="noResults">
+                <h3>No games found for this combination! 🧐</h3>
+                <p>Try selecting "All Grades" or a different topic.</p>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="k-2">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Math</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Flashcard Hero</h3>
+                    <p class="game-desc">Learn to count to 10 with friendly apples.</p>
+                    <a href="games/math/Flashcard-hero.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Math</span>
+                        <span class="tag grade">2-4</span>
+                    </div>
+                    <h3 class="game-title">Fractions and Roots</h3>
+                    <p class="game-desc">Solve times tables to speed up your race car.</p>
+                    <a href="games/math/fraction-and-Roots-Challenge.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="k-2">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Math</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Nerd learn Math</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/math/Gems-Learning-Game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Math</span>
+                        <span class="tag grade">2-4</span>
+                    </div>
+                    <h3 class="game-title">Math Practice Questions</h3>
+                    <p class="game-desc">Read the story and answer comprehension questions.</p>
+                    <a href="games/math/Grade2-math.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="k-2 2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Maths</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Logic Ranger</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/math/logic-Ranger.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="k-2 2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Maths</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Math Challenge</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/math/Math-Challenge.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="k-2 2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Maths</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Math Adventure</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/math/Math-Adventure.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="math" data-grade="k-2 2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Maths</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Puzle Math</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/math/Puzzle-maths.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="math" data-grade="2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Math</span>
+                        <span class="tag grade">2-4</span>
+                    </div>
+                    <h3 class="game-title">Babies Learn maths</h3>
+                    <p class="game-desc">Solve times tables to speed up your race car.</p>
+                    <a href="games/math/Baby_math.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="math" data-grade="2-4">
+                <div class="game-thumb">📜</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag math">Math</span>
+                        <span class="tag grade">2-4</span>
+                    </div>
+                    <h3 class="game-title">Maths Bridge</h3>
+                    <p class="game-desc">Solve times tables to speed up your race car.</p>
+                    <a href="games/math/math_bridge_hundreds.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Asteriod Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/asteriod-game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Brick Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/brick_game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Neon Invation Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Neon-invation.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Brick Layer Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/brick_layer.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Robo Route Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Robo-Route.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Galactic Geologist Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Galactic-Geologist.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Build Your Memory Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/nebula_memory.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Nebula Master Memory Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/nebula_memory_expert.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">lexicon linker Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/lexicon_linker.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Binary Bridge Builder Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Binary-Bridge-Builder.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Binary Bridge Master Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/binary_bridge_master.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+
+            <div class="game-card" data-subject="fun" data-grade="2-4">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Binary Bridge Pro Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Binary-Bridge-Builder-Pro.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="fun" data-grade="k-2">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Find the Object Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/find_it_game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="k-2">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Find the Object Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Alphabet_learning_game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="fun" data-grade="k-2">
+                <div class="game-thumb">👾</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag fun">Video Game</span>
+                        <span class="tag grade">All Ages</span>
+                    </div>
+                    <h3 class="game-title">Find the Object Game</h3>
+                    <p class="game-desc">Just for fun! Jump over the asteroids.</p>
+                    <a href="games/fun/Alphabet_search.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Beautiful-Stories</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Beautiful-Stories.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Magic Library</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/English-2-Game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">My Vocabulary</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/English-Game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Watch and Read</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/watch_and_learn.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Listen and Read</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Sentence-Readings.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Read with Me</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Read_with_me.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Short stories</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Short-stories.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Play and Learn</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Simple-sentences.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Evening Stories</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Story-Book.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Vocabulary Grid</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Square_word_grid.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Word Grid</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/word_grid_game.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Evening Stories</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Story-Book.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+
+            <div class="game-card" data-subject="reading" data-grade="k-2">
+                <div class="game-thumb">🐱</div>
+                <div class="game-info">
+                    <div class="tags-row">
+                        <span class="tag reading">Reading</span>
+                        <span class="tag grade">K-2</span>
+                    </div>
+                    <h3 class="game-title">Library One</h3>
+                    <p class="game-desc">Simple rhyming words for early readers.</p>
+                    <a href="games/reading/Stories-Collection.html" class="play-btn">Play Now</a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <footer>
+        <p>Created by Parent Developer &copy; 2023</p>
+    </footer>
+
+    <script>
+        // Track current state
+        let currentGrade = 'all';
+        let currentSubject = 'all';
+
+        // Select DOM elements
+        const gradeBtns = document.querySelectorAll('#gradeFilters .btn');
+        const subjectBtns = document.querySelectorAll('#subjectFilters .btn');
+        const cards = document.querySelectorAll('.game-card');
+        const noResultsMsg = document.getElementById('noResults');
+
+        // Function to filter cards
+        function filterGames() {
+            let visibleCount = 0;
+
+            cards.forEach(card => {
+                const cardSubject = card.getAttribute('data-subject');
+                const cardGrade = card.getAttribute('data-grade');
+
+                // Check logic: 
+                // Does the card match the Subject? (or is 'all' selected?)
+                const subjectMatch = (currentSubject === 'all' || cardSubject === currentSubject);
+                
+                // Does the card match the Grade? (or is 'all' selected?)
+                // Note: We use .includes() for grades so a game marked "k-2 2-4" shows up for both
+                const gradeMatch = (currentGrade === 'all' || cardGrade.includes(currentGrade));
+
+                if (subjectMatch && gradeMatch) {
+                    card.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    card.classList.add('hidden');
+                }
+            });
+
+            // Show "No Results" message if everything is hidden
+            if (visibleCount === 0) {
+                noResultsMsg.classList.add('visible');
+            } else {
+                noResultsMsg.classList.remove('visible');
+            }
+        }
+
+        // Add event listeners to Grade Buttons
+        gradeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update visuals
+                gradeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Update state & filter
+                currentGrade = btn.getAttribute('data-filter');
+                filterGames();
+            });
+        });
+
+        // Add event listeners to Subject Buttons
+        subjectBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update visuals
+                subjectBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Update state & filter
+                currentSubject = btn.getAttribute('data-filter');
+                filterGames();
+            });
+        });
+
+	//  ADD THIS PART HERE ---
+        document.querySelectorAll('.play-btn').forEach(link => {
+            link.setAttribute('target', '_blank');
+            link.setAttribute('rel', 'noopener noreferrer');
+        });
+        
+    </script>
+
+</body>
+</html>

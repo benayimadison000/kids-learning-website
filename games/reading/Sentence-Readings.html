@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reading Adventure Game (10-15 Words)</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #f0f8ff;
+        }
+        #sentence {
+            font-size: 24px;
+            font-weight: bold;
+            margin: 20px;
+            text-align: center;
+        }
+        .button {
+            padding: 10px 20px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 5px;
+            border: none;
+            border-radius: 5px;
+        }
+        #nextButton {
+            background-color: #4CAF50;
+            color: white;
+        }
+        #backButton {
+            background-color: #2196F3;
+            color: white;
+        }
+        #playSoundButton {
+            background-color: #FF9800;
+            color: white;
+        }
+        #nextButton:hover {
+            background-color: #45a049;
+        }
+        #backButton:hover {
+            background-color: #1976D2;
+        }
+        #playSoundButton:hover {
+            background-color: #F57C00;
+        }
+        #backButton:disabled, #nextButton:disabled, #playSoundButton:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div id="sentence">Click Next to start reading!</div>
+    <div>
+        <button id="backButton" class="button" disabled>Back</button>
+        <button id="playSoundButton" class="button" disabled>Play Sound</button>
+        <button id="nextButton" class="button">Next</button>
+    </div>
+
+    <script>
+        const sentences = [
+            "The bright red kite soars high above the vibrant festival.",
+            "My fluffy cat sleeps peacefully on the soft blue blanket.",
+            "Colorful butterflies flutter gently around the blooming garden flowers.",
+            "The shiny silver train speeds through the green valley daily.",
+            "I draw a big happy face on my colorful notebook.",
+            "The tall green trees sway gently in the cool breeze.",
+            "A small brown dog chases its tail in the park.",
+            "Bright twinkling stars light up the dark night sky beautifully.",
+            "I eat a juicy red apple with my lunch today.",
+            "The loud thunderstorm makes the windows rattle in our house.",
+            "We climb the steep hill to see the sunset view.",
+            "The clear blue river flows gently past the old bridge.",
+            "I read an exciting adventure book under my cozy blanket.",
+            "The soft white clouds float high above the green fields.",
+            "A big yellow balloon rises high above the bright festival.",
+            "I hear the sweet birds singing in the tall trees.",
+            "The warm golden sun shines brightly on the sandy beach.",
+            "My small green frog hops quickly across the wet grass.",
+            "I smell the fresh bread baking in the warm oven.",
+            "The fast red car races down the long straight road.",
+            "We plant tiny seeds in the rich brown garden soil.",
+            "The full round moon glows brightly in the night sky.",
+            "I count ten shiny stars twinkling above my quiet house.",
+            "The playful puppy barks loudly at the flying colorful kites.",
+            "I taste the sweet juicy orange from the farmer’s market.",
+            "The tall brown horse gallops fast across the open field.",
+            "I see a bright rainbow after the gentle spring rain.",
+            "The cool breeze carries dry leaves across the green lawn.",
+            "I touch the smooth soft petals of the red rose.",
+            "The small green turtle crawls slowly on the warm rock.",
+            "I wave at my friends playing in the sunny park.",
+            "The big red fire truck races to the burning building.",
+            "I hear the loud clock ticking in the quiet room.",
+            "The soft fluffy snow falls gently on the cold ground.",
+            "I draw a tall green tree on my white paper.",
+            "The bright yellow sunflowers bloom beautifully in the warm garden.",
+            "I read a funny story about a silly little cat.",
+            "The fast silver boat sails smoothly on the calm lake.",
+            "I smell the sweet scent of blooming purple lilacs daily.",
+            "The small brown squirrel climbs quickly up the tall tree.",
+            "I taste the crunchy green lettuce in my fresh salad.",
+            "The big gray elephant trumpets loudly in the green jungle.",
+            "I see the bright lightning flash across the dark sky.",
+            "The soft wind blows gently through the tall green grass.",
+            "I touch the rough bark on the old oak tree.",
+            "The small green lizard runs fast across the hot sand.",
+            "I climb the tall ladder to reach the juicy apples.",
+            "The warm orange sun sets slowly behind the high mountain.",
+            "I wave at the big airplane flying high in the sky.",
+            "The bright full moon lights up the dark forest path.",
+            "I count twelve colorful balloons floating above the fun party.",
+            "The happy dog fetches the red ball in the park.",
+            "I read a new book about brave knights and dragons.",
+            "The tall red kite dances wildly in the strong wind.",
+            "I draw a blue ocean with waves on my paper.",
+            "The soft rain falls gently on the green leafy trees.",
+            "I love my small fluffy hamster running in its wheel.",
+            "The bright yellow bird sings happily in the green cage.",
+            "I smell the fresh cookies baking in the warm kitchen.",
+            "The soft white cat purrs quietly on the cozy couch.",
+            "I hear the joyful laughter of children playing outside daily.",
+            "The tall green pine tree stands firm in the forest.",
+            "I taste the sweet red strawberries from the local farm.",
+            "The fast brown horse trots happily on the dirt path.",
+            "I see the colorful fireworks explode in the night sky.",
+            "The cool wind carries the scent of fresh spring flowers.",
+            "I touch the smooth round pebbles by the clear river.",
+            "The small green frog leaps high over the wet lily pads.",
+            "I climb the big rock to see the beautiful view.",
+            "The warm golden sun rises slowly over the calm ocean.",
+            "I wave at the bright sailboats gliding on the water.",
+            "The soft silver moon glows gently in the dark sky.",
+            "I count fifteen shiny coins in my small piggy bank.",
+            "The playful puppy runs fast across the green grassy field.",
+            "I read a fun poem about a dancing little bear.",
+            "The bright red kite twirls high above the sunny park.",
+            "I draw a big yellow sun shining in the sky.",
+            "The gentle rain drips slowly on the clear glass window.",
+            "I love my small goldfish swimming in the clear bowl.",
+            "The bright blue bird flies high above the tall trees.",
+            "I smell the sweet aroma of fresh warm apple pie.",
+            "The soft gray kitten sleeps quietly on the warm mat.",
+            "I hear the loud drums playing in the fun parade.",
+            "The tall oak tree grows strong in the green forest.",
+            "I taste the juicy purple grapes from the sunny vineyard.",
+            "The fast white horse gallops loudly across the open plain.",
+            "I see the bright stars twinkling in the clear sky.",
+            "The cool breeze feels nice on my warm sunny face.",
+            "I touch the soft fluffy feathers of the small bird.",
+            "The green frog hops quickly across the muddy brown pond.",
+            "I climb the tall hill to see the colorful sunset.",
+            "The warm red sun sets slowly behind the green forest.",
+            "I wave at the fast train speeding by the station.",
+            "The bright white moon shines softly on the quiet lake.",
+            "I count ten bright fireflies glowing in the dark night.",
+            "The happy dog chases the colorful butterflies in the field.",
+            "I read an exciting story about a brave little mouse.",
+            "The tall blue kite soars high above the green meadow.",
+            "I draw a big red apple on my white paper.",
+            "The soft rain falls gently on the blooming pink flowers.",
+            "I love my small turtle crawling in the green grass.",
+            "The bright yellow bird chirps loudly in the tall tree.",
+            "I smell the fresh scent of the warm summer rain.",
+            "The soft white kitten leaps high to catch the toy.",
+            "I hear the soft bells ringing in the quiet church.",
+            "The tall green tree sways gently in the cool wind.",
+            "I taste the sweet juicy peach from the farmer’s market.",
+            "The fast brown pony runs happily in the open field.",
+            "I see the bright rainbow shining after the soft rain.",
+            "The cool wind blows gently through the tall green reeds.",
+            "I touch the smooth soft fur of my fluffy dog.",
+            "The small green frog swims fast in the clear pond.",
+            "I climb the steep mountain to see the bright stars.",
+            "The warm yellow sun rises early over the calm valley.",
+            "I wave at the big red bus driving down the road.",
+            "The bright silver moon glows softly in the dark sky.",
+            "I count twelve colorful kites flying high above the park.",
+            "The playful puppy barks happily at the flying birds daily.",
+            "I read a funny book about a silly dancing elephant.",
+            "The tall red kite spins wildly in the strong breeze.",
+            "I draw a blue whale swimming in the deep ocean.",
+            "The gentle rain falls softly on the green leafy plants.",
+            "I love my small bunny hopping in the soft grass.",
+            "The bright blue bird sings sweetly in the green forest.",
+            "I smell the sweet scent of blooming white roses daily.",
+            "The soft gray cat jumps high to catch the string.",
+            "I hear the loud music playing at the fun festival.",
+            "The tall oak tree stands tall in the green meadow.",
+            "I taste the crunchy red apple from the tall tree.",
+            "The fast white pony gallops happily across the green field.",
+            "I see the bright lightning flash in the dark sky.",
+            "The cool breeze carries leaves across the green grassy lawn.",
+            "I touch the smooth round stones in the clear stream.",
+            "The small green lizard climbs fast up the tall tree.",
+            "I climb the big hill to see the bright sunset.",
+            "The warm golden sun shines brightly on the sandy shore.",
+            "I wave at the fast boats sailing on the blue lake.",
+            "The bright white moon lights up the dark forest path.",
+            "I count fifteen shiny stars twinkling in the night sky.",
+            "The happy dog runs fast across the green open field.",
+            "I read a fun story about a brave little squirrel.",
+            "The tall blue kite flies high above the sunny meadow.",
+            "I draw a big yellow flower on my white paper.",
+            "The soft rain drips gently on the green leafy trees.",
+            "I love my small goldfish swimming in the clear tank.",
+            "The bright yellow bird flies high above the green valley.",
+            "I smell the fresh scent of warm homemade chocolate cookies.",
+            "The soft white kitten purrs softly on the cozy blanket.",
+            "I hear the joyful singing of children in the park.",
+            "The tall green tree grows strong in the quiet forest.",
+            "I taste the sweet juicy watermelon from the local farm.",
+            "The fast brown horse trots happily on the dirt trail.",
+            "I see the colorful balloons floating high above the festival.",
+            "The cool wind blows gently through the tall green grass.",
+            "I touch the soft fluffy fur of my happy puppy.",
+            "The small green frog leaps high over the wet grass.",
+            "I climb the tall rock to see the beautiful valley.",
+            "The warm orange sun sets slowly behind the tall mountain.",
+            "I wave at the bright airplanes flying high in the sky.",
+            "The bright silver moon glows gently on the calm lake.",
+            "I count ten colorful fireflies glowing in the dark forest.",
+            "The playful puppy chases the bright butterflies in the meadow.",
+            "I read an exciting book about a brave little knight.",
+            "The tall red kite twirls high above the green park.",
+            "I draw a big blue wave crashing on the sandy beach.",
+            "The gentle rain falls softly on the blooming red flowers.",
+            "I love my small turtle crawling on the warm rock."
+        ];
+
+        let currentIndex = -1; // Start at -1 so first "Next" shows index 0
+        const sentenceElement = document.getElementById('sentence');
+        const nextButton = document.getElementById('nextButton');
+        const backButton = document.getElementById('backButton');
+        const playSoundButton = document.getElementById('playSoundButton');
+
+        function speakSentence(text) {
+            const utterance = new SpeechSynthesisUtterance(text);
+            utterance.lang = 'en-US';
+            const voices = speechSynthesis.getVoices();
+            const femaleVoice = voices.find(voice => voice.name.includes('Female') || voice.name.includes('Samantha') || voice.name.includes('Victoria') || voice.gender === 'female') || voices[0];
+            utterance.voice = femaleVoice;
+            utterance.rate = 0.9;
+            speechSynthesis.speak(utterance);
+        }
+
+        speechSynthesis.onvoiceschanged = () => {};
+
+        function updateDisplay() {
+            if (currentIndex >= 0 && currentIndex < sentences.length) {
+                sentenceElement.textContent = sentences[currentIndex];
+            } else if (currentIndex >= sentences.length) {
+                sentenceElement.textContent = "Great job! You finished all sentences!";
+            }
+            updateButtons();
+        }
+
+        function updateButtons() {
+            backButton.disabled = currentIndex <= 0;
+            nextButton.disabled = currentIndex >= sentences.length;
+            playSoundButton.disabled = currentIndex < 0 || currentIndex >= sentences.length;
+        }
+
+        nextButton.addEventListener('click', () => {
+            if (currentIndex < sentences.length) {
+                currentIndex++;
+                updateDisplay();
+            }
+        });
+
+        backButton.addEventListener('click', () => {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+            }
+        });
+
+        playSoundButton.addEventListener('click', () => {
+            if (currentIndex >= 0 && currentIndex < sentences.length) {
+                speakSentence(sentences[currentIndex]);
+            }
+        });
+
+        updateButtons();
+    </script>
+</body>
+</html>

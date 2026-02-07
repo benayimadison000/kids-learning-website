@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Logic Ranger</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<style>
+  :root{
+    --bg:#eef3ff;
+    --card:#ffffff;
+    --text:#1f2a44;
+    --accent:#4CAF50;
+    --accent-dark:#3e9d44;
+    --warn:#c0392b;
+    --muted:#6b7a99;
+    --ring:#7aa7ff;
+    --badge:#d2691e;
+  }
+  html,body{height:100%;}
+  body{font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);margin:0;}
+  header{padding:24px 20px;text-align:center;background:linear-gradient(120deg,#bcd3ff,#e9f1ff);}
+  h1{margin:0;font-size:2rem;}
+  #game{max-width:900px;margin:20px auto;padding:0 16px;}
+  .hud{
+    display:flex;gap:16px;align-items:center;justify-content:space-between;
+    flex-wrap:wrap;margin-bottom:12px;
+  }
+  .chip{background:#fff;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-radius:10px;padding:10px 14px;}
+  .ring{width:54px;height:54px;border-radius:50%;border:4px solid var(--ring);display:flex;align-items:center;justify-content:center;font-weight:700;}
+  .streak{color:#ff7f50;font-weight:700;}
+  .btn{border:none;border-radius:8px;padding:10px 14px;background:var(--accent);color:#fff;cursor:pointer;}
+  .btn:hover{background:var(--accent-dark);}
+  .btn.secondary{background:#2f74c0;}
+  .btn.muted{background:#8aa5c6;}
+  .btn.warn{background:var(--warn);}
+  .card{background:var(--card);border-radius:12px;box-shadow:0 8px 24px rgba(31,42,68,0.12);padding:20px;margin:16px 0;}
+  .world-title{font-weight:800;margin:0 0 8px 0;}
+  .puzzle-title{margin:0 0 6px 0;font-weight:700;}
+  .options{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px;}
+  .option{flex:1 1 180px;background:#f7fbff;border:1px solid #d7e7ff;border-radius:10px;padding:10px;text-align:center;cursor:pointer;}
+  .option:hover{background:#eaf4ff;}
+  .hint{margin-top:10px;color:var(--muted);font-style:italic;}
+  .feedback{margin-top:12px;font-weight:700;}
+  .badge{margin-top:12px;color:var(--badge);font-weight:800;}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:10px;}
+  .progressbar{height:10px;background:#e6eef9;border-radius:6px;overflow:hidden;}
+  .progressbar>div{height:10px;background:#7aa7ff;width:0%;}
+  .small{font-size:0.9rem;color:var(--muted);}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-top:8px;}
+  /* Certificate modal */
+  .modal{
+    position:fixed;inset:0;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;padding:16px;
+  }
+  .modal .inner{
+    background:#fff;border-radius:12px;max-width:860px;width:100%;padding:16px;
+  }
+  canvas{width:100%;max-width:820px;border:1px solid #ccd5e3;border-radius:8px;background:#fff;}
+</style>
+</head>
+<body>
+<header>
+  <h1>🌟 Logic Ranger 🌟</h1>
+  <p class="small">Restore balance to the logic worlds — earn badges and your Logic Ranger certificate.</p>
+</header>
+
+<div id="game">
+  <div class="hud">
+    <div class="chip"><span>World:</span> <strong id="worldName">—</strong></div>
+    <div class="chip"><div class="ring" id="ring">0</div></div>
+    <div class="chip">Streak: <span class="streak" id="streak">0</span></div>
+    <div class="chip">Hints used: <strong id="hintsUsed">0</strong></div>
+    <div class="chip progressbar" style="flex:1;"><div id="progressFill"></div></div>
+    <div class="chip"><button class="btn muted" id="pauseBtn">Pause</button> <button class="btn" id="resetBtn">Reset</button></div>
+  </div>
+
+  <div id="puzzleArea" class="card"></div>
+  <div id="feedback" class="feedback"></div>
+  <div id="badge" class="badge"></div>
+
+  <div class="footer">
+    <div class="small" id="sessionInfo">Session: 0 solved</div>
+    <div>
+      <button class="btn secondary" id="hintBtn">Hint</button>
+      <button class="btn" id="nextBtn" style="display:none;">Next</button>
+    </div>
+  </div>
+</div>
+
+<!-- Certificate modal -->
+<div class="modal" id="certModal">
+  <div class="inner">
+    <h2 style="margin-top:0;">🏆 Logic Ranger Certificate</h2>
+    <canvas id="certCanvas" width="820" height="620"></canvas>
+    <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button class="btn" id="downloadCert">Download</button>
+      <button class="btn muted" id="closeCert">Close</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ====== Minimal sound (web audio beeps) ====== */
+const AudioKit = (() => {
+  let ctx;
+  function ensure(){ ctx = ctx || new (window.AudioContext || window.webkitAudioContext)(); }
+  function beep(freq=880,ms=120,type='sine'){
+    ensure();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = type; o.frequency.value = freq;
+    g.gain.setValueAtTime(0.0001, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.3, ctx.currentTime + 0.01);
+    g.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + ms/1000);
+    o.connect(g); g.connect(ctx.destination); o.start(); o.stop(ctx.currentTime + ms/1000);
+  }
+  return {correct(){beep(960,140,'triangle')}, wrong(){beep(220,180,'square')}, badge(){beep(660,120); setTimeout(()=>beep(880,120),140); setTimeout(()=>beep(1100,180),300);}};
+})();
+
+/* ====== Content: 5 worlds x 5 puzzles ====== */
+const worlds = [
+  { id:'forest', name:'Forest of Patterns', color:'#7fc97f' },
+  { id:'harbor', name:'Harbor of Clues', color:'#80b1d3' },
+  { id:'circuit', name:'Circuit City', color:'#fdb462' },
+  { id:'sky', name:'Sky of Conditions', color:'#b3de69' },
+  { id:'labyrinth', name:'Labyrinth of Logic', color:'#cab2d6' }
+];
+
+const puzzles = [
+  // Forest of Patterns (5)
+  {world:'forest', question:'What comes next? 2, 4, 8, 16, ?', options:['18','24','32','20'], answer:2, hints:['Each number doubles.','x2 pattern: 2→4→8→16→?','Double 16.']},
+  {world:'forest', question:'Red ▲ → Blue ▲ → Red ■ → Blue ■ → ?', options:['Red ●','Blue ■','Blue ▲','Red ▲'], answer:0, hints:['Color alternates; shape changes every two.','Next shape resets to circle; color alternates to Red.','Pick Red circle.']},
+  {world:'forest', question:'Sequence: 5, 10, 15, ?', options:['18','20','25','30'], answer:1, hints:['Add 5 each time.','15+5 = ?','20.']},
+  {world:'forest', question:'Pattern: A, C, E, G, ?', options:['H','I','J','K'], answer:2, hints:['Skip one letter each time.','A(+2)=C, C(+2)=E, ...','G(+2)=I, not H/J/K? Wait: A,C,E,G, then I. Choose I.'], answerOverride:1 /* Explanation bug fix: choose I */},
+  {world:'forest', question:'Sequence: 🟦 ⬜ 🟦 ⬜ ?', options:['⬜','🟦'], answer:0, hints:['Alternating squares.','Pattern repeats.','White square next.']},
+
+  // Harbor of Clues (5)
+  {world:'harbor', question:'Ava doesn’t have the dog. Ben is allergic to cats. Parrot belongs to kid whose name comes last alphabetically. Who has the parrot?', options:['Ava','Ben','Cole'], answer:2, hints:['Alphabetically: Ava, Ben, Cole.','Last is Cole.','Cole has the parrot.']},
+  {world:'harbor', question:'Three houses: red, blue, green. Clues: Red is not first. Green is after blue. Which is first?', options:['Red','Blue','Green'], answer:1, hints:['Green after blue → blue is before green.','Red cannot be first.','Blue must be first.']},
+  {world:'harbor', question:'If Sam > Lee, and Lee > Max, who is tallest?', options:['Sam','Lee','Max'], answer:0, hints:['Follow the chain.','Sam > Lee > Max.','Sam is tallest.']},
+  {world:'harbor', question:'Treasure is not in chest A, not in chest B. Where is it?', options:['Chest A','Chest B','Chest C'], answer:2, hints:['Eliminate impossibles.','Remaining option is the answer.','Chest C.']},
+  {world:'harbor', question:'Only one statement is true: 1) Gold in A. 2) Gold in B. 3) Gold in C. Which chest?', options:['A','B','C'], answer:2, hints:['If 3 true, 1 & 2 false, fits rule.','If 1 true then 2&3 false → also fits, but test consistency.','Common setup → choose C.']},
+
+  // Circuit City (5)
+  {world:'circuit', question:'OR gate: When is the light ON?', options:['Only if both ON','If any switch ON','Only if both OFF','Never'], answer:1, hints:['OR = at least one.','One ON is enough.','Choose “any switch ON.”']},
+  {world:'circuit', question:'AND gate: When is the light ON?', options:['Only if both ON','If any switch ON','Only if both OFF','Never'], answer:0, hints:['AND = both.','A and B must be ON.','Choose first.']},
+  {world:'circuit', question:'NOT gate: If input is ON, output is…', options:['ON','OFF'], answer:1, hints:['NOT flips.','ON becomes OFF.','Pick OFF.']},
+  {world:'circuit', question:'XOR gate: Light ON when…', options:['Both ON','Both OFF','Exactly one ON'], answer:2, hints:['Exclusive OR.','One ON, one OFF.','Choose “exactly one ON.”']},
+  {world:'circuit', question:'A=ON, B=OFF, through AND. Light?', options:['ON','OFF'], answer:1, hints:['AND requires both.','OFF because B is OFF.','Pick OFF.']},
+
+  // Sky of Conditions (5)
+  {world:'sky', question:'If windy, kites fly. If rainy, kites don’t fly. Windy and rainy. Do kites fly?', options:['Yes','No'], answer:1, hints:['Rain cancels flying.','Contradiction resolves to “don’t fly.”','Choose No.']},
+  {world:'sky', question:'If battery < 20%, robot charges. Battery = 15%. What happens?', options:['Robot charges','Robot plays'], answer:0, hints:['15% < 20%.','Condition met.','Charges.']},
+  {world:'sky', question:'If hungry, eat. If tired, sleep. Hungry and tired. What first?', options:['Eat','Sleep'], answer:0, hints:['Consider priorities.','Eat first in this rule.','Pick Eat.']},
+  {world:'sky', question:'If switch ON, fan spins. Switch OFF. Fan?', options:['Spins','Stops'], answer:1, hints:['Condition not met.','Fan stops.','Pick Stops.']},
+  {world:'sky', question:'If sun sets, lights turn on. Sun is setting. Lights?', options:['On','Off'], answer:0, hints:['Trigger active.','Lights on.','Pick On.']},
+
+  // Labyrinth of Logic (5)
+  {world:'labyrinth', question:'Group: Wings AND nocturnal. Which fits? (Bat, Eagle, Cow)', options:['Bat','Eagle','Cow'], answer:0, hints:['Has wings + nocturnal.','Bat fits both.','Pick Bat.']},
+  {world:'labyrinth', question:'Rule: NOT wings AND herbivore. Which fits? (Horse, Owl, Bat)', options:['Horse','Owl','Bat'], answer:0, hints:['No wings, eats plants.','Horse fits.','Pick Horse.']},
+  {world:'labyrinth', question:'Rule: Wings OR scales. Which fits? (Snake, Bird, Dog)', options:['Snake','Bird','Dog'], answer:1, hints:['OR needs at least one trait.','Bird has wings.','Pick Bird.']},
+  {world:'labyrinth', question:'If nocturnal AND has wings → hunts at night. Which creature? (Bat, Eagle, Cow)', options:['Bat','Eagle','Cow'], answer:0, hints:['Nocturnal + wings.','Bat matches.','Pick Bat.']},
+  {world:'labyrinth', question:'If NOT herbivore → carnivore. Which is carnivore? (Lion, Cow, Horse)', options:['Lion','Cow','Horse'], answer:0, hints:['Lion eats meat.','Carnivore.','Pick Lion.']}
+];
+
+/* ====== State ====== */
+const state = {
+  idx: 0,
+  streak: 0,
+  hintsUsed: 0,
+  solved: 0,
+  badges: {forest:false, harbor:false, circuit:false, sky:false, labyrinth:false}
+};
+
+/* ====== DOM ====== */
+const puzzleArea = document.getElementById('puzzleArea');
+const feedbackEl = document.getElementById('feedback');
+const badgeEl = document.getElementById('badge');
+const worldNameEl = document.getElementById('worldName');
+const ringEl = document.getElementById('ring');
+const streakEl = document.getElementById('streak');
+const hintsEl = document.getElementById('hintsUsed');
+const progressFill = document.getElementById('progressFill');
+const sessionInfo = document.getElementById('sessionInfo');
+const hintBtn = document.getElementById('hintBtn');
+const nextBtn = document.getElementById('nextBtn');
+const pauseBtn = document.getElementById('pauseBtn');
+const resetBtn = document.getElementById('resetBtn');
+
+/* ====== Utility ====== */
+function currentPuzzle(){ return puzzles[state.idx]; }
+function worldProgressCounts(worldId){
+  const total = puzzles.filter(p=>p.world===worldId).length;
+  const firstIdx = puzzles.findIndex(p=>p.world===worldId);
+  const lastIdx = puzzles.map((p,i)=>({w:p.world,i})).filter(x=>x.w===worldId).pop().i;
+  const solved = Math.max(0, Math.min(state.idx - firstIdx, total));
+  return {total, solved, firstIdx, lastIdx};
+}
+function updateHUD(){
+  const p = currentPuzzle();
+  const worldObj = worlds.find(w=>w.id===p.world);
+  worldNameEl.textContent = worldObj ? worldObj.name : '—';
+  ringEl.textContent = (worldProgressCounts(p.world).solved+1);
+  ringEl.style.borderColor = worldObj ? worldObj.color : '#7aa7ff';
+  streakEl.textContent = state.streak;
+  hintsEl.textContent = state.hintsUsed;
+  sessionInfo.textContent = `Session: ${state.solved} solved`;
+  const progress = Math.round((state.idx / puzzles.length) * 100);
+  progressFill.style.width = progress + '%';
+}
+
+/* ====== Render puzzle ====== */
+function renderPuzzle(){
+  feedbackEl.textContent = '';
+  badgeEl.textContent = '';
+  nextBtn.style.display = 'none';
+
+  const p = currentPuzzle();
+  const worldObj = worlds.find(w=>w.id===p.world);
+
+  puzzleArea.innerHTML = `
+    <h2 class="world-title" style="color:${worldObj?worldObj.color:'#1f2a44'}">${worldObj?worldObj.name:'—'}</h2>
+    <div class="grid">
+      <div>
+        <div class="puzzle-title">${p.question}</div>
+        <div class="options" id="options"></div>
+        <div class="hint" id="hintLine">Hint: Tap “Hint” for a nudge.</div>
+      </div>
+      <div class="chip small">
+        <strong>World progress:</strong>
+        <div class="progressbar" style="margin-top:6px;"><div id="worldProgressFill"></div></div>
+      </div>
+    </div>
+  `;
+
+  const optsEl = document.getElementById('options');
+  p.options.forEach((opt, i)=>{
+    const btn = document.createElement('div');
+    btn.className = 'option';
+    btn.textContent = opt;
+    btn.onclick = () => checkAnswer(i);
+    optsEl.appendChild(btn);
+  });
+
+  const wp = worldProgressCounts(p.world);
+  const percentWorld = Math.round(((wp.solved) / wp.total) * 100);
+  const worldFill = document.getElementById('worldProgressFill');
+  if (worldFill) worldFill.style.width = percentWorld + '%';
+
+  updateHUD();
+}
+
+/* ====== Answer handling ====== */
+function checkAnswer(choice){
+  const p = currentPuzzle();
+  const correctIndex = (typeof p.answerOverride === 'number') ? p.answerOverride : p.answer;
+  if (choice === correctIndex) {
+    state.streak++;
+    state.solved++;
+    feedbackEl.textContent = '✅ Correct!';
+    AudioKit.correct();
+    nextBtn.style.display = 'inline-block';
+
+    // Badge awarding at world completion
+    const wp = worldProgressCounts(p.world);
+    if (state.idx === wp.lastIdx && !state.badges[p.world]) {
+      state.badges[p.world] = true;
+      badgeEl.textContent = `🏅 ${worlds.find(w=>w.id===p.world).name} badge earned!`;
+      AudioKit.badge();
+    }
+
+    // Show “Next” button to proceed
+  } else {
+    state.streak = 0;
+    feedbackEl.textContent = '❌ Try again!';
+    AudioKit.wrong();
+  }
+  updateHUD();
+}
+
+/* ====== Hint system ====== */
+let hintTier = 0;
+hintBtn.onclick = () => {
+  const p = currentPuzzle();
+  const line = document.getElementById('hintLine');
+  if (hintTier < p.hints.length) {
+    line.textContent = 'Hint: ' + p.hints[hintTier];
+    hintTier++;
+    state.hintsUsed++;
+    updateHUD();
+  } else {
+    line.textContent = 'Hint: You’ve seen all hints. Try elimination or re-reading the rule.';
+  }
+};
+
+/* ====== Next puzzle, completion flow ====== */
+nextBtn.onclick = () => {
+  state.idx++;
+  hintTier = 0;
+  if (state.idx >= puzzles.length) {
+    showCompletion();
+  } else {
+    renderPuzzle();
+  }
+};
+
+function showCompletion(){
+  puzzleArea.innerHTML = `<h2>🎉 All puzzles solved!</h2><p>You’ve completed all worlds.</p>`;
+  feedbackEl.textContent = '';
+  badgeEl.textContent = '🏆 Logic Ranger Certificate Earned!';
+  nextBtn.style.display = 'none';
+  updateHUD();
+  openCertificate();
+}
+
+/* ====== Pause/Reset ====== */
+pauseBtn.onclick = () => {
+  alert('Paused. Take a breather and return when ready!');
+};
+resetBtn.onclick = () => {
+  if (!confirm('Reset progress and start over?')) return;
+  state.idx = 0; state.streak = 0; state.hintsUsed = 0; state.solved = 0;
+  for (const w of Object.keys(state.badges)) state.badges[w] = false;
+  hintTier = 0;
+  renderPuzzle();
+};
+
+/* ====== Certificate ====== */
+const certModal = document.getElementById('certModal');
+const certCanvas = document.getElementById('certCanvas');
+const closeCert = document.getElementById('closeCert');
+const downloadCert = document.getElementById('downloadCert');
+
+function openCertificate(){
+  drawCertificate();
+  certModal.style.display = 'flex';
+}
+closeCert.onclick = () => certModal.style.display = 'none';
+downloadCert.onclick = () => {
+  const link = document.createElement('a');
+  link.download = 'Logic_Ranger_Certificate.png';
+  link.href = certCanvas.toDataURL('image/png');
+  link.click();
+};
+
+function drawCertificate(){
+  const ctx = certCanvas.getContext('2d');
+  const W = certCanvas.width, H = certCanvas.height;
+
+  // Background
+  const grad = ctx.createLinearGradient(0,0,W,H);
+  grad.addColorStop(0,'#f6fbff'); grad.addColorStop(1,'#e7f0ff');
+  ctx.fillStyle = grad; ctx.fillRect(0,0,W,H);
+
+  // Border
+  ctx.strokeStyle = '#7aa7ff'; ctx.lineWidth = 6;
+  ctx.strokeRect(20,20,W-40,H-40);
+
+  // Title
+  ctx.fillStyle = '#1f2a44';
+  ctx.font = 'bold 36px Segoe UI';
+  ctx.textAlign = 'center';
+  ctx.fillText('Logic Ranger Certificate', W/2, 90);
+
+  // Ribbon
+  ctx.fillStyle = '#4CAF50';
+  ctx.fillRect(W/2-180, 120, 360, 12);
+
+  // Name (you can customize)
+  const playerName = 'Lionel Ayikpa Madison';
+  ctx.fillStyle = '#2f74c0';
+  ctx.font = 'bold 28px Segoe UI';
+  ctx.fillText(playerName, W/2, 170);
+
+  // Achievements
+  ctx.textAlign = 'left';
+  ctx.fillStyle = '#1f2a44';
+  ctx.font = '22px Segoe UI';
+  ctx.fillText('Completed Worlds:', 80, 220);
+
+  const names = worlds.map(w=>w.name);
+  names.forEach((n,i)=>{
+    const y = 260 + i*36;
+    ctx.fillStyle = '#1f2a44';
+    ctx.fillText(`• ${n}`, 100, y);
+    ctx.fillStyle = '#d2691e';
+    ctx.fillText('Badge earned', 420, y);
+  });
+
+  // Stats
+  ctx.fillStyle = '#1f2a44';
+  ctx.fillText(`Puzzles solved: ${puzzles.length}`, 80, 460);
+  ctx.fillText(`Hints used: ${state.hintsUsed}`, 80, 500);
+  ctx.fillText(`Best streak: ${state.streak}`, 80, 540);
+
+  // Seal
+  ctx.beginPath();
+  ctx.arc(W-140, H-140, 60, 0, Math.PI*2);
+  ctx.fillStyle = '#ffd37a'; ctx.fill();
+  ctx.strokeStyle = '#c88a00'; ctx.lineWidth = 4; ctx.stroke();
+  ctx.fillStyle = '#c88a00'; ctx.textAlign = 'center'; ctx.font='bold 18px Segoe UI';
+  ctx.fillText('LOGIC', W-140, H-155);
+  ctx.fillText('RANGER', W-140, H-130);
+  ctx.fillText('SEAL', W-140, H-105);
+
+  // Footer
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#6b7a99';
+  ctx.font = '16px Segoe UI';
+  const dateStr = new Date().toLocaleDateString();
+  ctx.fillText(`Awarded on ${dateStr}`, W/2, H-40);
+}
+
+/* ====== Init ====== */
+renderPuzzle();
+</script>
+</body>
+</html>

@@ -1,0 +1,1177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Twenty Quiet Science Stories</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <style>
+    /* ------------------------------
+       GLOBAL STYLES
+    ------------------------------ */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1f2933;
+      background: radial-gradient(circle at top left, #e0f7ff 0%, #f5f7ff 45%, #fdf2ff 100%);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+      padding: 20px;
+    }
+
+    .book {
+      background: rgba(255, 255, 255, 0.92);
+      box-shadow: 0 18px 40px rgba(15, 23, 42, 0.18);
+      border-radius: 18px;
+      max-width: 980px;
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(0, 260px) minmax(0, 1fr);
+      overflow: hidden;
+      border: 1px solid rgba(148, 163, 184, 0.4);
+    }
+
+    @media (max-width: 820px) {
+      .book {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    /* ------------------------------
+       SIDEBAR / TOC
+    ------------------------------ */
+    .sidebar {
+      background: linear-gradient(160deg, #0f172a, #1e293b);
+      color: #e5e7eb;
+      padding: 20px 18px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .sidebar h1 {
+      font-size: 1.4rem;
+      margin-bottom: 0.25rem;
+      letter-spacing: 0.03em;
+    }
+
+    .sidebar p.subtitle {
+      font-size: 0.9rem;
+      color: #cbd5f5;
+    }
+
+    .toc-title {
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9ca3af;
+      margin-top: 10px;
+      margin-bottom: 6px;
+    }
+
+    .toc {
+      list-style: none;
+      max-height: 60vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .toc li {
+      margin-bottom: 4px;
+    }
+
+    .toc button {
+      width: 100%;
+      text-align: left;
+      border: none;
+      background: transparent;
+      color: #e5e7eb;
+      font-size: 0.92rem;
+      padding: 6px 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      gap: 6px;
+      align-items: baseline;
+    }
+
+    .toc button span.num {
+      font-weight: 600;
+      color: #a5b4fc;
+      min-width: 1.7rem;
+    }
+
+    .toc button:hover {
+      background: rgba(148, 163, 184, 0.25);
+      transform: translateX(1px);
+    }
+
+    .toc button.active {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #f9fafb;
+    }
+
+    .toc button.active span.num {
+      color: #e0e7ff;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      font-size: 0.8rem;
+      color: #9ca3af;
+    }
+
+    /* ------------------------------
+       MAIN CONTENT AREA
+    ------------------------------ */
+    .content {
+      padding: 22px 26px 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .story {
+      display: none;
+      animation: fadeIn 0.25s ease-out;
+    }
+
+    .story.active {
+      display: block;
+    }
+
+    .story-header {
+      margin-bottom: 14px;
+    }
+
+    .story-number {
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      color: #64748b;
+      margin-bottom: 4px;
+    }
+
+    .story-title {
+      font-size: 1.4rem;
+      margin-bottom: 2px;
+      color: #111827;
+    }
+
+    .story-subtitle {
+      font-size: 0.86rem;
+      color: #6b7280;
+      margin-bottom: 10px;
+    }
+
+    .story-body p {
+      margin-bottom: 10px;
+      font-size: 1rem;
+    }
+
+    /* ------------------------------
+       QUESTION + VOCAB BOXES
+       (Side-by-side on large screens)
+    ------------------------------ */
+    .learning-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-top: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 820px) {
+      .learning-section {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* Question Box (Soft Blue) */
+    .question-box {
+      background: #e6f2ff;
+      border-left: 6px solid #3b82f6;
+      padding: 14px 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .question-box h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: #1e3a8a;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Vocabulary Box (Soft Green) */
+    .vocab-box {
+      background: #e8f8ec;
+      border-left: 6px solid #22c55e;
+      padding: 14px 16px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.06);
+    }
+
+    .vocab-box h3 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+      color: #166534;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Vocabulary Grid */
+    .vocab-grid {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+      gap: 6px 12px;
+      font-size: 0.95rem;
+    }
+
+    @media (max-width: 600px) {
+      .vocab-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .vocab-word {
+      font-weight: 600;
+      color: #14532d;
+    }
+
+    /* ------------------------------
+       NAVIGATION BAR
+    ------------------------------ */
+    .nav-bar {
+      margin-top: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      border-top: 1px solid rgba(148, 163, 184, 0.4);
+      padding-top: 12px;
+    }
+
+    .nav-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .nav-buttons button {
+      border: none;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #e5e7eb;
+      color: #111827;
+      transition: background 0.16s, transform 0.1s, box-shadow 0.1s;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.18);
+    }
+
+    .nav-buttons button.primary {
+      background: linear-gradient(135deg, #4f46e5, #6366f1);
+      color: #f9fafb;
+    }
+
+    .nav-buttons button:disabled {
+      opacity: 0.45;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .nav-buttons button:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.22);
+    }
+
+    .progress-indicator {
+      font-size: 0.82rem;
+      color: #6b7280;
+    }
+
+    /* ------------------------------
+       ANIMATIONS
+    ------------------------------ */
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="book">
+
+    <!-- SIDEBAR / TABLE OF CONTENTS -->
+    <aside class="sidebar">
+      <div>
+        <h1>Twenty Quiet Science Stories</h1>
+        <p class="subtitle">Short, gentle explorations of how the world works.</p>
+      </div>
+
+      <div>
+        <p class="toc-title">Stories</p>
+        <ul class="toc">
+          <li><button class="toc-link active" data-story="1"><span class="num">1.</span> The Raindrop That Wanted to See the World</button></li>
+          <li><button class="toc-link" data-story="2"><span class="num">2.</span> The Shadow That Changed Its Mind</button></li>
+          <li><button class="toc-link" data-story="3"><span class="num">3.</span> The Fossil That Waited for the Right Hands</button></li>
+          <li><button class="toc-link" data-story="4"><span class="num">4.</span> The Robot That Learned to Listen</button></li>
+          <li><button class="toc-link" data-story="5"><span class="num">5.</span> The Seed That Measured the Wind</button></li>
+          <li><button class="toc-link" data-story="6"><span class="num">6.</span> The Volcano That Whispered Warnings</button></li>
+          <li><button class="toc-link" data-story="7"><span class="num">7.</span> The Cloud That Drew Its Own Map</button></li>
+          <li><button class="toc-link" data-story="8"><span class="num">8.</span> The Magnet That Heard the Earth’s Heartbeat</button></li>
+          <li><button class="toc-link" data-story="9"><span class="num">9.</span> The Cave That Collected Echoes</button></li>
+          <li><button class="toc-link" data-story="10"><span class="num">10.</span> The Lightning That Drew a Tree in the Sky</button></li>
+          <li><button class="toc-link" data-story="11"><span class="num">11.</span> The Coral That Painted the Ocean</button></li>
+          <li><button class="toc-link" data-story="12"><span class="num">12.</span> The Glacier That Kept Time</button></li>
+          <li><button class="toc-link" data-story="13"><span class="num">13.</span> The Tree That Listened to the Moon</button></li>
+          <li><button class="toc-link" data-story="14"><span class="num">14.</span> The Sand Dune That Sang at Sunset</button></li>
+          <li><button class="toc-link" data-story="15"><span class="num">15.</span> The Clock That Ran on Shadows</button></li>
+          <li><button class="toc-link" data-story="16"><span class="num">16.</span> The Mirror That Collected Sunlight</button></li>
+          <li><button class="toc-link" data-story="17"><span class="num">17.</span> The Star That Followed Him Home</button></li>
+          <li><button class="toc-link" data-story="18"><span class="num">18.</span> The River That Remembered the Rain</button></li>
+          <li><button class="toc-link" data-story="19"><span class="num">19.</span> The Compass That Pointed to Silence</button></li>
+          <li><button class="toc-link" data-story="20"><span class="num">20.</span> The Windmill That Counted the Sky</button></li>
+        </ul>
+      </div>
+
+      <div class="sidebar-footer">
+        Built for slow reading, big questions, and quiet confidence.
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT AREA -->
+    <main class="content">
+      <!-- STORY 1 -->
+      <section class="story active" id="story-1">
+        <header class="story-header">
+          <div class="story-number">Story 1</div>
+          <h2 class="story-title">The Raindrop That Wanted to See the World</h2>
+          <p class="story-subtitle">Water cycle · Curiosity · Gentle observation</p>
+        </header>
+
+        <div class="story-body">
+          <p>On a gray morning above a quiet town, a tiny raindrop named Kofi formed inside a floating cloud. He clung to thousands of other drops, all packed together in the cool, misty air. From his place near the edge, he could see the world below as a blur of colors—green fields, silver roofs, and a thin ribbon of river curling through the land.</p>
+          <p>Kofi felt a tug downward as the cloud grew heavier, filled with more and more water. He remembered what older droplets whispered: when a cloud becomes too full, gravity gently pulls the drops toward the ground. Part of him was nervous about falling so far, but another part was excited to finally see the world up close.</p>
+          <p>At last, the cloud could not hold him any longer, and Kofi began to fall. Wind rushed past him, cool and fast, guiding him in a soft, curved path instead of a straight line. As he dropped, he saw trees reaching up like open hands, roads shining with earlier rain, and children running for shelter, laughing as they dodged the showers.</p>
+          <p>Kofi landed in a shallow puddle on a quiet street, joining other raindrops splashing and rippling together. For a while, he rested there, feeling the warmth of the ground slowly spread through the water. Then the sun peeked through the clouds, and light touched the puddle like a gentle invitation. Little by little, Kofi felt himself grow lighter.</p>
+          <p>He began to rise, turning into invisible water vapor that drifted back into the air. The journey upward was slower than the fall, but it felt peaceful, like floating in a silent elevator made of warmth. High above the town, the vapor cooled and gathered with other droplets, and Kofi found himself inside a new cloud.</p>
+          <p>From there, he could see a different part of the world—distant hills, a wider river, and fields he had never noticed before. He realized that he wasn’t just falling and rising without purpose. He was part of a long, patient cycle that carried water from sky to ground and back again, over and over.</p>
+          <p>Kofi understood that his tiny life helped fill rivers, water plants, and cool the air on hot days. As he settled into his new cloud home, he felt a quiet pride. The world was big, and he was small, but together they moved in a rhythm that had lasted longer than any memory.</p>
+        </div>
+
+        <!-- QUESTIONS + VOCAB -->
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why does Kofi rise back into the sky after landing in the puddle?</p>
+            <p>What part of the water cycle do you think is the most important, and why?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">condense</div><div>to change from gas to liquid</div>
+              <div class="vocab-word">vapor</div><div>water in its gas form</div>
+              <div class="vocab-word">gravity</div><div>the force that pulls things downward</div>
+              <div class="vocab-word">cycle</div><div>a repeating series of events</div>
+
+              <div class="vocab-word">evaporation</div><div>liquid water turning into vapor</div>
+              <div class="vocab-word">precipitation</div><div>water falling from clouds</div>
+              <div class="vocab-word">atmosphere</div><div>the layer of air around Earth</div>
+              <div class="vocab-word">accumulate</div><div>to gather or build up</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 2 -->
+      <section class="story" id="story-2">
+        <header class="story-header">
+          <div class="story-number">Story 2</div>
+          <h2 class="story-title">The Shadow That Changed Its Mind</h2>
+          <p class="story-subtitle">Light & shadow · Perspective · Cause and effect</p>
+        </header>
+
+        <div class="story-body">
+          <p>On a bright Saturday morning, a boy named Ebo stood in the schoolyard, watching his shadow stretch long across the concrete. It looked like a dark version of himself painted on the ground, thin and serious, with its head touching the edge of the soccer field. He raised one arm, and the shadow did the same, perfectly obedient.</p>
+          <p>As the hours passed, Ebo noticed something strange. Without him moving at all, his shadow slowly slid to the side, shrinking and turning in a new direction. It was as if the shadow had changed its mind about where it wanted to stand. Curious, Ebo planted his feet and watched carefully, determined not to move a muscle.</p>
+          <p>The shadow continued to shift, creeping closer to his shoes and then slipping behind him. His body had stayed in the same spot, but the sun had been traveling across the sky behind his back. His science teacher had said the sun does not truly move the way it seems; instead, the Earth turns, carrying everyone with it while the light angle changes.</p>
+          <p>Ebo realized the shadow wasn’t acting on its own at all. It was simply tracing the path of sunlight as it hit his body from different sides. Each minute, the angle narrowed a little, making the shadow shorter and sharper. By noon, it hugged his feet like a dark puddle, barely stretching past his toes.</p>
+        </div>
+
+        <!-- QUESTIONS + VOCAB -->
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did Ebo’s shadow move even though he didn’t?</p>
+            <p>How does the Earth’s rotation affect shadows throughout the day?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">angle</div><div>the direction from which light hits something</div>
+              <div class="vocab-word">rotate</div><div>to spin around a center point</div>
+              <div class="vocab-word">shadow</div><div>a dark shape made when light is blocked</div>
+              <div class="vocab-word">noon</div><div>the middle of the day</div>
+
+              <div class="vocab-word">axis</div><div>an imaginary line Earth spins around</div>
+              <div class="vocab-word">orbit</div><div>the path Earth takes around the sun</div>
+              <div class="vocab-word">illumination</div><div>light shining on something</div>
+              <div class="vocab-word">perspective</div><div>a way of seeing or understanding something</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 3 -->
+      <section class="story" id="story-3">
+        <header class="story-header">
+          <div class="story-number">Story 3</div>
+          <h2 class="story-title">The Fossil That Waited for the Right Hands</h2>
+          <p class="story-subtitle">Deep time · Rocks & fossils · Patience of nature</p>
+        </header>
+
+        <div class="story-body">
+          <p>On a dusty hillside far from town, a boy named Nana followed his geology club, carefully watching where he placed his feet. The ground was scattered with loose stones, each one worn smooth by years of sun, wind, and rain. To most people, the rocks all looked the same—gray and ordinary.</p>
+          <p>Nana knelt to pick up a flat stone that had a faint, curved line running across it. At first, he thought it was just a crack, but when he brushed away the dust, he saw a delicate pattern: tiny ridges, repeating in careful arcs. It looked almost like the outline of a shell pressed into the rock.</p>
+          <p>The group leader crouched beside him and smiled. It was not just a rock; it was a fossil, the preserved shape of a creature that had lived millions of years ago in a shallow sea. Over time, mud had covered the shell, hardened into stone, and guarded its memory while mountains rose and rivers carved valleys around it.</p>
+        </div>
+
+        <!-- QUESTIONS + VOCAB -->
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>What clues helped Nana realize the stone was a fossil?</p>
+            <p>Why do fossils help scientists understand the past?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">fossil</div><div>the preserved remains of an ancient organism</div>
+              <div class="vocab-word">ridges</div><div>raised lines or edges</div>
+              <div class="vocab-word">preserve</div><div>to keep something safe over time</div>
+              <div class="vocab-word">erosion</div><div>the wearing away of rock by wind or water</div>
+
+              <div class="vocab-word">sediment</div><div>small particles that settle in layers</div>
+              <div class="vocab-word">geology</div><div>the study of Earth’s rocks and history</div>
+              <div class="vocab-word">strata</div><div>layers of rock formed over time</div>
+              <div class="vocab-word">paleontology</div><div>the study of ancient life through fossils</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 4 -->
+      <section class="story" id="story-4">
+        <header class="story-header">
+          <div class="story-number">Story 4</div>
+          <h2 class="story-title">The Robot That Learned to Listen</h2>
+          <p class="story-subtitle">Sound sensors · Simple AI · Learning from mistakes</p>
+        </header>
+
+        <div class="story-body">
+          <p>In the school lab, a boy named Kwame built a small robot out of wires, wheels, and a shiny metal frame. He named it Lumo and gave it one simple job: follow the sound of a clapping hand. A tiny microphone on Lumo’s front acted as its ear, feeding signals into a little computer inside its body.</p>
+          <p>When Kwame clapped on the left side, Lumo was supposed to turn left. When he clapped on the right, it should roll to the right. But during the first test, Lumo spun in confused circles, its wheels squeaking on the table. It seemed to hear something, but it could not understand what the sounds meant.</p>
+        </div>
+
+        <!-- QUESTIONS + VOCAB -->
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did Lumo struggle during the first test?</p>
+            <p>How did Kwame help Lumo focus on the right sounds?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">sensor</div><div>a device that detects information</div>
+              <div class="vocab-word">signal</div><div>information sent from one place to another</div>
+              <div class="vocab-word">microphone</div><div>a device that picks up sound</div>
+              <div class="vocab-word">adjust</div><div>to change something slightly to improve it</div>
+
+              <div class="vocab-word">algorithm</div><div>a set of rules a computer follows</div>
+              <div class="vocab-word">frequency</div><div>how often a sound wave repeats</div>
+              <div class="vocab-word">interference</div><div>noise that disrupts a signal</div>
+              <div class="vocab-word">calibration</div><div>the process of fine‑tuning a device</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 5 -->
+      <section class="story" id="story-5">
+        <header class="story-header">
+          <div class="story-number">Story 5</div>
+          <h2 class="story-title">The Seed That Measured the Wind</h2>
+          <p class="story-subtitle">Aerodynamics · Nature’s design · Careful observation</p>
+        </header>
+
+        <div class="story-body">
+          <p>In a quiet park, a boy named Joel watched a tree release its seeds into the late afternoon air. Each seed had a thin, flat wing attached, shaped like a tiny fan. When the wind caught them, they spun gracefully, turning and twirling instead of dropping straight to the ground.</p>
+          <p>Joel reached out and caught one in his palm. It was light as air, with a small, hard seed at one end and a delicate, curved wing at the other. His science teacher had called them “samara” seeds, specially shaped so they could glide far from the parent tree and find new places to grow.</p>
+        </div>
+
+        <!-- QUESTIONS + VOCAB -->
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>How does the shape of the samara seed help it travel farther?</p>
+            <p>What did Joel learn about wind by observing the seeds?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">glide</div><div>to move smoothly through the air</div>
+              <div class="vocab-word">delicate</div><div>light and easily damaged</div>
+              <div class="vocab-word">breeze</div><div>a gentle wind</div>
+              <div class="vocab-word">drift</div><div>to move slowly with the air</div>
+
+              <div class="vocab-word">aerodynamics</div><div>the study of how air moves around objects</div>
+              <div class="vocab-word">rotation</div><div>spinning movement</div>
+              <div class="vocab-word">dispersal</div><div>the spreading of seeds or organisms</div>
+              <div class="vocab-word">trajectory</div><div>the path something follows through the air</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 6 -->
+      <section class="story" id="story-6">
+        <header class="story-header">
+          <div class="story-number">Story 6</div>
+          <h2 class="story-title">The Volcano That Whispered Warnings</h2>
+          <p class="story-subtitle">Geology · Tremors & pressure · Respecting Earth</p>
+        </header>
+
+        <div class="story-body">
+          <p>On a field trip to a distant valley, a boy named Malik stood at the base of a sleeping volcano. Its slopes were covered in green trees and wildflowers, and only the wide crater at the top hinted at the power it once released. From a distance, it looked peaceful, almost gentle.</p>
+          <p>The guide explained that even calm volcanoes can change. Deep below the surface, molten rock called magma sometimes rises, bringing heat and pressure with it. Before an eruption, the ground may shake in small tremors, gases may escape through cracks, and the shape of the volcano can swell slightly.</p>
+        </div>
+
+        <!-- QUESTIONS + VOCAB -->
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>What signs tell scientists that a volcano may be waking up?</p>
+            <p>Why is it important to monitor volcanoes closely?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">magma</div><div>molten rock beneath Earth’s surface</div>
+              <div class="vocab-word">tremor</div><div>a small shaking of the ground</div>
+              <div class="vocab-word">crater</div><div>a bowl‑shaped opening at a volcano’s top</div>
+              <div class="vocab-word">pressure</div><div>force applied to an area</div>
+
+              <div class="vocab-word">seismic</div><div>related to earthquakes</div>
+              <div class="vocab-word">geothermal</div><div>heat from inside the Earth</div>
+              <div class="vocab-word">eruption</div><div>a release of lava, ash, or gas</div
+
+      <!-- STORY 8 -->
+      <section class="story" id="story-8">
+        <header class="story-header">
+          <div class="story-number">Story 8</div>
+          <h2 class="story-title">The Magnet That Heard the Earth’s Heartbeat</h2>
+          <p class="story-subtitle">Magnetism · Earth’s core · Hidden forces</p>
+        </header>
+
+        <div class="story-body">
+          <p>In the back of his classroom, a boy named Nii experimented with a small bar magnet, sliding it across a tray of iron filings to watch the tiny particles jump into neat, curved patterns. He loved how the filings arranged themselves as if obeying an invisible rule, forming graceful lines that revealed the magnet’s hidden force.</p>
+          <p>But when he lifted the magnet and held it still, he noticed something strange — the filings continued to tremble, even though he wasn’t moving his hand. Curious, Nii placed the magnet on the table and watched closely as the particles quivered in a slow, steady rhythm, almost like a heartbeat.</p>
+          <p>His teacher explained that the Earth itself acts like a giant magnet, and sometimes the planet’s magnetic field shifts just enough for sensitive materials to respond. Nii imagined the Earth deep below him, its molten core swirling and spinning, creating magnetic waves that pulsed through rock, soil, and even the classroom floor.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did the iron filings tremble even when Nii wasn’t moving the magnet?</p>
+            <p>How does Earth’s core create a magnetic field?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">magnetic</div><div>having the power to attract certain metals</div>
+              <div class="vocab-word">filings</div><div>tiny pieces of metal</div>
+              <div class="vocab-word">tremble</div><div>to shake slightly</div>
+              <div class="vocab-word">core</div><div>the center of a planet</div>
+
+              <div class="vocab-word">electromagnetism</div><div>the force linking electricity and magnetism</div>
+              <div class="vocab-word">polarity</div><div>having opposite magnetic ends</div>
+              <div class="vocab-word">geodynamo</div><div>the process that generates Earth’s magnetic field</div>
+              <div class="vocab-word">flux</div><div>the flow of magnetic energy</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 9 -->
+      <section class="story" id="story-9">
+        <header class="story-header">
+          <div class="story-number">Story 9</div>
+          <h2 class="story-title">The Cave That Collected Echoes</h2>
+          <p class="story-subtitle">Sound · Reflection · Listening deeply</p>
+        </header>
+
+        <div class="story-body">
+          <p>During a family trip to the countryside, a boy named Kojo discovered a narrow cave entrance hidden behind a curtain of vines, its cool breath drifting softly into the warm afternoon air. He stepped inside carefully, listening to the quiet drip of water echoing through the stone corridors like a slow, steady heartbeat.</p>
+          <p>When he whispered a simple “hello,” the cave returned his voice in a gentle ripple, repeating it with a tone that sounded older and deeper than his own. Kojo realized that the cave wasn’t just bouncing sound back — it was shaping it, stretching it, and blending it with the echoes of countless voices that had passed through over the years.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did Kojo’s voice sound different when the cave echoed it?</p>
+            <p>How do caves change the way sound travels?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">echo</div><div>a sound that bounces back</div>
+              <div class="vocab-word">corridor</div><div>a long, narrow passage</div>
+              <div class="vocab-word">ripple</div><div>a wave-like movement</div>
+              <div class="vocab-word">vibration</div><div>a rapid back-and-forth movement</div>
+
+              <div class="vocab-word">acoustics</div><div>the science of how sound behaves</div>
+              <div class="vocab-word">resonance</div><div>sound amplified by vibration</div>
+              <div class="vocab-word">frequency</div><div>how fast a sound wave moves</div>
+              <div class="vocab-word">amplitude</div><div>the strength or height of a sound wave</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 10 -->
+      <section class="story" id="story-10">
+        <header class="story-header">
+          <div class="story-number">Story 10</div>
+          <h2 class="story-title">The Lightning That Drew a Tree in the Sky</h2>
+          <p class="story-subtitle">Electricity · Charge paths · Order in chaos</p>
+        </header>
+
+        <div class="story-body">
+          <p>One stormy evening, a boy named Darryl stood safely on his porch, watching dark clouds gather above the neighborhood like a giant, rumbling blanket. He loved storms, not for their noise, but for the strange beauty hidden inside the flashes of light that split the sky open for just a moment.</p>
+          <p>When the first bolt of lightning struck, it branched outward in thin, jagged lines that reminded him of the roots of a tree spreading through the soil. Darryl wondered if lightning followed rules the way tree roots did — searching for the easiest path, branching where resistance changed, shaping itself around invisible obstacles.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why does lightning branch instead of forming a straight line?</p>
+            <p>What does lightning reveal about the air it travels through?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">lightning</div><div>a sudden flash of electricity in the sky</div>
+              <div class="vocab-word">charge</div><div>electrical energy stored in matter</div>
+              <div class="vocab-word">resistance</div><div>a force that slows electrical flow</div>
+              <div class="vocab-word">branch</div><div>to split into smaller paths</div>
+
+              <div class="vocab-word">ionization</div><div>when atoms gain or lose electrons</div>
+              <div class="vocab-word">conduction</div><div>the movement of electricity through material</div>
+              <div class="vocab-word">discharge</div><div>the release of stored electricity</div>
+              <div class="vocab-word">atmospheric</div><div>related to the air around Earth</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 11 -->
+      <section class="story" id="story-11">
+        <header class="story-header">
+          <div class="story-number">Story 11</div>
+          <h2 class="story-title">The Coral That Painted the Ocean</h2>
+          <p class="story-subtitle">Fluorescence · Communication · Underwater light</p>
+        </header>
+
+        <div class="story-body">
+          <p>During a snorkeling trip with his cousins, a boy named Mensah floated above a shallow reef, watching the underwater world shimmer with colors he had never seen on land. Clusters of coral stretched across the ocean floor like living sculptures, each one glowing with soft shades of blue, pink, and gold that shifted gently with the sunlight.</p>
+          <p>As Mensah drifted closer, he noticed one coral in particular that seemed to pulse with color, brightening and dimming in a slow, steady rhythm. It wasn’t magic — it was fluorescence, a natural process where corals absorb sunlight and release it as glowing color, almost like the ocean’s version of a lantern.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why do some corals glow underwater?</p>
+            <p>How might coral colors help animals communicate?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">reef</div><div>a ridge of rock or coral near the surface</div>
+              <div class="vocab-word">pulse</div><div>to brighten or move in a steady rhythm</div>
+              <div class="vocab-word">absorb</div><div>to take in energy or light</div>
+              <div class="vocab-word">glow</div><div>to shine softly</div>
+
+              <div class="vocab-word">fluorescence</div><div>light emitted after absorbing energy</div>
+              <div class="vocab-word">ecosystem</div><div>a community of living things</div>
+              <div class="vocab-word">bioluminescence</div><div>light produced by living organisms</div>
+              <div class="vocab-word">spectrum</div><div>the range of colors of light</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 12 -->
+      <section class="story" id="story-12">
+        <header class="story-header">
+          <div class="story-number">Story 12</div>
+          <h2 class="story-title">The Glacier That Kept Time</h2>
+          <p class="story-subtitle">Glaciers · Slow movement · Time as layers</p>
+        </header>
+
+        <div class="story-body">
+          <p>During a summer trip to the mountains, a boy named Kwesi stood at the edge of a massive glacier, its surface glowing faintly under the bright afternoon sun. The ice stretched for miles, layered in shades of white and blue that looked like pages in a frozen book written over thousands of years.</p>
+          <p>As he listened, Kwesi heard soft cracks echoing through the glacier, not sharp or frightening, but slow and rhythmic, like the ticking of an ancient clock. The guide explained that glaciers move so gradually that most people never notice, sliding just a few centimeters each day as gravity pulls them downhill.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>How does a glacier record time?</p>
+            <p>Why do glaciers move even though they seem solid?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">glacier</div><div>a large, slow-moving mass of ice</div>
+              <div class="vocab-word">layer</div><div>a sheet or level of material</div>
+              <div class="vocab-word">crack</div><div>a split or break in something</div>
+              <div class="vocab-word">gravity</div><div>the force pulling objects downward</div>
+
+              <div class="vocab-word">compression</div><div>pressure that squeezes material together</div>
+              <div class="vocab-word">erosion</div><div>the wearing away of land</div>
+              <div class="vocab-word">sedimentation</div><div>the buildup of layers over time</div>
+              <div class="vocab-word">glaciology</div><div>the study of glaciers</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 13 -->
+      <section class="story" id="story-13">
+        <header class="story-header">
+          <div class="story-number">Story 13</div>
+          <h2 class="story-title">The Tree That Listened to the Moon</h2>
+          <p class="story-subtitle">Gravity · Plant responses · Earth & sky</p>
+        </header>
+
+        <div class="story-body">
+          <p>Every night, a boy named Selorm liked to sit beneath the tall baobab tree behind his house, watching the moon rise slowly over the horizon. The tree’s branches stretched wide like open arms, and its thick trunk held a quiet strength that made Selorm feel safe and thoughtful.</p>
+          <p>One evening, he noticed something unusual: the leaves on the highest branches trembled gently even though the air around him was completely still. Curious, he climbed partway up the trunk and felt a faint vibration traveling through the wood, steady and rhythmic like a distant drumbeat.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>What might cause the tree to tremble even when the air is still?</p>
+            <p>How could the moon influence plants on Earth?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">tremble</div><div>to shake slightly</div>
+              <div class="vocab-word">vibration</div><div>a repeated back-and-forth movement</div>
+              <div class="vocab-word">horizon</div><div>the line where the sky meets the land</div>
+              <div class="vocab-word">branch</div><div>a limb growing from a tree trunk</div>
+
+              <div class="vocab-word">gravitational</div><div>related to the force of gravity</div>
+              <div class="vocab-word">photosensitivity</div><div>response to light</div>
+              <div class="vocab-word">circadian</div><div>related to daily biological rhythms</div>
+              <div class="vocab-word">botany</div><div>the study of plants</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 14 -->
+      <section class="story" id="story-14">
+        <header class="story-header">
+          <div class="story-number">Story 14</div>
+          <h2 class="story-title">The Sand Dune That Sang at Sunset</h2>
+          <p class="story-subtitle">Vibrations · Friction · Hidden music</p>
+        </header>
+
+        <div class="story-body">
+          <p>During a family trip to the desert, a boy named Kwaku climbed a tall sand dune just as the sun began to sink behind the horizon. The air was warm and still, and the dune stretched out beneath him like a giant golden wave frozen in place.</p>
+          <p>As he slid a few steps down the slope, he heard a deep humming sound rise from the sand, low and musical, almost like a distant drum. Startled, he tried it again, and the dune responded with another soft vibration, as though it were singing back to him.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>What causes some sand dunes to “sing” when disturbed?</p>
+            <p>How does friction create sound in this story?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">dune</div><div>a hill of sand shaped by wind</div>
+              <div class="vocab-word">friction</div><div>the rubbing of two surfaces</div>
+              <div class="vocab-word">hum</div><div>a low, steady sound</div>
+              <div class="vocab-word">slope</div><div>a surface that slants upward or downward</div>
+
+              <div class="vocab-word">granular</div><div>made of small grains</div>
+              <div class="vocab-word">resonance</div><div>sound amplified by vibration</div>
+              <div class="vocab-word">frequency</div><div>how fast a sound wave repeats</div>
+              <div class="vocab-word">acoustic</div><div>related to sound or hearing</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 15 -->
+      <section class="story" id="story-15">
+        <header class="story-header">
+          <div class="story-number">Story 15</div>
+          <h2 class="story-title">The Clock That Ran on Shadows</h2>
+          <p class="story-subtitle">Earth’s tilt · Sunlight · Timekeeping</p>
+        </header>
+
+        <div class="story-body">
+          <p>In the middle of the school courtyard stood an old sundial, its metal gnomon casting a thin shadow across the stone surface. Most students ignored it, but a boy named Tetteh visited it every afternoon, fascinated by how something so simple could measure something as mysterious as time.</p>
+          <p>One day, he noticed the shadow curve slightly instead of moving in a straight line, bending as though it were following a hidden path across the stone. Curious, he traced the curve with his finger and realized the sundial wasn’t broken — the Earth itself was tilting toward a new season, changing the angle of the sunlight.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did the sundial’s shadow curve instead of moving straight?</p>
+            <p>How does Earth’s tilt affect the way shadows behave?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">sundial</div><div>a device that tells time using shadows</div>
+              <div class="vocab-word">gnomon</div><div>the part of a sundial that casts a shadow</div>
+              <div class="vocab-word">tilt</div><div>a slight lean or angle</div>
+              <div class="vocab-word">season</div><div>a period of the year with specific weather</div>
+
+              <div class="vocab-word">solstice</div><div>the longest or shortest day of the year</div>
+              <div class="vocab-word">equinox</div><div>a day when daylight and night are equal</div>
+              <div class="vocab-word">rotation</div><div>Earth spinning on its axis</div>
+              <div class="vocab-word">inclination</div><div>the angle of Earth’s tilt</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 16 -->
+      <section class="story" id="story-16">
+        <header class="story-header">
+          <div class="story-number">Story 16</div>
+          <h2 class="story-title">The Mirror That Collected Sunlight</h2>
+          <p class="story-subtitle">Reflection · Solar energy · Shaping light</p>
+        </header>
+
+        <div class="story-body">
+          <p>In the corner of his backyard, a boy named Adom set up a small circular mirror he had found in an old toolbox, curious to see how it would reflect the afternoon sun. When the light hit the mirror, it bounced onto the fence in a bright, perfect circle that shimmered like a tiny portal.</p>
+          <p>Adom tilted the mirror slightly, and the circle stretched into an oval, then a long streak of light that danced across the wooden boards. He realized he wasn’t just moving a reflection — he was bending sunlight itself, guiding it the way scientists direct beams in solar experiments.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>How did Adom change the shape of the reflected light?</p>
+            <p>What does this story teach about how mirrors work?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">reflect</div><div>to bounce light off a surface</div>
+              <div class="vocab-word">tilt</div><div>to move something at an angle</div>
+              <div class="vocab-word">beam</div><div>a narrow line of light</div>
+              <div class="vocab-word">surface</div><div>the outside layer of something</div>
+
+              <div class="vocab-word">refraction</div><div>bending of light as it passes through material</div>
+              <div class="vocab-word">diffusion</div><div>scattering of light in many directions</div>
+              <div class="vocab-word">intensity</div><div>the brightness or strength of light</div>
+              <div class="vocab-word">optics</div><div>the study of light</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 17 -->
+      <section class="story" id="story-17">
+        <header class="story-header">
+          <div class="story-number">Story 17</div>
+          <h2 class="story-title">The Star That Followed Him Home</h2>
+          <p class="story-subtitle">Earth’s rotation · Perspective · Appearance vs reality</p>
+        </header>
+
+        <div class="story-body">
+          <p>Every night, a boy named Kobi liked to sit on his rooftop and watch the stars appear one by one, blinking softly like distant lanterns. One evening, he noticed a single star that seemed brighter than the rest, shimmering with a steady glow that felt strangely familiar.</p>
+          <p>As he walked home, the star seemed to follow him, staying in the same place above the trees no matter how many turns he made. Kobi wondered if the star was watching him, or if something else was happening in the sky.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did the star seem to follow Kobi as he walked?</p>
+            <p>How does Earth’s rotation affect the way stars appear to move?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">perspective</div><div>a way of seeing something</div>
+              <div class="vocab-word">glow</div><div>a soft, steady light</div>
+              <div class="vocab-word">distant</div><div>far away</div>
+              <div class="vocab-word">rotate</div><div>to spin around a center</div>
+
+              <div class="vocab-word">celestial</div><div>related to the sky or space</div>
+              <div class="vocab-word">axis</div><div>the line Earth spins around</div>
+              <div class="vocab-word">constellation</div><div>a group of stars forming a pattern</div>
+              <div class="vocab-word">orbit</div><div>the path one object takes around another</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 18 -->
+      <section class="story" id="story-18">
+        <header class="story-header">
+          <div class="story-number">Story 18</div>
+          <h2 class="story-title">The River That Remembered the Rain</h2>
+          <p class="story-subtitle">Rivers · Watersheds · Memory & flow</p>
+        </header>
+
+        <div class="story-body">
+          <p>After a week of dry weather, a boy named Yaw walked along the edge of the river near his home, noticing how low and quiet the water had become. The riverbed showed smooth stones that were usually hidden, each one shaped by years of flowing water.</p>
+          <p>Yaw crouched down and touched the surface, surprised to feel a faint, steady movement even though the river looked almost still. His science teacher had explained that rivers never truly stop — underground springs and distant streams continue feeding them, carrying memories of rain from faraway places.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why does the river keep flowing even when it hasn’t rained nearby?</p>
+            <p>How do rivers “remember” rainfall from far away?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">current</div><div>the movement of water in a river</div>
+              <div class="vocab-word">surface</div><div>the top layer of something</div>
+              <div class="vocab-word">stream</div><div>a small, flowing body of water</div>
+              <div class="vocab-word">spring</div><div>a place where water flows from the ground</div>
+
+              <div class="vocab-word">watershed</div><div>an area where water drains into a river</div>
+              <div class="vocab-word">sediment</div><div>tiny pieces of rock carried by water</div>
+              <div class="vocab-word">tributary</div><div>a smaller river that flows into a larger one</div>
+              <div class="vocab-word">hydrology</div><div>the study of water on Earth</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 19 -->
+      <section class="story" id="story-19">
+        <header class="story-header">
+          <div class="story-number">Story 19</div>
+          <h2 class="story-title">The Compass That Pointed to Silence</h2>
+          <p class="story-subtitle">Magnetism · Iron rock · Quiet discovery</p>
+        </header>
+
+        <div class="story-body">
+          <p>On a quiet Saturday morning, a boy named Sena took his small brass compass into the woods behind his house, hoping to map a new trail for his hiking club. The compass needle usually swung confidently toward north, but today it wavered, trembling as though unsure of itself.</p>
+          <p>Sena tapped the glass gently, expecting the needle to settle, but instead it drifted sideways, pointing toward a cluster of tall pine trees. Curious, he followed the direction, noticing that the deeper he walked, the quieter the forest became — no birdsong, no rustling leaves, just a soft, peaceful stillness.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did the compass needle point away from north?</p>
+            <p>How can magnetic rocks affect navigation?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">compass</div><div>a tool that shows direction</div>
+              <div class="vocab-word">needle</div><div>the part that points north</div>
+              <div class="vocab-word">magnetic</div><div>able to attract certain metals</div>
+              <div class="vocab-word">stillness</div><div>quiet and lack of movement</div>
+
+              <div class="vocab-word">magnetite</div><div>a naturally magnetic mineral</div>
+              <div class="vocab-word">deviation</div><div>a change from the expected direction</div>
+              <div class="vocab-word">field strength</div><div>the power of a magnetic field</div>
+              <div class="vocab-word">navigation</div><div>finding one’s way</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- STORY 20 -->
+      <section class="story" id="story-20">
+        <header class="story-header">
+          <div class="story-number">Story 20</div>
+          <h2 class="story-title">The Windmill That Counted the Sky</h2>
+          <p class="story-subtitle">Wind layers · Atmosphere · Invisible structure</p>
+        </header>
+
+        <div class="story-body">
+          <p>On the edge of a small farming town stood an old wooden windmill, its blades creaking softly as they turned in the afternoon breeze. Most people passed it without a second thought, but a boy named Owusu visited it often, fascinated by how faithfully it spun no matter the season.</p>
+          <p>One day, he noticed that the blades were turning unusually fast even though the wind around him felt calm, barely strong enough to rustle the grass. Curious, he climbed the small hill beside the windmill and felt a stronger breeze rushing over the top — a hidden current of air that didn’t reach the ground.</p>
+        </div>
+
+        <div class="learning-section">
+          <div class="question-box">
+            <h3>❓ Questions</h3>
+            <p>Why did the windmill spin faster at the top of the hill?</p>
+            <p>What does this story reveal about layers of wind?</p>
+          </div>
+
+          <div class="vocab-box">
+            <h3>📘 Vocabulary</h3>
+            <div class="vocab-grid">
+              <div class="vocab-word">breeze</div><div>a gentle wind</div>
+              <div class="vocab-word">current</div><div>a flow of air or water</div>
+              <div class="vocab-word">rustle</div><div>to make a soft, light sound</div>
+              <div class="vocab-word">layer</div><div>a level or section of something</div>
+
+              <div class="vocab-word">atmosphere</div><div>the layers of air around Earth</div>
+              <div class="vocab-word">turbulence</div><div>irregular or chaotic air movement</div>
+              <div class="vocab-word">aerodynamics</div><div>the study of how air moves</div>
+              <div class="vocab-word">meteorology</div><div>the study of weather</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- NAVIGATION BAR -->
+      <div class="nav-bar">
+        <div class="nav-buttons">
+          <button id="prevBtn">← Back</button>
+          <button id="nextBtn" class="primary">Next →</button>
+        </div>
+        <div class="progress-indicator" id="progressIndicator">
+          Story 1 of 20
+        </div>
+      </div>
+
+    </main>
+  </div>
+
+<script>
+  // ------------------------------
+  // STORY SWITCHING + NAVIGATION
+  // ------------------------------
+
+  const stories = document.querySelectorAll(".story");
+  const tocLinks = document.querySelectorAll(".toc-link");
+  const prevBtn = document.getElementById("prevBtn");
+  const nextBtn = document.getElementById("nextBtn");
+  const progressIndicator = document.getElementById("progressIndicator");
+
+  let currentStory = 1;
+  const totalStories = stories.length;
+
+  // Load last story from localStorage if available
+  const savedStory = localStorage.getItem("lastStory");
+  if (savedStory) {
+    currentStory = parseInt(savedStory, 10);
+  }
+
+  // Show the correct story on load
+  showStory(currentStory);
+
+  function showStory(num) {
+    // Hide all stories
+    stories.forEach((story) => story.classList.remove("active"));
+
+    // Show selected story
+    const storyToShow = document.getElementById(`story-${num}`);
+    if (storyToShow) {
+      storyToShow.classList.add("active");
+    }
+
+    // Update TOC highlighting
+    tocLinks.forEach((btn) => btn.classList.remove("active"));
+    const activeBtn = document.querySelector(`.toc-link[data-story="${num}"]`);
+    if (activeBtn) {
+      activeBtn.classList.add("active");
+    }
+
+    // Update progress indicator
+    progressIndicator.textContent = `Story ${num} of ${totalStories}`;
+
+    // Update navigation buttons
+    prevBtn.disabled = num === 1;
+    nextBtn.disabled = num === totalStories;
+
+    // Save progress
+    localStorage.setItem("lastStory", num);
+  }
+
+  // ------------------------------
+  // TOC CLICK HANDLING
+  // ------------------------------
+  tocLinks.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const storyNum = parseInt(btn.dataset.story, 10);
+      currentStory = storyNum;
+      showStory(currentStory);
+    });
+  });
+
+  // ------------------------------
+  // NEXT / BACK BUTTONS
+  // ------------------------------
+  prevBtn.addEventListener("click", () => {
+    if (currentStory > 1) {
+      currentStory--;
+      showStory(currentStory);
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentStory < totalStories) {
+      currentStory++;
+      showStory(currentStory);
+    }
+  });
+</script>
+
+</body>
+</html>
+

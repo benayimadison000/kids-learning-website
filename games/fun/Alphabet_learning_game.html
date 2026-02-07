@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Alphabet Learning Game</title>
+<style>
+    body {
+        font-family: 'Arial Rounded MT Bold', Arial, sans-serif;
+        background: #cfe9ff; /* Light blue */
+        color: #003355;
+        text-align: center;
+        padding: 20px;
+        overflow-x: hidden;
+        position: relative;
+    }
+
+    /* Floating emojis */
+    .emoji {
+        position: fixed;
+        font-size: 60px;
+        opacity: 0.35;
+        animation: float 12s linear infinite;
+        pointer-events: none;
+    }
+
+    @keyframes float {
+        from { transform: translateY(110vh) rotate(0deg); }
+        to { transform: translateY(-120vh) rotate(360deg); }
+    }
+
+    h1 {
+        font-size: 48px;
+        color: #005a8d;
+        text-shadow: 0 0 12px rgba(255,255,255,0.7);
+        margin-bottom: 10px;
+    }
+
+    /* Modern glowing buttons */
+    .menu button, .controls button {
+        padding: 18px 30px;
+        margin: 10px;
+        font-size: 26px;
+        border: none;
+        border-radius: 14px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #4ab3ff, #7dd6ff);
+        color: #002244;
+        box-shadow: 0 0 15px #4ab3ff;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .menu button:hover, .controls button:hover {
+        transform: scale(1.08);
+        box-shadow: 0 0 25px #7dd6ff;
+    }
+
+    /* Modern letters */
+    .letter-display {
+    	font-size: 260px;
+    	margin: 40px 0;
+    	color: #003355; /* Dark blue */
+    	text-shadow: 0 0 12px rgba(255,255,255,0.6);
+    	animation: bounce 0.6s ease;
+    	font-weight: 900;
+}
+    }
+
+    @keyframes bounce {
+        0% { transform: scale(0.7); opacity: 0.5; }
+        60% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1); }
+    }
+
+    /* Find-the-letter grid */
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 20px;
+        max-width: 500px;
+        margin: 20px auto;
+    }
+
+    .grid button {
+        font-size: 70px;
+        padding: 25px;
+        border-radius: 14px;
+        border: none;
+        background: linear-gradient(135deg, #ffffff, #d6f3ff);
+        color: #003355;
+        box-shadow: 0 0 12px rgba(0,0,0,0.2);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .grid button:hover {
+        transform: scale(1.12);
+        box-shadow: 0 0 20px #a8e6ff;
+    }
+
+    /* Progress stars */
+    #progress {
+        font-size: 42px;
+        margin: 15px 0;
+        color: #ffb400;
+        text-shadow: 0 0 12px rgba(255,200,0,0.7);
+    }
+
+    /* Confetti */
+    .confetti {
+        position: fixed;
+        top: -10px;
+        width: 12px;
+        height: 12px;
+        background: red;
+        animation: fall 1s linear forwards;
+        border-radius: 50%;
+    }
+
+    @keyframes fall {
+        to { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+    }
+
+    /* Matching rows */
+    #matchRows {
+        margin-top: 30px;
+    }
+
+    .match-row {
+        display: flex;
+        justify-content: center;
+        gap: 60px;
+        margin: 20px 0;
+    }
+
+    .match-row button {
+        font-size: 70px;
+        padding: 25px 35px;
+        border-radius: 14px;
+        border: none;
+        background: linear-gradient(135deg, #ffffff, #d6f3ff);
+        color: #003355;
+        box-shadow: 0 0 12px rgba(0,0,0,0.2);
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .match-row button:hover {
+        transform: scale(1.12);
+        box-shadow: 0 0 20px #a8e6ff;
+    }
+
+    .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<!-- FLOATING EMOJIS -->
+<script>
+const emojis = ["🚀","🪐","⭐","🌈","☁️","🛰️","🌟","✨"];
+for (let i = 0; i < 18; i++) {
+    const e = document.createElement("div");
+    e.className = "emoji";
+    e.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    e.style.left = Math.random() * 100 + "vw";
+    e.style.animationDuration = 8 + Math.random() * 10 + "s";
+    e.style.fontSize = 40 + Math.random() * 40 + "px";
+    document.body.appendChild(e);
+}
+</script>
+
+<h1>Alphabet Learning Game</h1>
+
+<div id="progress">⭐ 0</div>
+
+<!-- MAIN MENU -->
+<div id="menu" class="menu">
+    <button onclick="startLearnMode()">Learn the Alphabet</button>
+    <button onclick="startFindMode()">Find the Letter</button>
+    <button onclick="startPhonicsMode()">Phonics Mode</button>
+    <button onclick="startMatchMode()">Match Uppercase ↔ Lowercase</button>
+</div>
+
+<!-- LEARN MODE -->
+<div id="learnMode" class="hidden">
+    <div id="learnLetter" class="letter-display">A</div>
+    <div class="controls">
+        <button onclick="prevLetter()">Previous</button>
+        <button onclick="speakLetter()">🔊 Say Letter</button>
+        <button onclick="nextLetter()">Next</button>
+    </div>
+    <button onclick="goHome()">Back to Menu</button>
+</div>
+
+<!-- FIND MODE -->
+<div id="findMode" class="hidden">
+    <div id="letterGrid" class="grid"></div>
+    <button onclick="goHome()">Back to Menu</button>
+</div>
+
+<!-- PHONICS MODE -->
+<div id="phonicsMode" class="hidden">
+    <div id="phonicsLetter" class="letter-display">A</div>
+    <h2 id="phonicsWord">A is for Apple</h2>
+    <button onclick="nextPhonics()">Next</button>
+    <button onclick="goHome()">Back to Menu</button>
+</div>
+
+<!-- MATCH MODE -->
+<div id="matchMode" class="hidden">
+    <h2 style="color:#005a8d; text-shadow:0 0 12px white;">Match Uppercase to Lowercase</h2>
+    <div id="matchRows"></div>
+    <button onclick="goHome()">Back to Menu</button>
+</div>
+
+<!-- CLEAN TA-DA SOUND -->
+<audio id="tadaSound" src="https://cdn.pixabay.com/download/audio/2022/03/15/audio_7b1b1f1e8d.mp3?filename=correct-2-46134.mp3"></audio>
+
+<script>
+const letters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+const phonics = {
+    A: "Apple", B: "Ball", C: "Cat", D: "Dog", E: "Elephant",
+    F: "Fish", G: "Goat", H: "Hat", I: "Igloo", J: "Jam",
+    K: "Kite", L: "Lion", M: "Monkey", N: "Nest", O: "Octopus",
+    P: "Pig", Q: "Queen", R: "Rabbit", S: "Sun", T: "Tiger",
+    U: "Umbrella", V: "Van", W: "Whale", X: "Xylophone",
+    Y: "Yarn", Z: "Zebra"
+};
+
+let currentIndex = 0;
+let targetLetter = "";
+let stars = 0;
+
+/* FEMALE VOICE */
+function speak(text) {
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.rate = 0.9;
+
+    const voices = speechSynthesis.getVoices();
+    const female =
+        voices.find(v => v.name.toLowerCase().includes("female")) ||
+        voices.find(v => v.gender === "female") ||
+        voices.find(v => v.name.toLowerCase().includes("zira")) ||
+        voices.find(v => v.name.toLowerCase().includes("samantha")) ||
+        voices[0];
+
+    utter.voice = female;
+    speechSynthesis.speak(utter);
+}
+
+/* ---------------- LEARN MODE ---------------- */
+
+function startLearnMode() {
+    hideAll();
+    document.getElementById("learnMode").classList.remove("hidden");
+    showLetter();
+}
+
+function showLetter() {
+    const letter = letters[currentIndex];
+    document.getElementById("learnLetter").textContent = letter;
+    speak(letter);
+}
+
+function nextLetter() {
+    currentIndex = (currentIndex + 1) % letters.length;
+    showLetter();
+}
+
+function prevLetter() {
+    currentIndex = (currentIndex - 1 + letters.length) % letters.length;
+    showLetter();
+}
+
+function speakLetter() {
+    speak(letters[currentIndex]);
+}
+
+/* ---------------- FIND MODE ---------------- */
+
+function startFindMode() {
+    hideAll();
+    document.getElementById("findMode").classList.remove("hidden");
+    generateFindRound();
+}
+
+function generateFindRound() {
+    const grid = document.getElementById("letterGrid");
+    grid.innerHTML = "";
+
+    targetLetter = letters[Math.floor(Math.random() * letters.length)];
+    speak("Find the letter " + targetLetter);
+
+    let options = new Set([targetLetter]);
+    while (options.size < 10) {
+        options.add(letters[Math.floor(Math.random() * letters.length)]);
+    }
+
+    const shuffled = Array.from(options).sort(() => Math.random() - 0.5);
+
+    shuffled.forEach(letter => {
+        const btn = document.createElement("button");
+        btn.textContent = letter;
+        btn.onclick = () => checkAnswer(letter);
+        grid.appendChild(btn);
+    });
+}
+
+function checkAnswer(letter) {
+    if (letter === targetLetter) {
+        stars++;
+        updateStars();
+        playConfetti();
+        document.getElementById("tadaSound").play();
+        speak("Great job");
+        setTimeout(generateFindRound, 1200);
+    } else {
+        speak("Try again");
+    }
+}
+
+/* ---------------- PHONICS MODE ---------------- */
+
+function startPhonicsMode() {
+    hideAll();
+    document.getElementById("phonicsMode").classList.remove("hidden");
+    currentIndex = 0;
+    showPhonics();
+}
+
+function showPhonics() {
+    const letter = letters[currentIndex];
+    const word = phonics[letter];
+
+    document.getElementById("phonicsLetter").textContent = letter;
+    document.getElementById("phonicsWord").textContent = `${letter} is for ${word}`;
+
+    speak(`${letter} is for ${word}`);
+}
+
+function nextPhonics() {
+    currentIndex = (currentIndex + 1) % letters.length;
+    showPhonics();
+}
+
+/* ---------------- MATCH MODE ---------------- */
+
+let matchPairs = [];
+let matchedCount = 0;
+let firstPick = null;
+
+function startMatchMode() {
+    hideAll();
+    document.getElementById("matchMode").classList.remove("hidden");
+    buildMatchRows();
+}
+
+function buildMatchRows() {
+    const container = document.getElementById("matchRows");
+    container.innerHTML = "";
+    matchedCount = 0;
+    firstPick = null;
+
+    const shuffled = [...letters].sort(() => Math.random() - 0.5).slice(0, 6);
+
+    matchPairs = shuffled.map(l => ({
+        upper: l,
+        lower: l.toLowerCase()
+    }));
+
+    const lowerShuffled = matchPairs
+        .map(p => p.lower)
+        .sort(() => Math.random() - 0.5);
+
+    matchPairs.forEach((pair, i) => {
+        const row = document.createElement("div");
+        row.className = "match-row";
+
+        const upperBtn = document.createElement("button");
+        upperBtn.textContent = pair.upper;
+        upperBtn.onclick = () => selectMatch(pair.upper, upperBtn);
+
+        const lowerBtn = document.createElement("button");
+        lowerBtn.textContent = lowerShuffled[i];
+        lowerBtn.onclick = () => selectMatch(lowerShuffled[i], lowerBtn);
+
+        row.appendChild(upperBtn);
+        row.appendChild(lowerBtn);
+        container.appendChild(row);
+    });
+}
+
+function selectMatch(letter, btn) {
+    btn.style.background = "#bfe4ff";
+
+    if (!firstPick) {
+        firstPick = { letter, btn };
+        return;
+    }
+
+    const isMatch =
+        firstPick.letter.toLowerCase() === letter.toLowerCase() &&
+        firstPick.btn !== btn;
+
+    if (isMatch) {
+        stars++;
+        updateStars();
+        playConfetti();
+        document.getElementById("tadaSound").play();
+        speak("Good match");
+
+        firstPick.btn.style.background = "#b6ffb6";
+        btn.style.background = "#b6ffb6";
+
+        matchedCount++;
+
+        if (matchedCount === matchPairs.length) {
+            setTimeout(() => {
+                speak("New round");
+                buildMatchRows();
+            }, 1200);
+        }
+    } else {
+        speak("Try again");
+        firstPick.btn.style.background = "white";
+        btn.style.background = "white";
+    }
+
+    firstPick = null;
+}
+
+/* ---------------- UTILITIES ---------------- */
+
+function updateStars() {
+    document.getElementById("progress").textContent = "⭐ " + stars;
+}
+
+function playConfetti() {
+    for (let i = 0; i < 20; i++) {
+        const c = document.createElement("div");
+        c.className = "confetti";
+        c.style.left = Math.random() * window.innerWidth + "px";
+        c.style.background = ["#ff6b6b","#4dabf7","#ffd93d","#51cf66","#845ef7"][Math.floor(Math.random()*5)];
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 1000);
+    }
+}
+
+function hideAll() {
+    document.getElementById("menu").classList.add("hidden");
+    document.getElementById("learnMode").classList.add("hidden");
+    document.getElementById("findMode").classList.add("hidden");
+    document.getElementById("phonicsMode").classList.add("hidden");
+    document.getElementById("matchMode").classList.add("hidden");
+}
+
+function goHome() {
+    hideAll();
+    document.getElementById("menu").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
