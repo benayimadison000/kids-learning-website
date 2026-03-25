@@ -1,0 +1,1092 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Alphabet Tracing - Learn to Write Letters!</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✏️</text></svg>">
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg: #FFF8F0;
+    --bg-card: #FFFFFF;
+    --primary: #6C63FF;
+    --primary-light: #A5A0FF;
+    --secondary: #FF6584;
+    --accent-green: #4ECDC4;
+    --accent-yellow: #FFE66D;
+    --accent-orange: #FFA07A;
+    --accent-pink: #FFB6C1;
+    --text-dark: #2D3436;
+    --text-muted: #636E72;
+    --border: #E0E0E0;
+    --success: #2ECC71;
+    --shadow: 0 4px 20px rgba(0,0,0,0.08);
+    --shadow-lg: 0 8px 30px rgba(0,0,0,0.12);
+    --radius: 16px;
+    --radius-sm: 10px;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg);
+    color: var(--text-dark);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  /* Header */
+  .header {
+    width: 100%;
+    background: linear-gradient(135deg, #6C63FF 0%, #A5A0FF 50%, #FF6584 100%);
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 10px rgba(108,99,255,0.3);
+    position: relative;
+    z-index: 10;
+  }
+
+  .home-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.2);
+    color: white;
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    font-weight: 600;
+    transition: background 0.2s;
+    border: 2px solid rgba(255,255,255,0.3);
+  }
+
+  .home-btn:hover {
+    background: rgba(255,255,255,0.35);
+  }
+
+  .header-title {
+    color: white;
+    font-size: 22px;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  .header-emoji {
+    font-size: 28px;
+  }
+
+  /* Main Layout */
+  .main-container {
+    width: 100%;
+    max-width: 800px;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    flex: 1;
+  }
+
+  /* Current Letter Display */
+  .letter-display {
+    text-align: center;
+    margin-top: 4px;
+  }
+
+  .letter-display h2 {
+    font-size: 28px;
+    color: var(--primary);
+    font-weight: 800;
+  }
+
+  .letter-display .subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Canvas Area */
+  .canvas-wrapper {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-lg);
+    padding: 16px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    border: 3px solid var(--border);
+    width: 100%;
+    max-width: 370px;
+  }
+
+  .canvas-wrapper.success-glow {
+    border-color: var(--success);
+    box-shadow: 0 0 30px rgba(46,204,113,0.4);
+  }
+
+  #traceCanvas {
+    border: 2px dashed #D0D0D0;
+    border-radius: var(--radius-sm);
+    cursor: crosshair;
+    touch-action: none;
+    background: #FEFEFE;
+    display: block;
+  }
+
+  /* Progress bar under canvas */
+  .progress-bar-container {
+    width: 100%;
+    max-width: 300px;
+    height: 14px;
+    background: #EEE;
+    border-radius: 7px;
+    margin-top: 12px;
+    overflow: hidden;
+    position: relative;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent-yellow), var(--accent-green));
+    border-radius: 7px;
+    transition: width 0.3s ease;
+    width: 0%;
+  }
+
+  .progress-bar-text {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  /* Buttons Row */
+  .controls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    width: 100%;
+    max-width: 370px;
+  }
+
+  .btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 25px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+  }
+
+  .btn:active {
+    transform: translateY(0);
+  }
+
+  .btn-prev {
+    background: var(--primary-light);
+    color: white;
+  }
+
+  .btn-next {
+    background: var(--primary);
+    color: white;
+  }
+
+  .btn-clear {
+    background: var(--secondary);
+    color: white;
+  }
+
+  /* Success Message */
+  .success-message {
+    display: none;
+    text-align: center;
+    padding: 12px;
+    animation: bounceIn 0.5s ease;
+  }
+
+  .success-message.show {
+    display: block;
+  }
+
+  .success-message h3 {
+    font-size: 26px;
+    color: var(--success);
+    margin-bottom: 4px;
+  }
+
+  .success-message p {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--primary);
+  }
+
+  @keyframes bounceIn {
+    0% { transform: scale(0.3); opacity: 0; }
+    50% { transform: scale(1.1); }
+    70% { transform: scale(0.9); }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  /* Letter Grid */
+  .letter-grid-section {
+    width: 100%;
+    max-width: 500px;
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 16px;
+    box-shadow: var(--shadow);
+  }
+
+  .letter-grid-section h3 {
+    text-align: center;
+    font-size: 16px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+  }
+
+  .letter-grid {
+    display: grid;
+    grid-template-columns: repeat(9, 1fr);
+    gap: 6px;
+  }
+
+  .letter-cell {
+    aspect-ratio: 1;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: white;
+    position: relative;
+    color: var(--text-dark);
+  }
+
+  .letter-cell:hover {
+    border-color: var(--primary);
+    background: #F0EEFF;
+    transform: scale(1.05);
+  }
+
+  .letter-cell.active {
+    border-color: var(--primary);
+    background: var(--primary);
+    color: white;
+    box-shadow: 0 2px 8px rgba(108,99,255,0.3);
+  }
+
+  .letter-cell.completed {
+    border-color: var(--success);
+    background: #E8FFF0;
+    color: var(--success);
+  }
+
+  .letter-cell.completed::after {
+    content: '\2713';
+    position: absolute;
+    top: -4px;
+    right: -2px;
+    font-size: 10px;
+    background: var(--success);
+    color: white;
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+  }
+
+  .letter-cell.completed.active {
+    background: var(--success);
+    color: white;
+  }
+
+  /* Confetti Canvas */
+  #confettiCanvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 999;
+  }
+
+  /* Footer */
+  .footer {
+    width: 100%;
+    text-align: center;
+    padding: 16px;
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-top: auto;
+  }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .header-title {
+      font-size: 16px;
+    }
+    .home-btn {
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+    .letter-display h2 {
+      font-size: 22px;
+    }
+    .canvas-wrapper {
+      padding: 10px;
+    }
+    .letter-grid {
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+    }
+    .letter-cell {
+      font-size: 13px;
+    }
+    .btn {
+      padding: 8px 14px;
+      font-size: 13px;
+    }
+    .controls {
+      gap: 6px;
+    }
+  }
+
+  @media (max-width: 350px) {
+    .letter-grid {
+      grid-template-columns: repeat(6, 1fr);
+    }
+  }
+</style>
+</head>
+<body>
+
+  <header class="header">
+    <a href="../../index.html" class="home-btn">&#x1F3E0; Home</a>
+    <div class="header-title">Alphabet Tracing</div>
+    <span class="header-emoji">&#x270F;&#xFE0F;</span>
+  </header>
+
+  <div class="main-container">
+    <div class="letter-display">
+      <h2 id="letterTitle">Trace the Letter A</h2>
+      <div class="subtitle">Draw over the dots to trace the letter!</div>
+    </div>
+
+    <div class="canvas-wrapper" id="canvasWrapper">
+      <canvas id="traceCanvas" width="300" height="350"></canvas>
+      <div class="progress-bar-container">
+        <div class="progress-bar-fill" id="progressFill"></div>
+        <div class="progress-bar-text" id="progressText">0%</div>
+      </div>
+      <div class="success-message" id="successMessage">
+        <h3>&#x2B50; Great Job! &#x2B50;</h3>
+        <p id="successWord"></p>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="btn btn-prev" id="prevBtn" onclick="prevLetter()">&#x25C0; Previous</button>
+      <button class="btn btn-clear" onclick="clearCanvas()">&#x1F504; Clear</button>
+      <button class="btn btn-next" id="nextBtn" onclick="nextLetter()">Next &#x25B6;</button>
+    </div>
+
+    <div class="letter-grid-section">
+      <h3>Pick a Letter</h3>
+      <div class="letter-grid" id="letterGrid"></div>
+    </div>
+  </div>
+
+  <div class="footer">Alphabet Tracing &mdash; BetterKids Learning</div>
+
+  <canvas id="confettiCanvas"></canvas>
+
+<script>
+// ========== LETTER DATA ==========
+const letterWords = {
+  A: { word: 'Apple', emoji: '\u{1F34E}' },
+  B: { word: 'Ball', emoji: '\u{26BD}' },
+  C: { word: 'Cat', emoji: '\u{1F431}' },
+  D: { word: 'Dog', emoji: '\u{1F436}' },
+  E: { word: 'Elephant', emoji: '\u{1F418}' },
+  F: { word: 'Fish', emoji: '\u{1F41F}' },
+  G: { word: 'Grapes', emoji: '\u{1F347}' },
+  H: { word: 'House', emoji: '\u{1F3E0}' },
+  I: { word: 'Ice Cream', emoji: '\u{1F368}' },
+  J: { word: 'Juice', emoji: '\u{1F9C3}' },
+  K: { word: 'Kite', emoji: '\u{1FA81}' },
+  L: { word: 'Lion', emoji: '\u{1F981}' },
+  M: { word: 'Moon', emoji: '\u{1F319}' },
+  N: { word: 'Nest', emoji: '\u{1FAB9}' },
+  O: { word: 'Orange', emoji: '\u{1F34A}' },
+  P: { word: 'Penguin', emoji: '\u{1F427}' },
+  Q: { word: 'Queen', emoji: '\u{1F451}' },
+  R: { word: 'Rainbow', emoji: '\u{1F308}' },
+  S: { word: 'Star', emoji: '\u{2B50}' },
+  T: { word: 'Tree', emoji: '\u{1F333}' },
+  U: { word: 'Umbrella', emoji: '\u{2602}\uFE0F' },
+  V: { word: 'Violin', emoji: '\u{1F3BB}' },
+  W: { word: 'Whale', emoji: '\u{1F433}' },
+  X: { word: 'Xylophone', emoji: '\u{1F3B6}' },
+  Y: { word: 'Yacht', emoji: '\u{26F5}' },
+  Z: { word: 'Zebra', emoji: '\u{1F993}' }
+};
+
+// Letter paths: arrays of stroke arrays. Each stroke is an array of {x,y} points.
+// Canvas is 300x350. Letters are roughly centered and sized to fill ~200x240 area.
+// Points are spaced ~12-18px apart so kids can hit them naturally.
+function generateLetterPaths() {
+  const P = {};
+
+  // Helper: interpolate points along a line
+  function line(x1, y1, x2, y2, n) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      pts.push({ x: Math.round(x1 + (x2 - x1) * t), y: Math.round(y1 + (y2 - y1) * t) });
+    }
+    return pts;
+  }
+
+  // Helper: arc points
+  function arc(cx, cy, rx, ry, startAngle, endAngle, n) {
+    const pts = [];
+    for (let i = 0; i <= n; i++) {
+      const t = i / n;
+      const a = startAngle + (endAngle - startAngle) * t;
+      pts.push({ x: Math.round(cx + rx * Math.cos(a)), y: Math.round(cy + ry * Math.sin(a)) });
+    }
+    return pts;
+  }
+
+  const PI = Math.PI;
+
+  // A - two diagonals and a crossbar
+  P.A = [
+    line(150, 50, 60, 300, 18),   // left leg
+    line(150, 50, 240, 300, 18),   // right leg
+    line(95, 195, 205, 195, 8)     // crossbar
+  ];
+
+  // B - vertical + two bumps
+  P.B = [
+    line(80, 50, 80, 300, 18),
+    line(80, 50, 170, 50, 6),
+    arc(170, 120, 60, 70, -PI/2, PI/2, 10),
+    line(170, 190, 80, 190, 6),
+    line(80, 190, 180, 190, 6),
+    arc(180, 245, 60, 55, -PI/2, PI/2, 10),
+    line(180, 300, 80, 300, 6)
+  ];
+
+  // C - arc open to the right
+  P.C = [
+    arc(170, 175, 100, 125, -2.5, 2.5, 22)
+  ];
+
+  // D - vertical + big curve
+  P.D = [
+    line(80, 50, 80, 300, 18),
+    line(80, 50, 140, 50, 4),
+    arc(140, 175, 95, 125, -PI/2, PI/2, 16),
+    line(140, 300, 80, 300, 4)
+  ];
+
+  // E - vertical + three horizontals
+  P.E = [
+    line(90, 50, 90, 300, 18),
+    line(90, 50, 220, 50, 9),
+    line(90, 175, 200, 175, 8),
+    line(90, 300, 220, 300, 9)
+  ];
+
+  // F - vertical + two horizontals
+  P.F = [
+    line(90, 50, 90, 300, 18),
+    line(90, 50, 220, 50, 9),
+    line(90, 175, 200, 175, 8)
+  ];
+
+  // G - arc + horizontal bar going inward
+  P.G = [
+    arc(165, 175, 100, 125, -2.3, 2.3, 22),
+    line(165, 175, 230, 175, 5)
+  ];
+
+  // H - two verticals + crossbar
+  P.H = [
+    line(80, 50, 80, 300, 18),
+    line(220, 50, 220, 300, 18),
+    line(80, 175, 220, 175, 10)
+  ];
+
+  // I - vertical + top & bottom serifs
+  P.I = [
+    line(110, 50, 190, 50, 6),
+    line(150, 50, 150, 300, 18),
+    line(110, 300, 190, 300, 6)
+  ];
+
+  // J - top serif + vertical + hook
+  P.J = [
+    line(110, 50, 200, 50, 6),
+    line(170, 50, 170, 240, 14),
+    arc(120, 240, 50, 60, 0, PI, 8)
+  ];
+
+  // K - vertical + two diagonals
+  P.K = [
+    line(80, 50, 80, 300, 18),
+    line(220, 50, 80, 185, 12),
+    line(80, 185, 220, 300, 10)
+  ];
+
+  // L - vertical + horizontal
+  P.L = [
+    line(90, 50, 90, 300, 18),
+    line(90, 300, 220, 300, 9)
+  ];
+
+  // M - two verticals + V in middle
+  P.M = [
+    line(60, 300, 60, 50, 18),
+    line(60, 50, 150, 200, 12),
+    line(150, 200, 240, 50, 12),
+    line(240, 50, 240, 300, 18)
+  ];
+
+  // N - two verticals + diagonal
+  P.N = [
+    line(75, 300, 75, 50, 18),
+    line(75, 50, 225, 300, 18),
+    line(225, 300, 225, 50, 18)
+  ];
+
+  // O - ellipse
+  P.O = [
+    arc(150, 175, 90, 125, 0, 2 * PI, 24)
+  ];
+
+  // P - vertical + top bump
+  P.P = [
+    line(80, 50, 80, 300, 18),
+    line(80, 50, 160, 50, 5),
+    arc(160, 120, 65, 70, -PI/2, PI/2, 10),
+    line(160, 190, 80, 190, 5)
+  ];
+
+  // Q - ellipse + tail
+  P.Q = [
+    arc(150, 165, 90, 115, 0, 2 * PI, 24),
+    line(180, 240, 240, 310, 6)
+  ];
+
+  // R - vertical + bump + leg
+  P.R = [
+    line(80, 50, 80, 300, 18),
+    line(80, 50, 160, 50, 5),
+    arc(160, 120, 65, 70, -PI/2, PI/2, 10),
+    line(160, 190, 80, 190, 5),
+    line(140, 190, 230, 300, 8)
+  ];
+
+  // S - double arc (S-curve)
+  P.S = [
+    arc(155, 120, 75, 70, -2.6, 0.5, 10),
+    arc(145, 230, 75, 70, -2.6, 0.5, 10).map(p => ({
+      x: 300 - p.x,
+      y: 350 - p.y + 100
+    })).reverse()
+  ];
+
+  // T - horizontal + vertical center
+  P.T = [
+    line(60, 50, 240, 50, 12),
+    line(150, 50, 150, 300, 18)
+  ];
+
+  // U - two verticals + bottom arc
+  P.U = [
+    line(75, 50, 75, 220, 12),
+    arc(150, 220, 75, 80, PI, 0, 10),
+    line(225, 220, 225, 50, 12)
+  ];
+
+  // V - two diagonals meeting at bottom
+  P.V = [
+    line(65, 50, 150, 300, 18),
+    line(150, 300, 235, 50, 18)
+  ];
+
+  // W - four diagonals
+  P.W = [
+    line(40, 50, 100, 300, 16),
+    line(100, 300, 150, 150, 10),
+    line(150, 150, 200, 300, 10),
+    line(200, 300, 260, 50, 16)
+  ];
+
+  // X - two diagonals crossing
+  P.X = [
+    line(70, 50, 230, 300, 18),
+    line(230, 50, 70, 300, 18)
+  ];
+
+  // Y - two diagonals to center, then vertical down
+  P.Y = [
+    line(65, 50, 150, 175, 10),
+    line(235, 50, 150, 175, 10),
+    line(150, 175, 150, 300, 10)
+  ];
+
+  // Z - top horizontal + diagonal + bottom horizontal
+  P.Z = [
+    line(70, 50, 230, 50, 11),
+    line(230, 50, 70, 300, 18),
+    line(70, 300, 230, 300, 11)
+  ];
+
+  return P;
+}
+
+const letterPaths = generateLetterPaths();
+const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+
+// ========== STATE ==========
+let currentIndex = 0;
+let guidePoints = [];       // flat array of all guide {x, y, hit}
+let isDrawing = false;
+let completedLetters = new Set();
+let letterComplete = false;
+
+// Load progress from localStorage
+try {
+  const saved = localStorage.getItem('alphabetTracing_completed');
+  if (saved) completedLetters = new Set(JSON.parse(saved));
+} catch(e) {}
+
+function saveProgress() {
+  try {
+    localStorage.setItem('alphabetTracing_completed', JSON.stringify([...completedLetters]));
+  } catch(e) {}
+}
+
+// ========== CANVAS SETUP ==========
+const canvas = document.getElementById('traceCanvas');
+const ctx = canvas.getContext('2d');
+const confettiCanvas = document.getElementById('confettiCanvas');
+const confettiCtx = confettiCanvas.getContext('2d');
+
+function resizeConfetti() {
+  confettiCanvas.width = window.innerWidth;
+  confettiCanvas.height = window.innerHeight;
+}
+resizeConfetti();
+window.addEventListener('resize', resizeConfetti);
+
+// ========== DRAWING ==========
+function loadLetter(index) {
+  currentIndex = index;
+  letterComplete = false;
+  const letter = letters[currentIndex];
+  const strokes = letterPaths[letter];
+
+  document.getElementById('letterTitle').textContent = 'Trace the Letter ' + letter;
+  document.getElementById('successMessage').classList.remove('show');
+  document.getElementById('canvasWrapper').classList.remove('success-glow');
+
+  // Flatten all strokes into guide points
+  guidePoints = [];
+  strokes.forEach(stroke => {
+    stroke.forEach(pt => {
+      guidePoints.push({ x: pt.x, y: pt.y, hit: false });
+    });
+  });
+
+  drawGuide();
+  updateProgress();
+  updateGrid();
+  updateNavButtons();
+}
+
+function drawGuide() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Light background grid for notebook feel
+  ctx.strokeStyle = '#F0F0F0';
+  ctx.lineWidth = 1;
+  for (let y = 0; y < canvas.height; y += 35) {
+    ctx.beginPath();
+    ctx.moveTo(0, y);
+    ctx.lineTo(canvas.width, y);
+    ctx.stroke();
+  }
+
+  const letter = letters[currentIndex];
+  const strokes = letterPaths[letter];
+
+  // Draw connecting lines lightly
+  ctx.strokeStyle = '#E0E0E0';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([6, 6]);
+  strokes.forEach(stroke => {
+    if (stroke.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(stroke[0].x, stroke[0].y);
+    for (let i = 1; i < stroke.length; i++) {
+      ctx.lineTo(stroke[i].x, stroke[i].y);
+    }
+    ctx.stroke();
+  });
+  ctx.setLineDash([]);
+
+  // Draw guide dots
+  guidePoints.forEach((pt, i) => {
+    ctx.beginPath();
+    ctx.arc(pt.x, pt.y, pt.hit ? 6 : 5, 0, Math.PI * 2);
+    if (pt.hit) {
+      ctx.fillStyle = '#4ECDC4';
+    } else {
+      ctx.fillStyle = '#C0C0C0';
+    }
+    ctx.fill();
+    ctx.strokeStyle = pt.hit ? '#2ECC71' : '#A0A0A0';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+  });
+
+  // Draw starting arrow / indicator on first unhit point
+  if (!letterComplete) {
+    const firstUnhit = guidePoints.find(p => !p.hit);
+    if (firstUnhit) {
+      ctx.beginPath();
+      ctx.arc(firstUnhit.x, firstUnhit.y, 12, 0, Math.PI * 2);
+      ctx.strokeStyle = var_primary();
+      ctx.lineWidth = 2.5;
+      ctx.setLineDash([4, 4]);
+      ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }
+}
+
+function var_primary() { return '#6C63FF'; }
+
+// Track user drawing
+let lastX = -1, lastY = -1;
+
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  let clientX, clientY;
+  if (e.touches && e.touches.length > 0) {
+    clientX = e.touches[0].clientX;
+    clientY = e.touches[0].clientY;
+  } else {
+    clientX = e.clientX;
+    clientY = e.clientY;
+  }
+  return {
+    x: (clientX - rect.left) * scaleX,
+    y: (clientY - rect.top) * scaleY
+  };
+}
+
+function handleDrawStart(e) {
+  if (letterComplete) return;
+  e.preventDefault();
+  isDrawing = true;
+  const pos = getCanvasPos(e);
+  lastX = pos.x;
+  lastY = pos.y;
+  checkHits(pos.x, pos.y);
+}
+
+function handleDrawMove(e) {
+  if (!isDrawing || letterComplete) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e);
+
+  // Draw colorful user stroke
+  ctx.beginPath();
+  ctx.moveTo(lastX, lastY);
+  ctx.lineTo(pos.x, pos.y);
+  ctx.strokeStyle = getDrawColor();
+  ctx.lineWidth = 8;
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+  ctx.setLineDash([]);
+  ctx.stroke();
+
+  lastX = pos.x;
+  lastY = pos.y;
+
+  checkHits(pos.x, pos.y);
+}
+
+function handleDrawEnd(e) {
+  if (e) e.preventDefault();
+  isDrawing = false;
+  lastX = -1;
+  lastY = -1;
+}
+
+let hueCounter = 0;
+
+function getDrawColor() {
+  hueCounter = (hueCounter + 2) % 360;
+  return 'hsl(' + hueCounter + ', 80%, 55%)';
+}
+
+const HIT_RADIUS = 22;
+
+function checkHits(mx, my) {
+  let anyNew = false;
+  guidePoints.forEach(pt => {
+    if (!pt.hit) {
+      const dx = pt.x - mx;
+      const dy = pt.y - my;
+      if (dx * dx + dy * dy <= HIT_RADIUS * HIT_RADIUS) {
+        pt.hit = true;
+        anyNew = true;
+      }
+    }
+  });
+
+  if (anyNew) {
+    // Redraw guide dots on top (re-render them so hit dots turn green)
+    drawHitDots();
+    updateProgress();
+    checkCompletion();
+  }
+}
+
+function drawHitDots() {
+  // Only redraw the dots on top of the user's strokes
+  guidePoints.forEach(pt => {
+    if (pt.hit) {
+      ctx.beginPath();
+      ctx.arc(pt.x, pt.y, 6, 0, Math.PI * 2);
+      ctx.fillStyle = '#4ECDC4';
+      ctx.fill();
+      ctx.strokeStyle = '#2ECC71';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  });
+}
+
+function updateProgress() {
+  const total = guidePoints.length;
+  const hit = guidePoints.filter(p => p.hit).length;
+  const pct = total > 0 ? Math.round((hit / total) * 100) : 0;
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = pct + '%';
+}
+
+function checkCompletion() {
+  const total = guidePoints.length;
+  const hit = guidePoints.filter(p => p.hit).length;
+  const pct = hit / total;
+  if (pct >= 0.70 && !letterComplete) {
+    letterComplete = true;
+    const letter = letters[currentIndex];
+    completedLetters.add(letter);
+    saveProgress();
+
+    // Mark all remaining points as hit
+    guidePoints.forEach(p => p.hit = true);
+    updateProgress();
+
+    // Show success
+    const info = letterWords[letter];
+    document.getElementById('successWord').textContent =
+      letter + ' is for ' + info.word + ' ' + info.emoji;
+    document.getElementById('successMessage').classList.add('show');
+    document.getElementById('canvasWrapper').classList.add('success-glow');
+
+    updateGrid();
+    launchConfetti();
+
+    // Redraw fully completed
+    setTimeout(() => {
+      drawGuide();
+    }, 100);
+  }
+}
+
+// ========== CANVAS EVENTS ==========
+canvas.addEventListener('mousedown', handleDrawStart);
+canvas.addEventListener('mousemove', handleDrawMove);
+canvas.addEventListener('mouseup', handleDrawEnd);
+canvas.addEventListener('mouseleave', handleDrawEnd);
+
+canvas.addEventListener('touchstart', handleDrawStart, { passive: false });
+canvas.addEventListener('touchmove', handleDrawMove, { passive: false });
+canvas.addEventListener('touchend', handleDrawEnd, { passive: false });
+canvas.addEventListener('touchcancel', handleDrawEnd, { passive: false });
+
+// ========== CONTROLS ==========
+function clearCanvas() {
+  guidePoints.forEach(p => p.hit = false);
+  letterComplete = false;
+  document.getElementById('successMessage').classList.remove('show');
+  document.getElementById('canvasWrapper').classList.remove('success-glow');
+  hueCounter = 0;
+  drawGuide();
+  updateProgress();
+}
+
+function prevLetter() {
+  if (currentIndex > 0) {
+    loadLetter(currentIndex - 1);
+  }
+}
+
+function nextLetter() {
+  if (currentIndex < 25) {
+    loadLetter(currentIndex + 1);
+  }
+}
+
+function updateNavButtons() {
+  document.getElementById('prevBtn').disabled = currentIndex === 0;
+  document.getElementById('nextBtn').disabled = currentIndex === 25;
+  document.getElementById('prevBtn').style.opacity = currentIndex === 0 ? '0.4' : '1';
+  document.getElementById('nextBtn').style.opacity = currentIndex === 25 ? '0.4' : '1';
+}
+
+// ========== LETTER GRID ==========
+function buildGrid() {
+  const grid = document.getElementById('letterGrid');
+  grid.innerHTML = '';
+  letters.forEach((letter, i) => {
+    const cell = document.createElement('div');
+    cell.className = 'letter-cell';
+    cell.textContent = letter;
+    cell.dataset.index = i;
+    cell.addEventListener('click', () => loadLetter(i));
+    grid.appendChild(cell);
+  });
+}
+
+function updateGrid() {
+  const cells = document.querySelectorAll('.letter-cell');
+  cells.forEach((cell, i) => {
+    cell.classList.remove('active', 'completed');
+    if (i === currentIndex) cell.classList.add('active');
+    if (completedLetters.has(letters[i])) cell.classList.add('completed');
+  });
+}
+
+// ========== CONFETTI ==========
+let confettiPieces = [];
+let confettiAnimId = null;
+
+function launchConfetti() {
+  confettiPieces = [];
+  const colors = ['#FF6584', '#6C63FF', '#FFE66D', '#4ECDC4', '#FFA07A', '#A5A0FF', '#FF6B6B', '#2ECC71'];
+  for (let i = 0; i < 150; i++) {
+    confettiPieces.push({
+      x: Math.random() * confettiCanvas.width,
+      y: -20 - Math.random() * 200,
+      w: 6 + Math.random() * 6,
+      h: 4 + Math.random() * 4,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      vx: (Math.random() - 0.5) * 6,
+      vy: 2 + Math.random() * 4,
+      rot: Math.random() * 360,
+      rotSpeed: (Math.random() - 0.5) * 12,
+      life: 1
+    });
+  }
+  if (confettiAnimId) cancelAnimationFrame(confettiAnimId);
+  animateConfetti();
+}
+
+function animateConfetti() {
+  confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+
+  let alive = false;
+  confettiPieces.forEach(p => {
+    if (p.life <= 0) return;
+    alive = true;
+    p.x += p.vx;
+    p.y += p.vy;
+    p.vy += 0.08;
+    p.rot += p.rotSpeed;
+    p.life -= 0.003;
+
+    confettiCtx.save();
+    confettiCtx.translate(p.x, p.y);
+    confettiCtx.rotate((p.rot * Math.PI) / 180);
+    confettiCtx.globalAlpha = Math.max(0, p.life);
+    confettiCtx.fillStyle = p.color;
+    confettiCtx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+    confettiCtx.restore();
+  });
+
+  if (alive) {
+    confettiAnimId = requestAnimationFrame(animateConfetti);
+  } else {
+    confettiCtx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+    confettiAnimId = null;
+  }
+}
+
+// ========== KEYBOARD NAVIGATION ==========
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowLeft') prevLetter();
+  if (e.key === 'ArrowRight') nextLetter();
+});
+
+// ========== INIT ==========
+buildGrid();
+loadLetter(0);
+</script>
+</body>
+</html>
