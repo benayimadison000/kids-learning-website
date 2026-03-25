@@ -522,9 +522,9 @@ function generateLetterPaths() {
     line(180, 300, 80, 300, 6)
   ];
 
-  // C - arc open to the right
+  // C - arc open to the right (traces counterclockwise: top-right → top → left → bottom → bottom-right)
   P.C = [
-    arc(170, 175, 100, 125, -2.5, 2.5, 22)
+    arc(160, 175, 90, 125, -0.6, -(2 * PI - 0.6), 22)
   ];
 
   // D - vertical + big curve
@@ -870,9 +870,13 @@ function handleDrawMove(e) {
 
 function handleDrawEnd(e) {
   if (e) e.preventDefault();
-  isDrawing = false;
-  lastX = -1;
-  lastY = -1;
+  if (isDrawing) {
+    isDrawing = false;
+    lastX = -1;
+    lastY = -1;
+    // Only check completion when user lifts finger/mouse
+    if (!letterComplete) checkCompletion();
+  }
 }
 
 let hueCounter = 0;
@@ -901,7 +905,7 @@ function checkHits(mx, my) {
     // Redraw guide dots on top (re-render them so hit dots turn green)
     drawHitDots();
     updateProgress();
-    checkCompletion();
+    // Don't check completion here - wait until user lifts finger/mouse
   }
 }
 
