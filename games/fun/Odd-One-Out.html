@@ -1,0 +1,1046 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Odd One Out - Logic Game for Kids</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  @keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes bounceUp{0%{transform:translateY(0)}20%{transform:translateY(-30px)}40%{transform:translateY(0)}60%{transform:translateY(-15px)}80%{transform:translateY(0)}100%{transform:translateY(-5px)}}
+  @keyframes shake{0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}}
+  @keyframes popIn{0%{transform:scale(0);opacity:0}60%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.05)}}
+  @keyframes sparkle{0%,100%{opacity:0;transform:scale(0) rotate(0deg)}50%{opacity:1;transform:scale(1) rotate(180deg)}}
+  @keyframes slideDown{from{opacity:0;transform:translateY(-30px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes confetti{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(600px) rotate(720deg);opacity:0}}
+  @keyframes starBurst{0%{transform:scale(0) rotate(0deg);opacity:1}100%{transform:scale(3) rotate(360deg);opacity:0}}
+  @keyframes timerPulse{0%,100%{color:#e74c3c;transform:scale(1)}50%{color:#c0392b;transform:scale(1.15)}}
+  @keyframes cardHover{0%{box-shadow:0 4px 15px rgba(0,0,0,0.1)}100%{box-shadow:0 8px 30px rgba(0,0,0,0.2)}}
+
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(135deg,#FFF9C4 0%,#FFE082 50%,#FFCC80 100%);
+    min-height:100vh;
+    overflow-x:hidden;
+    color:#333;
+  }
+  .home-btn{
+    position:fixed;top:15px;left:15px;z-index:100;
+    background:linear-gradient(135deg,#FF6B6B,#EE5A24);
+    color:#fff;border:none;padding:10px 18px;border-radius:50px;
+    font-size:1rem;font-weight:700;cursor:pointer;
+    box-shadow:0 4px 15px rgba(238,90,36,0.4);
+    transition:all 0.3s ease;display:flex;align-items:center;gap:6px;
+    text-decoration:none;
+  }
+  .home-btn:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(238,90,36,0.5)}
+
+  .game-container{
+    max-width:900px;margin:0 auto;padding:20px 15px 40px;
+    animation:fadeIn 0.6s ease;
+  }
+
+  /* Header */
+  .game-header{
+    text-align:center;margin:10px 0 15px;
+  }
+  .game-title{
+    font-size:2.4rem;font-weight:900;
+    background:linear-gradient(135deg,#6C5CE7,#E17055,#00B894);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+    text-shadow:none;margin-bottom:4px;
+  }
+  .game-subtitle{
+    font-size:1rem;color:#666;font-weight:500;
+  }
+
+  /* Stats Bar */
+  .stats-bar{
+    display:flex;justify-content:center;gap:15px;flex-wrap:wrap;
+    margin:12px 0;
+  }
+  .stat-box{
+    background:#fff;border-radius:16px;padding:8px 18px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+    display:flex;align-items:center;gap:8px;
+    font-weight:700;font-size:0.95rem;
+    transition:transform 0.2s;
+  }
+  .stat-box:hover{transform:scale(1.05)}
+  .stat-icon{font-size:1.3rem}
+  .stat-value{color:#6C5CE7;font-size:1.1rem}
+
+  /* Progress Bar */
+  .progress-wrapper{
+    background:#fff;border-radius:20px;height:22px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+    overflow:hidden;margin:10px 0 18px;position:relative;
+  }
+  .progress-fill{
+    height:100%;border-radius:20px;
+    background:linear-gradient(90deg,#00B894,#00CEC9,#6C5CE7);
+    transition:width 0.5s ease;
+    display:flex;align-items:center;justify-content:flex-end;
+    padding-right:10px;
+    min-width:40px;
+  }
+  .progress-text{
+    color:#fff;font-size:0.75rem;font-weight:800;
+    text-shadow:0 1px 2px rgba(0,0,0,0.3);
+  }
+
+  /* Level Badge */
+  .level-badge{
+    text-align:center;margin:0 0 10px;
+    animation:slideDown 0.4s ease;
+  }
+  .level-label{
+    display:inline-block;
+    background:linear-gradient(135deg,#6C5CE7,#a29bfe);
+    color:#fff;padding:6px 22px;border-radius:30px;
+    font-weight:800;font-size:0.9rem;
+    box-shadow:0 3px 12px rgba(108,92,231,0.3);
+  }
+
+  /* Question */
+  .question-area{
+    text-align:center;margin:15px 0;
+    animation:fadeIn 0.5s ease;
+  }
+  .question-text{
+    font-size:1.5rem;font-weight:800;color:#2D3436;
+    margin-bottom:5px;
+  }
+  .question-hint{
+    font-size:0.95rem;color:#636E72;font-weight:500;
+  }
+
+  /* Timer */
+  .timer-bar{
+    text-align:center;margin:8px 0 12px;
+  }
+  .timer-display{
+    display:inline-flex;align-items:center;gap:6px;
+    background:#fff;padding:6px 18px;border-radius:30px;
+    font-weight:800;font-size:1.1rem;
+    box-shadow:0 2px 8px rgba(0,0,0,0.08);
+  }
+  .timer-display.warning{animation:timerPulse 0.5s ease infinite}
+  .timer-icon{font-size:1.2rem}
+
+  /* Cards Grid */
+  .cards-grid{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:18px;
+    margin:10px auto;max-width:750px;
+  }
+  .item-card{
+    background:#fff;border-radius:20px;
+    padding:20px 15px;min-width:130px;flex:1 1 130px;max-width:180px;
+    text-align:center;cursor:pointer;
+    box-shadow:0 4px 15px rgba(0,0,0,0.08);
+    border:3px solid transparent;
+    transition:all 0.25s ease;
+    animation:popIn 0.4s ease backwards;
+    user-select:none;
+  }
+  .item-card:nth-child(1){animation-delay:0s}
+  .item-card:nth-child(2){animation-delay:0.08s}
+  .item-card:nth-child(3){animation-delay:0.16s}
+  .item-card:nth-child(4){animation-delay:0.24s}
+  .item-card:nth-child(5){animation-delay:0.32s}
+  .item-card:nth-child(6){animation-delay:0.40s}
+  .item-card:hover{
+    transform:translateY(-6px);
+    box-shadow:0 8px 25px rgba(0,0,0,0.15);
+    border-color:#6C5CE7;
+  }
+  .item-card:active{transform:scale(0.95)}
+  .item-card .card-emoji{font-size:3rem;margin-bottom:8px;display:block}
+  .item-card .card-label{
+    font-size:1rem;font-weight:700;color:#2D3436;
+    display:block;
+  }
+  .item-card.correct{
+    background:linear-gradient(135deg,#00B894,#55EFC4);
+    border-color:#00B894;
+    animation:bounceUp 0.8s ease;
+  }
+  .item-card.correct .card-label{color:#fff}
+  .item-card.wrong{
+    animation:shake 0.5s ease;
+    border-color:#E17055;
+    background:#FFEAA7;
+  }
+  .item-card.disabled{
+    pointer-events:none;opacity:0.6;
+  }
+  .item-card.highlighted{
+    border-color:#00B894;
+    background:rgba(0,184,148,0.08);
+  }
+
+  /* Reason Banner */
+  .reason-banner{
+    text-align:center;margin:18px 0 10px;
+    animation:slideDown 0.4s ease;
+    display:none;
+  }
+  .reason-box{
+    display:inline-block;
+    background:linear-gradient(135deg,#00B894,#55EFC4);
+    color:#fff;padding:12px 28px;border-radius:16px;
+    font-size:1.15rem;font-weight:700;
+    box-shadow:0 4px 15px rgba(0,184,148,0.3);
+    max-width:90%;
+  }
+
+  /* Next Button */
+  .next-btn{
+    display:none;margin:18px auto 0;
+    background:linear-gradient(135deg,#6C5CE7,#a29bfe);
+    color:#fff;border:none;padding:14px 40px;border-radius:50px;
+    font-size:1.1rem;font-weight:800;cursor:pointer;
+    box-shadow:0 4px 18px rgba(108,92,231,0.4);
+    transition:all 0.3s ease;
+    animation:popIn 0.4s ease;
+  }
+  .next-btn:hover{transform:translateY(-3px);box-shadow:0 6px 24px rgba(108,92,231,0.5)}
+
+  /* Screens */
+  .screen{display:none;animation:fadeIn 0.5s ease}
+  .screen.active{display:block}
+
+  /* Start Screen */
+  .start-screen{text-align:center;padding:40px 20px}
+  .start-emoji{font-size:5rem;margin-bottom:15px;display:block}
+  .start-title{
+    font-size:2.5rem;font-weight:900;
+    background:linear-gradient(135deg,#6C5CE7,#E17055);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;margin-bottom:12px;
+  }
+  .start-desc{
+    font-size:1.1rem;color:#555;max-width:500px;margin:0 auto 8px;
+    line-height:1.6;
+  }
+  .start-levels{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:10px;
+    margin:20px auto;max-width:500px;
+  }
+  .level-chip{
+    background:#fff;border-radius:12px;padding:8px 16px;
+    font-size:0.85rem;font-weight:600;
+    box-shadow:0 2px 8px rgba(0,0,0,0.06);
+    display:flex;align-items:center;gap:6px;
+  }
+  .level-chip .lc-dot{
+    width:10px;height:10px;border-radius:50%;display:inline-block;
+  }
+  .start-btn{
+    display:inline-block;margin-top:20px;
+    background:linear-gradient(135deg,#00B894,#55EFC4);
+    color:#fff;border:none;padding:16px 50px;border-radius:50px;
+    font-size:1.3rem;font-weight:900;cursor:pointer;
+    box-shadow:0 6px 25px rgba(0,184,148,0.4);
+    transition:all 0.3s ease;
+    animation:pulse 2s ease infinite;
+  }
+  .start-btn:hover{transform:translateY(-3px);box-shadow:0 8px 30px rgba(0,184,148,0.5)}
+
+  /* End Screen */
+  .end-screen{text-align:center;padding:30px 20px}
+  .end-emoji{font-size:5rem;margin-bottom:10px;display:block}
+  .end-title{
+    font-size:2.2rem;font-weight:900;
+    color:#6C5CE7;margin-bottom:8px;
+  }
+  .end-rank{
+    font-size:1.6rem;font-weight:800;
+    background:linear-gradient(135deg,#FDCB6E,#E17055);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;margin-bottom:15px;
+  }
+  .end-stats{
+    display:flex;flex-wrap:wrap;justify-content:center;gap:15px;
+    margin:20px 0;
+  }
+  .end-stat{
+    background:#fff;border-radius:16px;padding:15px 25px;
+    box-shadow:0 3px 12px rgba(0,0,0,0.08);
+    min-width:120px;
+  }
+  .end-stat-value{font-size:2rem;font-weight:900;color:#6C5CE7;display:block}
+  .end-stat-label{font-size:0.85rem;color:#888;font-weight:600}
+  .play-again-btn{
+    display:inline-block;margin-top:20px;
+    background:linear-gradient(135deg,#6C5CE7,#a29bfe);
+    color:#fff;border:none;padding:14px 45px;border-radius:50px;
+    font-size:1.2rem;font-weight:800;cursor:pointer;
+    box-shadow:0 5px 20px rgba(108,92,231,0.4);
+    transition:all 0.3s ease;
+  }
+  .play-again-btn:hover{transform:translateY(-3px);box-shadow:0 7px 25px rgba(108,92,231,0.5)}
+
+  /* Confetti */
+  .confetti-piece{
+    position:fixed;top:-20px;width:12px;height:12px;
+    border-radius:2px;animation:confetti 3s ease forwards;
+    z-index:200;pointer-events:none;
+  }
+
+  /* Sparkle */
+  .sparkle{
+    position:absolute;pointer-events:none;font-size:1.5rem;
+    animation:sparkle 0.8s ease forwards;z-index:50;
+  }
+
+  /* Responsive */
+  @media(max-width:600px){
+    .game-title{font-size:1.8rem}
+    .game-subtitle{font-size:0.85rem}
+    .stats-bar{gap:8px}
+    .stat-box{padding:6px 12px;font-size:0.82rem}
+    .question-text{font-size:1.2rem}
+    .cards-grid{gap:12px}
+    .item-card{min-width:100px;padding:14px 10px;border-radius:16px}
+    .item-card .card-emoji{font-size:2.2rem}
+    .item-card .card-label{font-size:0.85rem}
+    .start-title{font-size:1.8rem}
+    .start-emoji{font-size:3.5rem}
+    .home-btn{padding:8px 14px;font-size:0.85rem}
+    .end-title{font-size:1.7rem}
+    .end-rank{font-size:1.3rem}
+  }
+  @media(max-width:380px){
+    .item-card{min-width:85px;padding:10px 6px}
+    .item-card .card-emoji{font-size:1.8rem;margin-bottom:4px}
+    .item-card .card-label{font-size:0.75rem}
+    .game-container{padding:15px 8px 30px}
+  }
+</style>
+</head>
+<body>
+
+<a href="../../index.html" class="home-btn" title="Go Home">&#x1F3E0; Home</a>
+
+<!-- START SCREEN -->
+<div class="game-container">
+  <div id="startScreen" class="screen active">
+    <div class="start-screen">
+      <span class="start-emoji">&#x1F9E9;</span>
+      <h1 class="start-title">Odd One Out</h1>
+      <p class="start-desc">
+        Look at the group of items and find the one that does NOT belong!
+        Think carefully about what the others have in common.
+      </p>
+      <p class="start-desc" style="font-size:0.95rem;color:#888">
+        25 puzzles across 5 difficulty levels. Can you become a Logic Champion?
+      </p>
+      <div class="start-levels">
+        <div class="level-chip"><span class="lc-dot" style="background:#00B894"></span> Super Easy</div>
+        <div class="level-chip"><span class="lc-dot" style="background:#00CEC9"></span> Easy</div>
+        <div class="level-chip"><span class="lc-dot" style="background:#FDCB6E"></span> Medium</div>
+        <div class="level-chip"><span class="lc-dot" style="background:#E17055"></span> Hard</div>
+        <div class="level-chip"><span class="lc-dot" style="background:#6C5CE7"></span> Expert</div>
+      </div>
+      <button class="start-btn" onclick="startGame()">&#x1F680; Let's Go!</button>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div id="gameScreen" class="screen">
+    <div class="game-header">
+      <h1 class="game-title">Odd One Out</h1>
+      <p class="game-subtitle">Find the item that doesn't belong!</p>
+    </div>
+
+    <div class="stats-bar">
+      <div class="stat-box">
+        <span class="stat-icon">&#x2B50;</span>
+        <span>Score: <span class="stat-value" id="scoreDisplay">0</span></span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">&#x1F525;</span>
+        <span>Streak: <span class="stat-value" id="streakDisplay">0</span></span>
+      </div>
+      <div class="stat-box">
+        <span class="stat-icon">&#x1F3AF;</span>
+        <span>Best: <span class="stat-value" id="bestStreakDisplay">0</span></span>
+      </div>
+    </div>
+
+    <div class="progress-wrapper">
+      <div class="progress-fill" id="progressFill" style="width:4%">
+        <span class="progress-text" id="progressText">1/25</span>
+      </div>
+    </div>
+
+    <div class="level-badge" id="levelBadge">
+      <span class="level-label" id="levelLabel">Level 1: Super Easy</span>
+    </div>
+
+    <div class="timer-bar">
+      <div class="timer-display" id="timerDisplay">
+        <span class="timer-icon">&#x23F1;&#xFE0F;</span>
+        <span id="timerText">20s</span>
+      </div>
+    </div>
+
+    <div class="question-area" id="questionArea">
+      <p class="question-text" id="questionText">Which one doesn't belong?</p>
+      <p class="question-hint" id="questionHint">Tap the odd one out!</p>
+    </div>
+
+    <div class="cards-grid" id="cardsGrid"></div>
+
+    <div class="reason-banner" id="reasonBanner">
+      <div class="reason-box" id="reasonText"></div>
+    </div>
+
+    <button class="next-btn" id="nextBtn" onclick="nextPuzzle()">Next Puzzle &#x27A1;&#xFE0F;</button>
+  </div>
+
+  <!-- END SCREEN -->
+  <div id="endScreen" class="screen">
+    <div class="end-screen">
+      <span class="end-emoji" id="endEmoji">&#x1F3C6;</span>
+      <h1 class="end-title">Game Complete!</h1>
+      <p class="end-rank" id="endRank">Logic Champion</p>
+      <div class="end-stats">
+        <div class="end-stat">
+          <span class="end-stat-value" id="endScore">0</span>
+          <span class="end-stat-label">Score</span>
+        </div>
+        <div class="end-stat">
+          <span class="end-stat-value" id="endCorrect">0</span>
+          <span class="end-stat-label">Correct</span>
+        </div>
+        <div class="end-stat">
+          <span class="end-stat-value" id="endBestStreak">0</span>
+          <span class="end-stat-label">Best Streak</span>
+        </div>
+        <div class="end-stat">
+          <span class="end-stat-value" id="endAccuracy">0%</span>
+          <span class="end-stat-label">Accuracy</span>
+        </div>
+      </div>
+      <button class="play-again-btn" onclick="resetGame()">&#x1F504; Play Again</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== PUZZLE DATA ==========
+const puzzles = [
+  // LEVEL 1: Super Easy (animals vs objects, very obvious)
+  {
+    level:1,
+    items:[
+      {emoji:"\u{1F34E}",label:"Apple"},
+      {emoji:"\u{1F34C}",label:"Banana"},
+      {emoji:"\u{1F697}",label:"Car"},
+      {emoji:"\u{1F34A}",label:"Orange"}
+    ],
+    answer:2,
+    reason:"Car is not a fruit!",
+    hint:"Think about what you can eat."
+  },
+  {
+    level:1,
+    items:[
+      {emoji:"\u{1F431}",label:"Cat"},
+      {emoji:"\u{1F436}",label:"Dog"},
+      {emoji:"\u{1F407}",label:"Rabbit"},
+      {emoji:"\u{1FA91}",label:"Chair"}
+    ],
+    answer:3,
+    reason:"Chair is not an animal!",
+    hint:"Which one is NOT alive?"
+  },
+  {
+    level:1,
+    items:[
+      {emoji:"\u{2708}\uFE0F",label:"Airplane"},
+      {emoji:"\u{1F6F3}\uFE0F",label:"Ship"},
+      {emoji:"\u{1F682}",label:"Train"},
+      {emoji:"\u{1F352}",label:"Cherry"}
+    ],
+    answer:3,
+    reason:"Cherry is not a vehicle!",
+    hint:"How do people travel?"
+  },
+  {
+    level:1,
+    items:[
+      {emoji:"\u{1F4DA}",label:"Books"},
+      {emoji:"\u{270F}\uFE0F",label:"Pencil"},
+      {emoji:"\u{1F3D2}",label:"Hockey"},
+      {emoji:"\u{1F4CF}",label:"Ruler"}
+    ],
+    answer:2,
+    reason:"Hockey is not a school supply!",
+    hint:"What do you use at school?"
+  },
+  {
+    level:1,
+    items:[
+      {emoji:"\u{2600}\uFE0F",label:"Sun"},
+      {emoji:"\u{2B50}",label:"Star"},
+      {emoji:"\u{1F319}",label:"Moon"},
+      {emoji:"\u{1F4A7}",label:"Raindrop"},
+      {emoji:"\u{1FA90}",label:"Planet"}
+    ],
+    answer:3,
+    reason:"Raindrop is not found in outer space!",
+    hint:"Look up at the night sky."
+  },
+  // LEVEL 2: Same category, one difference
+  {
+    level:2,
+    items:[
+      {emoji:"\u{1F34E}",label:"Apple"},
+      {emoji:"\u{1F353}",label:"Strawberry"},
+      {emoji:"\u{1F34C}",label:"Banana"},
+      {emoji:"\u{1F955}",label:"Carrot"},
+      {emoji:"\u{1F347}",label:"Grapes"}
+    ],
+    answer:3,
+    reason:"Carrot is a vegetable, not a fruit!",
+    hint:"One of these grows underground."
+  },
+  {
+    level:2,
+    items:[
+      {emoji:"\u{1F1EB}\u{1F1F7}",label:"France"},
+      {emoji:"\u{1F1EF}\u{1F1F5}",label:"Japan"},
+      {emoji:"\u{1F1E7}\u{1F1F7}",label:"Brazil"},
+      {emoji:"\u{1F1FA}\u{1F1F8}",label:"USA"},
+      {emoji:"\u{1F30D}",label:"Mars"}
+    ],
+    answer:4,
+    reason:"Mars is a planet, not a country!",
+    hint:"One of these is not on Earth."
+  },
+  {
+    level:2,
+    items:[
+      {emoji:"\u{1F3B8}",label:"Guitar"},
+      {emoji:"\u{1F3B9}",label:"Piano"},
+      {emoji:"\u{1F941}",label:"Drum"},
+      {emoji:"\u{1F3BB}",label:"Violin"},
+      {emoji:"\u{1F3A8}",label:"Painting"}
+    ],
+    answer:4,
+    reason:"Painting is art, not a musical instrument!",
+    hint:"Which one doesn't make music?"
+  },
+  {
+    level:2,
+    items:[
+      {emoji:"\u{1F40B}",label:"Whale"},
+      {emoji:"\u{1F42C}",label:"Dolphin"},
+      {emoji:"\u{1F988}",label:"Shark"},
+      {emoji:"\u{1F433}",label:"Spouting Whale"},
+      {emoji:"\u{1F414}",label:"Chicken"}
+    ],
+    answer:4,
+    reason:"Chicken lives on land, not in the ocean!",
+    hint:"Which one can't swim in the sea?"
+  },
+  {
+    level:2,
+    items:[
+      {emoji:"\u{1F6B2}",label:"Bicycle"},
+      {emoji:"\u{1F3CD}\uFE0F",label:"Motorcycle"},
+      {emoji:"\u{1F6F4}",label:"Scooter"},
+      {emoji:"\u{1F6F6}",label:"Canoe"}
+    ],
+    answer:3,
+    reason:"Canoe travels on water, not on roads!",
+    hint:"Which one needs a different path?"
+  },
+  // LEVEL 3: Number-based
+  {
+    level:3,
+    items:[
+      {emoji:"\u0032\uFE0F\u20E3",label:"2"},
+      {emoji:"\u0034\uFE0F\u20E3",label:"4"},
+      {emoji:"\u0037\uFE0F\u20E3",label:"7"},
+      {emoji:"\u0038\uFE0F\u20E3",label:"8"},
+      {emoji:"\u{1F51F}",label:"10"}
+    ],
+    answer:2,
+    reason:"7 is odd \u2014 the rest are all even numbers!",
+    hint:"Think about even and odd."
+  },
+  {
+    level:3,
+    items:[
+      {emoji:"\u0035\uFE0F\u20E3",label:"5"},
+      {emoji:"\u{1F51F}",label:"10"},
+      {emoji:"\u{1F4AF}",label:"15"},
+      {emoji:"\u{1F522}",label:"22"},
+      {emoji:"2\uFE0F\u20E3\u0035\uFE0F\u20E3",label:"25"}
+    ],
+    answer:3,
+    reason:"22 is not a multiple of 5!",
+    hint:"Try counting by fives."
+  },
+  {
+    level:3,
+    items:[
+      {emoji:"\u0031\uFE0F\u20E3",label:"1"},
+      {emoji:"\u0033\uFE0F\u20E3",label:"3"},
+      {emoji:"\u0035\uFE0F\u20E3",label:"5"},
+      {emoji:"\u0036\uFE0F\u20E3",label:"6"},
+      {emoji:"\u0039\uFE0F\u20E3",label:"9"}
+    ],
+    answer:3,
+    reason:"6 is even \u2014 the rest are all odd numbers!",
+    hint:"Even or odd?"
+  },
+  {
+    level:3,
+    items:[
+      {emoji:"\u0033\uFE0F\u20E3",label:"3"},
+      {emoji:"\u0036\uFE0F\u20E3",label:"6"},
+      {emoji:"\u0039\uFE0F\u20E3",label:"9"},
+      {emoji:"\u{1F522}",label:"11"},
+      {emoji:"\u{1F4AF}",label:"12"}
+    ],
+    answer:3,
+    reason:"11 is not a multiple of 3!",
+    hint:"Try the 3 times table."
+  },
+  {
+    level:3,
+    items:[
+      {emoji:"\u{1F522}",label:"16"},
+      {emoji:"\u{1F522}",label:"25"},
+      {emoji:"\u{1F522}",label:"36"},
+      {emoji:"\u{1F522}",label:"42"},
+      {emoji:"\u{1F522}",label:"49"}
+    ],
+    answer:3,
+    reason:"42 is not a perfect square! (4\u00D74=16, 5\u00D75=25, 6\u00D76=36, 7\u00D77=49)",
+    hint:"Can you make these by multiplying a number by itself?"
+  },
+  // LEVEL 4: Shape/visual based
+  {
+    level:4,
+    items:[
+      {emoji:"\u{1F534}",label:"Red Circle"},
+      {emoji:"\u{1F7E0}",label:"Orange Circle"},
+      {emoji:"\u{1F7E1}",label:"Yellow Circle"},
+      {emoji:"\u{1F7E2}",label:"Green Circle"},
+      {emoji:"\u{1F533}",label:"White Diamond"}
+    ],
+    answer:4,
+    reason:"Diamond is not a circle shape!",
+    hint:"Look at the shapes, not the colors."
+  },
+  {
+    level:4,
+    items:[
+      {emoji:"\u{1F535}",label:"Blue"},
+      {emoji:"\u{1F534}",label:"Red"},
+      {emoji:"\u{1F7E2}",label:"Green"},
+      {emoji:"\u{1F7E1}",label:"Yellow"},
+      {emoji:"\u{1F538}",label:"Small Orange"}
+    ],
+    answer:4,
+    reason:"The small orange diamond is a different size!",
+    hint:"Compare the sizes."
+  },
+  {
+    level:4,
+    items:[
+      {emoji:"\u25B2",label:"Triangle"},
+      {emoji:"\u25A0",label:"Square"},
+      {emoji:"\u2B1B",label:"Black Square"},
+      {emoji:"\u{1F536}",label:"Diamond"},
+      {emoji:"\u2764\uFE0F",label:"Heart"}
+    ],
+    answer:4,
+    reason:"Heart is curved \u2014 the rest have only straight edges!",
+    hint:"Count the straight sides."
+  },
+  {
+    level:4,
+    items:[
+      {emoji:"\u{1F7E5}",label:"Red Square"},
+      {emoji:"\u{1F7E7}",label:"Orange Square"},
+      {emoji:"\u{1F7E8}",label:"Yellow Square"},
+      {emoji:"\u{1F535}",label:"Blue Circle"},
+      {emoji:"\u{1F7E9}",label:"Green Square"}
+    ],
+    answer:3,
+    reason:"Blue circle is round \u2014 the rest are all squares!",
+    hint:"Focus on shape, not color."
+  },
+  {
+    level:4,
+    items:[
+      {emoji:"\u{1F7E6}",label:"Blue"},
+      {emoji:"\u{1F7E6}",label:"Blue"},
+      {emoji:"\u{1F7E6}",label:"Blue"},
+      {emoji:"\u{1F7E3}",label:"Purple"},
+      {emoji:"\u{1F7E6}",label:"Blue"}
+    ],
+    answer:3,
+    reason:"Purple is a different color from all the blues!",
+    hint:"One of these is not like the others."
+  },
+  // LEVEL 5: Abstract reasoning
+  {
+    level:5,
+    items:[
+      {emoji:"\u{1F1E6}",label:"A"},
+      {emoji:"\u{1F1EA}",label:"E"},
+      {emoji:"\u{1F1EE}",label:"I"},
+      {emoji:"\u{1F1F4}",label:"O"},
+      {emoji:"\u{1F1F7}",label:"R"}
+    ],
+    answer:4,
+    reason:"R is a consonant \u2014 the rest are all vowels (A, E, I, O)!",
+    hint:"Think about the alphabet and vowels."
+  },
+  {
+    level:5,
+    items:[
+      {emoji:"\u{1F4D5}",label:"BEE"},
+      {emoji:"\u{1F4D7}",label:"SEE"},
+      {emoji:"\u{1F4D8}",label:"TEE"},
+      {emoji:"\u{1F4D9}",label:"FLY"},
+      {emoji:"\u{1F4D2}",label:"FEE"}
+    ],
+    answer:3,
+    reason:"FLY doesn't rhyme with the others (BEE, SEE, TEE, FEE)!",
+    hint:"Say them out loud. Do they sound alike?"
+  },
+  {
+    level:5,
+    items:[
+      {emoji:"\u{1F4D5}",label:"MOM"},
+      {emoji:"\u{1F4D7}",label:"DAD"},
+      {emoji:"\u{1F4D8}",label:"RACECAR"},
+      {emoji:"\u{1F4D9}",label:"LEVEL"},
+      {emoji:"\u{1F4D2}",label:"HELLO"}
+    ],
+    answer:4,
+    reason:"HELLO is not a palindrome \u2014 the rest read the same forwards and backwards!",
+    hint:"Try reading each word backwards."
+  },
+  {
+    level:5,
+    items:[
+      {emoji:"\u{1F4D5}",label:"ANT"},
+      {emoji:"\u{1F4D7}",label:"BAT"},
+      {emoji:"\u{1F4D8}",label:"CAT"},
+      {emoji:"\u{1F4D9}",label:"DOG"},
+      {emoji:"\u{1F4D2}",label:"EAT"}
+    ],
+    answer:3,
+    reason:"DOG doesn't end in T \u2014 the rest all end with the letter T!",
+    hint:"Look at the last letter of each word."
+  },
+  {
+    level:5,
+    items:[
+      {emoji:"\u{1F4D5}",label:"APPLE"},
+      {emoji:"\u{1F4D7}",label:"EAGLE"},
+      {emoji:"\u{1F4D8}",label:"IGLOO"},
+      {emoji:"\u{1F4D9}",label:"UMBRELLA"},
+      {emoji:"\u{1F4D2}",label:"BANANA"}
+    ],
+    answer:4,
+    reason:"BANANA starts with B \u2014 the rest all start with a vowel!",
+    hint:"Look at the first letter of each word."
+  }
+];
+
+// ========== GAME STATE ==========
+let currentPuzzle = 0;
+let score = 0;
+let streak = 0;
+let bestStreak = 0;
+let totalCorrectFirstTry = 0;
+let timer = 20;
+let timerInterval = null;
+let answered = false;
+let firstTryOnCurrent = true;
+let shuffledPuzzles = [];
+
+// ========== LEVEL CONFIG ==========
+const levelConfig = [
+  {name:"Super Easy",color:"#00B894"},
+  {name:"Easy",color:"#00CEC9"},
+  {name:"Medium",color:"#FDCB6E"},
+  {name:"Hard",color:"#E17055"},
+  {name:"Expert",color:"#6C5CE7"}
+];
+
+// ========== UTILITY ==========
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+// ========== GAME FLOW ==========
+function startGame(){
+  currentPuzzle=0;score=0;streak=0;bestStreak=0;totalCorrectFirstTry=0;
+  // Group puzzles by level and shuffle within each level, then concatenate
+  const byLevel=[[],[],[],[],[]];
+  puzzles.forEach(p=>byLevel[p.level-1].push(p));
+  shuffledPuzzles=[];
+  byLevel.forEach(group=>shuffledPuzzles.push(...shuffle(group)));
+  showScreen('gameScreen');
+  loadPuzzle();
+}
+
+function resetGame(){
+  showScreen('startScreen');
+}
+
+function loadPuzzle(){
+  answered=false;
+  firstTryOnCurrent=true;
+  const p=shuffledPuzzles[currentPuzzle];
+  const levelIdx=p.level-1;
+  const lc=levelConfig[levelIdx];
+
+  // Update level badge
+  const lb=document.getElementById('levelLabel');
+  lb.textContent='Level '+p.level+': '+lc.name;
+  lb.style.background='linear-gradient(135deg,'+lc.color+','+lc.color+'cc)';
+
+  // Update progress
+  const pct=((currentPuzzle)/shuffledPuzzles.length*100);
+  document.getElementById('progressFill').style.width=Math.max(pct,2)+'%';
+  document.getElementById('progressText').textContent=(currentPuzzle+1)+'/'+shuffledPuzzles.length;
+
+  // Update question
+  document.getElementById('questionText').textContent='Which one doesn\u2019t belong?';
+  document.getElementById('questionHint').textContent=p.hint||'Tap the odd one out!';
+
+  // Build cards - we need to track original indices for answer matching
+  const grid=document.getElementById('cardsGrid');
+  grid.innerHTML='';
+
+  // Create shuffled display order but track which display index maps to the answer
+  const indices=p.items.map((_,i)=>i);
+  const shuffledIndices=shuffle(indices);
+
+  shuffledIndices.forEach((origIdx,displayIdx)=>{
+    const item=p.items[origIdx];
+    const card=document.createElement('div');
+    card.className='item-card';
+    card.setAttribute('data-orig-index',origIdx);
+    card.innerHTML='<span class="card-emoji">'+item.emoji+'</span><span class="card-label">'+item.label+'</span>';
+    card.style.animationDelay=(displayIdx*0.08)+'s';
+    card.addEventListener('click',()=>handleCardClick(card,origIdx,p));
+    grid.appendChild(card);
+  });
+
+  // Hide reason and next
+  document.getElementById('reasonBanner').style.display='none';
+  document.getElementById('nextBtn').style.display='none';
+
+  // Start timer
+  startTimer();
+
+  // Update scores display
+  updateScoreDisplay();
+}
+
+function handleCardClick(card,origIdx,puzzle){
+  if(answered) return;
+  if(card.classList.contains('wrong')) return;
+
+  if(origIdx===puzzle.answer){
+    // CORRECT
+    answered=true;
+    clearInterval(timerInterval);
+    card.classList.add('correct');
+
+    if(firstTryOnCurrent){
+      const timeBonus=Math.max(0,timer);
+      const levelBonus=puzzle.level*20;
+      score+=100+timeBonus+levelBonus;
+      streak++;
+      totalCorrectFirstTry++;
+      if(streak>bestStreak) bestStreak=streak;
+    } else {
+      score+=25;
+    }
+
+    updateScoreDisplay();
+
+    // Highlight the others as "belongs"
+    document.querySelectorAll('.item-card').forEach(c=>{
+      if(c!==card){
+        c.classList.add('highlighted','disabled');
+      }
+    });
+
+    // Show reason
+    const rb=document.getElementById('reasonBanner');
+    rb.style.display='block';
+    document.getElementById('reasonText').textContent=puzzle.reason;
+
+    // Show next button
+    const nb=document.getElementById('nextBtn');
+    nb.style.display='block';
+    nb.textContent=currentPuzzle<shuffledPuzzles.length-1?'Next Puzzle \u27A1\uFE0F':'See Results \u{1F3C6}';
+
+    // Sparkle effect
+    createSparkles(card);
+
+  } else {
+    // WRONG
+    firstTryOnCurrent=false;
+    streak=0;
+    card.classList.add('wrong');
+    updateScoreDisplay();
+    setTimeout(()=>{
+      card.classList.remove('wrong');
+      card.classList.add('disabled');
+      card.style.opacity='0.4';
+    },500);
+  }
+}
+
+function nextPuzzle(){
+  currentPuzzle++;
+  if(currentPuzzle>=shuffledPuzzles.length){
+    showEndScreen();
+  } else {
+    loadPuzzle();
+  }
+}
+
+// ========== TIMER ==========
+function startTimer(){
+  timer=20;
+  clearInterval(timerInterval);
+  const td=document.getElementById('timerDisplay');
+  const tt=document.getElementById('timerText');
+  td.classList.remove('warning');
+  tt.textContent='20s';
+
+  timerInterval=setInterval(()=>{
+    if(answered){clearInterval(timerInterval);return;}
+    timer--;
+    tt.textContent=timer+'s';
+    if(timer<=5) td.classList.add('warning');
+    if(timer<=0){
+      clearInterval(timerInterval);
+      tt.textContent='0s';
+      // Time's up - auto reveal
+      if(!answered) timeUp();
+    }
+  },1000);
+}
+
+function timeUp(){
+  answered=true;
+  streak=0;
+  const p=shuffledPuzzles[currentPuzzle];
+  // Highlight the correct answer
+  document.querySelectorAll('.item-card').forEach(c=>{
+    const idx=parseInt(c.getAttribute('data-orig-index'));
+    if(idx===p.answer){
+      c.classList.add('correct');
+    } else {
+      c.classList.add('disabled');
+    }
+  });
+  const rb=document.getElementById('reasonBanner');
+  rb.style.display='block';
+  document.getElementById('reasonText').textContent='\u23F0 Time\'s up! '+p.reason;
+  const nb=document.getElementById('nextBtn');
+  nb.style.display='block';
+  nb.textContent=currentPuzzle<shuffledPuzzles.length-1?'Next Puzzle \u27A1\uFE0F':'See Results \u{1F3C6}';
+  updateScoreDisplay();
+}
+
+// ========== SCORE DISPLAY ==========
+function updateScoreDisplay(){
+  document.getElementById('scoreDisplay').textContent=score;
+  document.getElementById('streakDisplay').textContent=streak;
+  document.getElementById('bestStreakDisplay').textContent=bestStreak;
+}
+
+// ========== SPARKLES ==========
+function createSparkles(el){
+  const rect=el.getBoundingClientRect();
+  const symbols=['\u2728','\u{1F31F}','\u2B50','\u{1F4AB}'];
+  for(let i=0;i<6;i++){
+    const s=document.createElement('span');
+    s.className='sparkle';
+    s.textContent=symbols[Math.floor(Math.random()*symbols.length)];
+    s.style.left=(rect.left+Math.random()*rect.width)+'px';
+    s.style.top=(rect.top+Math.random()*rect.height+window.scrollY)+'px';
+    s.style.animationDelay=(Math.random()*0.3)+'s';
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),1000);
+  }
+}
+
+// ========== CONFETTI ==========
+function launchConfetti(){
+  const colors=['#6C5CE7','#00B894','#FDCB6E','#E17055','#00CEC9','#FF6B6B','#a29bfe','#55EFC4'];
+  for(let i=0;i<50;i++){
+    const c=document.createElement('div');
+    c.className='confetti-piece';
+    c.style.left=Math.random()*100+'vw';
+    c.style.background=colors[Math.floor(Math.random()*colors.length)];
+    c.style.animationDuration=(2+Math.random()*2)+'s';
+    c.style.animationDelay=(Math.random()*1.5)+'s';
+    c.style.width=(8+Math.random()*8)+'px';
+    c.style.height=(8+Math.random()*8)+'px';
+    c.style.borderRadius=Math.random()>0.5?'50%':'2px';
+    document.body.appendChild(c);
+    setTimeout(()=>c.remove(),5000);
+  }
+}
+
+// ========== END SCREEN ==========
+function showEndScreen(){
+  clearInterval(timerInterval);
+  showScreen('endScreen');
+
+  const maxScore=shuffledPuzzles.reduce((sum,p)=>sum+100+20+p.level*20,0);
+  const pct=Math.round((totalCorrectFirstTry/shuffledPuzzles.length)*100);
+
+  document.getElementById('endScore').textContent=score;
+  document.getElementById('endCorrect').textContent=totalCorrectFirstTry+'/'+shuffledPuzzles.length;
+  document.getElementById('endBestStreak').textContent=bestStreak;
+  document.getElementById('endAccuracy').textContent=pct+'%';
+
+  let rank,emoji;
+  if(pct>=95){rank='Logic Champion';emoji='\u{1F3C6}';}
+  else if(pct>=80){rank='Master Thinker';emoji='\u{1F9E0}';}
+  else if(pct>=60){rank='Sharp Mind';emoji='\u{1F31F}';}
+  else if(pct>=40){rank='Quick Learner';emoji='\u{1F4A1}';}
+  else{rank='Rising Star';emoji='\u{1F31F}';}
+
+  document.getElementById('endRank').textContent=rank;
+  document.getElementById('endEmoji').textContent=emoji;
+
+  launchConfetti();
+}
+</script>
+</body>
+</html>

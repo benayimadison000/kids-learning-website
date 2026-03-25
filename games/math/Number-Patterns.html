@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Patterns - Magic Math Wizard</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        @import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800&display=swap');
+
+        :root {
+            --purple-dark: #2d1b69;
+            --purple-mid: #4a2c8a;
+            --purple-light: #7c4dff;
+            --blue-glow: #64b5f6;
+            --gold: #ffd54f;
+            --gold-dark: #f9a825;
+            --star-gold: #ffe082;
+            --green: #69f0ae;
+            --red: #ff5252;
+            --pink: #f48fb1;
+            --white: #ffffff;
+            --bubble-bg: rgba(255,255,255,0.15);
+        }
+
+        body {
+            font-family: 'Nunito', sans-serif;
+            background: linear-gradient(135deg, #1a0a3e 0%, #2d1b69 30%, #1b1464 60%, #0d0b30 100%);
+            min-height: 100vh;
+            overflow-x: hidden;
+            color: var(--white);
+            position: relative;
+        }
+
+        /* ===== STAR FIELD BACKGROUND ===== */
+        .starfield {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .star {
+            position: absolute;
+            background: var(--white);
+            border-radius: 50%;
+            animation: twinkle var(--dur) ease-in-out infinite alternate;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0.2; transform: scale(0.8); }
+            100% { opacity: 1; transform: scale(1.2); }
+        }
+
+        /* ===== FLOATING SPARKLES ===== */
+        .sparkle {
+            position: fixed;
+            width: 6px; height: 6px;
+            background: var(--gold);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 1;
+            animation: floatSparkle var(--dur) linear infinite;
+            opacity: 0;
+        }
+
+        @keyframes floatSparkle {
+            0% { opacity: 0; transform: translateY(100vh) rotate(0deg); }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(-10vh) rotate(360deg); }
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .game-wrapper {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ===== TOP BAR ===== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            margin-bottom: 8px;
+        }
+
+        .home-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.25);
+            color: var(--white);
+            padding: 8px 18px;
+            border-radius: 50px;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-family: 'Nunito', sans-serif;
+        }
+
+        .home-btn:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(124,77,255,0.4);
+        }
+
+        .home-btn svg {
+            width: 18px; height: 18px;
+        }
+
+        .sound-btn {
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.25);
+            color: var(--white);
+            width: 42px; height: 42px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .sound-btn:hover {
+            background: rgba(255,255,255,0.25);
+        }
+
+        /* ===== STATS BAR ===== */
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-bottom: 12px;
+        }
+
+        .stat-item {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-icon { font-size: 18px; }
+        .stat-value { color: var(--gold); font-size: 18px; }
+
+        .streak-fire { color: #ff6e40; }
+
+        /* ===== LEVEL PROGRESS BAR ===== */
+        .level-progress {
+            background: rgba(255,255,255,0.1);
+            border-radius: 50px;
+            height: 14px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.15);
+            position: relative;
+        }
+
+        .level-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--purple-light), var(--gold), var(--green));
+            background-size: 200% 100%;
+            animation: shimmerBar 2s linear infinite;
+            border-radius: 50px;
+            transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
+        }
+
+        @keyframes shimmerBar {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .level-label {
+            text-align: center;
+            font-size: 15px;
+            font-weight: 800;
+            color: var(--gold);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 20px rgba(255,213,79,0.5);
+        }
+
+        /* ===== GAME CARD ===== */
+        .game-card {
+            background: linear-gradient(145deg, rgba(74,44,138,0.6) 0%, rgba(45,27,105,0.8) 100%);
+            border: 2px solid rgba(124,77,255,0.3);
+            border-radius: 24px;
+            padding: 30px 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .puzzle-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 22px;
+            color: var(--star-gold);
+            margin-bottom: 8px;
+            text-shadow: 0 2px 10px rgba(255,213,79,0.4);
+            text-align: center;
+        }
+
+        .puzzle-hint-text {
+            font-size: 14px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 24px;
+            text-align: center;
+            min-height: 20px;
+            transition: all 0.3s;
+        }
+
+        .puzzle-hint-text.visible {
+            color: var(--pink);
+        }
+
+        /* ===== NUMBER BUBBLES ROW ===== */
+        .bubbles-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 36px;
+            flex-wrap: wrap;
+        }
+
+        .bubble {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Fredoka One', cursive;
+            font-size: 26px;
+            position: relative;
+            transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            flex-shrink: 0;
+        }
+
+        .bubble-number {
+            background: linear-gradient(145deg, rgba(100,181,246,0.3) 0%, rgba(124,77,255,0.3) 100%);
+            border: 3px solid rgba(100,181,246,0.5);
+            color: var(--white);
+            text-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px rgba(100,181,246,0.2), inset 0 2px 0 rgba(255,255,255,0.15);
+            animation: floatBubble 3s ease-in-out infinite;
+        }
+
+        .bubble-number::after {
+            content: '';
+            position: absolute;
+            top: 12px; left: 16px;
+            width: 14px; height: 8px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 50%;
+            transform: rotate(-30deg);
+        }
+
+        .bubble-missing {
+            background: linear-gradient(145deg, rgba(255,213,79,0.25) 0%, rgba(255,152,0,0.25) 100%);
+            border: 3px dashed var(--gold);
+            color: var(--gold);
+            animation: pulseMissing 1.5s ease-in-out infinite;
+            font-size: 32px;
+            cursor: default;
+        }
+
+        .bubble-arrow {
+            width: 24px;
+            height: 24px;
+            flex-shrink: 0;
+            color: rgba(255,255,255,0.3);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        @keyframes floatBubble {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+
+        @keyframes pulseMissing {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 20px rgba(255,213,79,0.3); }
+            50% { transform: scale(1.08); box-shadow: 0 0 35px rgba(255,213,79,0.6); }
+        }
+
+        .bubble:nth-child(2) { animation-delay: 0.15s; }
+        .bubble:nth-child(4) { animation-delay: 0.3s; }
+        .bubble:nth-child(6) { animation-delay: 0.45s; }
+        .bubble:nth-child(8) { animation-delay: 0.6s; }
+
+        /* ===== ANSWER CHOICES ===== */
+        .choices-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            width: 100%;
+            max-width: 400px;
+            margin-bottom: 24px;
+        }
+
+        .choice-btn {
+            background: linear-gradient(145deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0.05) 100%);
+            border: 2px solid rgba(255,255,255,0.2);
+            color: var(--white);
+            padding: 16px 10px;
+            border-radius: 16px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 28px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4,0,0.2,1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transition: left 0.5s;
+        }
+
+        .choice-btn:hover:not(:disabled) {
+            transform: translateY(-3px);
+            border-color: var(--blue-glow);
+            box-shadow: 0 8px 25px rgba(100,181,246,0.3);
+        }
+
+        .choice-btn:hover:not(:disabled)::before {
+            left: 100%;
+        }
+
+        .choice-btn:active:not(:disabled) {
+            transform: translateY(0) scale(0.97);
+        }
+
+        .choice-btn.correct {
+            background: linear-gradient(145deg, rgba(105,240,174,0.4) 0%, rgba(0,200,83,0.3) 100%);
+            border-color: var(--green);
+            color: var(--green);
+            box-shadow: 0 0 30px rgba(105,240,174,0.4);
+            animation: correctPop 0.5s ease-out;
+        }
+
+        .choice-btn.wrong {
+            background: linear-gradient(145deg, rgba(255,82,82,0.3) 0%, rgba(213,0,0,0.2) 100%);
+            border-color: var(--red);
+            color: var(--red);
+            animation: shakeWrong 0.5s ease-out;
+        }
+
+        @keyframes correctPop {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes shakeWrong {
+            0%, 100% { transform: translateX(0); }
+            15%, 45%, 75% { transform: translateX(-8px); }
+            30%, 60%, 90% { transform: translateX(8px); }
+        }
+
+        /* ===== MAGIC WAND EFFECT ===== */
+        .wand-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            display: none;
+        }
+
+        .wand-overlay.active {
+            display: block;
+        }
+
+        .magic-particle {
+            position: absolute;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: magicBurst 0.8s ease-out forwards;
+        }
+
+        @keyframes magicBurst {
+            0% { opacity: 1; transform: scale(0) translate(0,0); }
+            100% { opacity: 0; transform: scale(1) translate(var(--tx), var(--ty)); }
+        }
+
+        /* ===== WAND ICON ===== */
+        .wand-container {
+            position: absolute;
+            pointer-events: none;
+            z-index: 101;
+            display: none;
+            font-size: 48px;
+            animation: wandWave 0.6s ease-in-out;
+        }
+
+        @keyframes wandWave {
+            0% { transform: rotate(-20deg) scale(0.5); opacity: 0; }
+            30% { transform: rotate(15deg) scale(1.2); opacity: 1; }
+            60% { transform: rotate(-10deg) scale(1); }
+            100% { transform: rotate(0deg) scale(1); opacity: 0; }
+        }
+
+        /* ===== FEEDBACK MESSAGE ===== */
+        .feedback {
+            font-family: 'Fredoka One', cursive;
+            font-size: 20px;
+            min-height: 36px;
+            text-align: center;
+            transition: all 0.3s;
+            margin-bottom: 10px;
+        }
+
+        .feedback.correct-msg { color: var(--green); text-shadow: 0 0 20px rgba(105,240,174,0.5); }
+        .feedback.wrong-msg { color: var(--red); text-shadow: 0 0 20px rgba(255,82,82,0.5); }
+
+        /* ===== NEXT BUTTON ===== */
+        .next-btn {
+            background: linear-gradient(135deg, var(--purple-light) 0%, #651fff 100%);
+            color: var(--white);
+            border: none;
+            padding: 14px 48px;
+            border-radius: 50px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(124,77,255,0.4);
+            display: none;
+            margin-top: 4px;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(124,77,255,0.6);
+        }
+
+        .next-btn.visible { display: inline-block; }
+
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            flex-grow: 1;
+        }
+
+        .screen.active { display: flex; }
+
+        /* ===== START SCREEN ===== */
+        .start-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 42px;
+            background: linear-gradient(135deg, var(--gold), var(--blue-glow), var(--purple-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }
+
+        .start-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 30px;
+        }
+
+        .wizard-icon {
+            font-size: 80px;
+            margin-bottom: 20px;
+            animation: wizardFloat 2s ease-in-out infinite;
+        }
+
+        @keyframes wizardFloat {
+            0%, 100% { transform: translateY(0) rotate(-3deg); }
+            50% { transform: translateY(-12px) rotate(3deg); }
+        }
+
+        .start-btn {
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+            color: var(--purple-dark);
+            border: none;
+            padding: 18px 60px;
+            border-radius: 50px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 25px rgba(255,213,79,0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .start-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 60%);
+            animation: startBtnShine 3s linear infinite;
+        }
+
+        @keyframes startBtnShine {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .start-btn:hover {
+            transform: translateY(-4px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(255,213,79,0.6);
+        }
+
+        .level-preview {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+            margin: 24px 0;
+            width: 100%;
+            max-width: 350px;
+        }
+
+        .level-dot {
+            background: rgba(255,255,255,0.15);
+            border: 2px solid rgba(255,255,255,0.2);
+            border-radius: 12px;
+            padding: 10px 4px;
+            text-align: center;
+            font-size: 11px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.5);
+        }
+
+        /* ===== COMPLETION SCREEN ===== */
+        .complete-title {
+            font-family: 'Fredoka One', cursive;
+            font-size: 36px;
+            color: var(--gold);
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255,213,79,0.5);
+        }
+
+        .complete-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            margin-bottom: 24px;
+        }
+
+        .stars-display {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .star-icon {
+            font-size: 52px;
+            transition: all 0.5s;
+            opacity: 0;
+            transform: scale(0) rotate(-180deg);
+        }
+
+        .star-icon.earned {
+            opacity: 1;
+            transform: scale(1) rotate(0deg);
+            animation: starPop 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            filter: drop-shadow(0 0 12px rgba(255,213,79,0.6));
+        }
+
+        .star-icon.empty {
+            opacity: 0.3;
+            transform: scale(0.8) rotate(0deg);
+            filter: grayscale(1);
+        }
+
+        @keyframes starPop {
+            0% { transform: scale(0) rotate(-180deg); }
+            60% { transform: scale(1.3) rotate(10deg); }
+            100% { transform: scale(1) rotate(0deg); }
+        }
+
+        .score-final {
+            font-family: 'Fredoka One', cursive;
+            font-size: 56px;
+            color: var(--white);
+            margin-bottom: 4px;
+        }
+
+        .score-final-label {
+            font-size: 16px;
+            color: rgba(255,255,255,0.6);
+            margin-bottom: 20px;
+        }
+
+        .final-stats {
+            display: flex;
+            gap: 30px;
+            margin-bottom: 28px;
+        }
+
+        .final-stat {
+            text-align: center;
+        }
+
+        .final-stat-val {
+            font-family: 'Fredoka One', cursive;
+            font-size: 28px;
+            color: var(--blue-glow);
+        }
+
+        .final-stat-lbl {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .replay-btn {
+            background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 100%);
+            color: var(--purple-dark);
+            border: none;
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 19px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 6px 20px rgba(255,213,79,0.3);
+        }
+
+        .replay-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 30px rgba(255,213,79,0.5);
+        }
+
+        .home-btn-end {
+            background: rgba(255,255,255,0.12);
+            border: 2px solid rgba(255,255,255,0.25);
+            color: var(--white);
+            padding: 14px 40px;
+            border-radius: 50px;
+            font-family: 'Fredoka One', cursive;
+            font-size: 19px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .home-btn-end:hover {
+            background: rgba(255,255,255,0.25);
+            transform: translateY(-3px);
+        }
+
+        /* ===== LEVEL TRANSITION ===== */
+        .level-up-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            backdrop-filter: blur(8px);
+        }
+
+        .level-up-overlay.active {
+            display: flex;
+        }
+
+        .level-up-box {
+            text-align: center;
+            animation: levelPopIn 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+        }
+
+        @keyframes levelPopIn {
+            0% { transform: scale(0) rotate(-10deg); opacity: 0; }
+            100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        }
+
+        .level-up-icon { font-size: 64px; margin-bottom: 12px; }
+
+        .level-up-text {
+            font-family: 'Fredoka One', cursive;
+            font-size: 36px;
+            color: var(--gold);
+            text-shadow: 0 0 30px rgba(255,213,79,0.5);
+        }
+
+        .level-up-sub {
+            font-size: 18px;
+            color: rgba(255,255,255,0.7);
+            margin-top: 8px;
+        }
+
+        /* ===== CONFETTI ===== */
+        .confetti-piece {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            z-index: 300;
+            pointer-events: none;
+            animation: confettiFall var(--dur) linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(-20vh) rotate(0deg); }
+            100% { opacity: 0; transform: translateY(110vh) rotate(var(--rot)); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .start-title { font-size: 30px; }
+            .wizard-icon { font-size: 60px; }
+            .start-btn { padding: 14px 40px; font-size: 20px; }
+            .bubble { width: 56px; height: 56px; font-size: 20px; }
+            .bubble-missing { font-size: 26px; }
+            .bubbles-row { gap: 6px; }
+            .bubble-arrow { width: 16px; font-size: 12px; }
+            .choice-btn { padding: 12px 8px; font-size: 22px; }
+            .choices-grid { gap: 10px; max-width: 320px; }
+            .stats-bar { gap: 10px; }
+            .stat-item { padding: 6px 14px; font-size: 12px; }
+            .stat-value { font-size: 15px; }
+            .game-card { padding: 20px 14px; }
+            .puzzle-title { font-size: 18px; }
+            .complete-title { font-size: 28px; }
+            .score-final { font-size: 44px; }
+            .star-icon { font-size: 40px; }
+        }
+
+        @media (max-width: 380px) {
+            .bubble { width: 46px; height: 46px; font-size: 17px; }
+            .bubble-missing { font-size: 22px; }
+            .choice-btn { font-size: 19px; padding: 10px 6px; }
+            .level-preview { grid-template-columns: repeat(5, 1fr); gap: 4px; }
+        }
+
+        /* ===== BUBBLE CORRECT FILL ===== */
+        .bubble-solved {
+            background: linear-gradient(145deg, rgba(105,240,174,0.35) 0%, rgba(0,200,83,0.3) 100%) !important;
+            border: 3px solid var(--green) !important;
+            color: var(--green) !important;
+            animation: solvedPop 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55) !important;
+        }
+
+        @keyframes solvedPop {
+            0% { transform: scale(0.5); }
+            60% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Star field -->
+<div class="starfield" id="starfield"></div>
+
+<!-- Floating sparkles -->
+<div id="sparkles"></div>
+
+<!-- Magic wand overlay -->
+<div class="wand-overlay" id="wandOverlay"></div>
+
+<!-- Level-up overlay -->
+<div class="level-up-overlay" id="levelUpOverlay">
+    <div class="level-up-box">
+        <div class="level-up-icon" id="levelUpIcon"></div>
+        <div class="level-up-text" id="levelUpText"></div>
+        <div class="level-up-sub" id="levelUpSub"></div>
+    </div>
+</div>
+
+<div class="game-wrapper">
+
+    <!-- Top bar -->
+    <div class="top-bar" id="topBar">
+        <a href="../../index.html" class="home-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+                <polyline points="9 22 9 12 15 12 15 22"/>
+            </svg>
+            Home
+        </a>
+        <button class="sound-btn" id="soundBtn" title="Toggle Sound" aria-label="Toggle Sound">&#x1F50A;</button>
+    </div>
+
+    <!-- ===== START SCREEN ===== -->
+    <div class="screen active" id="startScreen">
+        <div class="wizard-icon">&#x1FA84;</div>
+        <div class="start-title">Number Patterns</div>
+        <div class="start-subtitle">Find the missing numbers in magical sequences!</div>
+        <div class="level-preview">
+            <div class="level-dot">Lvl 1<br>Easy</div>
+            <div class="level-dot">Lvl 2<br>+/-</div>
+            <div class="level-dot">Lvl 3<br>Mix</div>
+            <div class="level-dot">Lvl 4<br>Hard</div>
+            <div class="level-dot">Lvl 5<br>Wizard</div>
+        </div>
+        <button class="start-btn" id="startBtn">Begin the Quest!</button>
+    </div>
+
+    <!-- ===== GAME SCREEN ===== -->
+    <div class="screen" id="gameScreen">
+        <div class="stats-bar">
+            <div class="stat-item">
+                <span class="stat-icon">&#x2B50;</span>
+                <span>Score: </span>
+                <span class="stat-value" id="scoreDisplay">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon streak-fire">&#x1F525;</span>
+                <span>Streak: </span>
+                <span class="stat-value" id="streakDisplay">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-icon">&#x1F4A1;</span>
+                <span id="questionNum">1</span><span>/25</span>
+            </div>
+        </div>
+
+        <div class="level-label" id="levelLabel">Level 1 - Apprentice</div>
+        <div class="level-progress">
+            <div class="level-progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+
+        <div class="game-card">
+            <div class="puzzle-title" id="puzzleTitle">Find the missing number!</div>
+            <div class="puzzle-hint-text" id="hintText">&nbsp;</div>
+
+            <div class="bubbles-row" id="bubblesRow"></div>
+
+            <div class="choices-grid" id="choicesGrid"></div>
+
+            <div class="feedback" id="feedback">&nbsp;</div>
+
+            <button class="next-btn" id="nextBtn">Next Puzzle &#x27A1;</button>
+        </div>
+    </div>
+
+    <!-- ===== COMPLETION SCREEN ===== -->
+    <div class="screen" id="completeScreen">
+        <div class="wizard-icon">&#x1F9D9;</div>
+        <div class="complete-title" id="completeTitle">Quest Complete!</div>
+        <div class="complete-subtitle" id="completeSub">You are a true Number Wizard!</div>
+
+        <div class="stars-display" id="starsDisplay">
+            <span class="star-icon">&#x2B50;</span>
+            <span class="star-icon">&#x2B50;</span>
+            <span class="star-icon">&#x2B50;</span>
+        </div>
+
+        <div class="score-final" id="scoreFinal">0</div>
+        <div class="score-final-label">points earned</div>
+
+        <div class="final-stats">
+            <div class="final-stat">
+                <div class="final-stat-val" id="finalAccuracy">0%</div>
+                <div class="final-stat-lbl">Accuracy</div>
+            </div>
+            <div class="final-stat">
+                <div class="final-stat-val" id="finalBestStreak">0</div>
+                <div class="final-stat-lbl">Best Streak</div>
+            </div>
+        </div>
+
+        <div class="btn-row">
+            <button class="replay-btn" id="replayBtn">Play Again &#x1FA84;</button>
+            <a href="../../index.html" class="home-btn-end">Go Home</a>
+        </div>
+    </div>
+
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ===== SOUND SYSTEM =====
+    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+    let audioCtx = null;
+    let soundEnabled = true;
+
+    function ensureAudio() {
+        if (!audioCtx) audioCtx = new AudioCtx();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+    }
+
+    function playTone(freq, duration, type, vol) {
+        if (!soundEnabled) return;
+        try {
+            ensureAudio();
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = type || 'sine';
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(vol || 0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.connect(gain).connect(audioCtx.destination);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        } catch(e) {}
+    }
+
+    function playCorrectSound() {
+        playTone(523, 0.15, 'sine', 0.15);
+        setTimeout(() => playTone(659, 0.15, 'sine', 0.15), 100);
+        setTimeout(() => playTone(784, 0.25, 'sine', 0.12), 200);
+    }
+
+    function playWrongSound() {
+        playTone(200, 0.25, 'sawtooth', 0.1);
+        setTimeout(() => playTone(170, 0.3, 'sawtooth', 0.1), 150);
+    }
+
+    function playLevelUpSound() {
+        [523, 587, 659, 784, 880, 1047].forEach((f, i) => {
+            setTimeout(() => playTone(f, 0.2, 'sine', 0.1), i * 80);
+        });
+    }
+
+    function playCompleteSound() {
+        [523, 659, 784, 1047, 784, 1047, 1319].forEach((f, i) => {
+            setTimeout(() => playTone(f, 0.3, 'triangle', 0.12), i * 120);
+        });
+    }
+
+    function playClickSound() {
+        playTone(440, 0.08, 'sine', 0.08);
+    }
+
+    // Sound toggle
+    const soundBtn = document.getElementById('soundBtn');
+    soundBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundBtn.textContent = soundEnabled ? '\u{1F50A}' : '\u{1F507}';
+    });
+
+    // ===== GENERATE BACKGROUND =====
+    function createStars() {
+        const sf = document.getElementById('starfield');
+        sf.innerHTML = '';
+        const count = Math.min(120, Math.floor(window.innerWidth * window.innerHeight / 6000));
+        for (let i = 0; i < count; i++) {
+            const s = document.createElement('div');
+            s.className = 'star';
+            const size = Math.random() * 3 + 1;
+            s.style.cssText = `
+                width:${size}px;height:${size}px;
+                top:${Math.random()*100}%;left:${Math.random()*100}%;
+                --dur:${Math.random()*3+1.5}s;
+                animation-delay:${Math.random()*3}s;
+            `;
+            sf.appendChild(s);
+        }
+    }
+
+    function createSparkles() {
+        const container = document.getElementById('sparkles');
+        container.innerHTML = '';
+        for (let i = 0; i < 15; i++) {
+            const s = document.createElement('div');
+            s.className = 'sparkle';
+            s.style.cssText = `
+                left:${Math.random()*100}%;
+                --dur:${Math.random()*6+4}s;
+                animation-delay:${Math.random()*8}s;
+                width:${Math.random()*4+3}px;height:${Math.random()*4+3}px;
+            `;
+            container.appendChild(s);
+        }
+    }
+
+    createStars();
+    createSparkles();
+    window.addEventListener('resize', createStars);
+
+    // ===== PUZZLE DATA =====
+    const LEVEL_NAMES = [
+        'Apprentice', 'Spellcaster', 'Enchanter', 'Sorcerer', 'Grand Wizard'
+    ];
+
+    const LEVEL_ICONS = ['\u{1FA84}', '\u{2728}', '\u{1F31F}', '\u{1F525}', '\u{1F9D9}'];
+
+    // Each puzzle: { sequence: [...], missingIndex, answer, rule }
+    const PUZZLES = [
+        // Level 1 - Simple addition patterns (Apprentice)
+        { sequence: [2, 4, 6, null, 10],    missingIndex: 3, answer: 8,   rule: 'Add 2 each time' },
+        { sequence: [5, 10, 15, null, 25],   missingIndex: 3, answer: 20,  rule: 'Add 5 each time' },
+        { sequence: [3, 6, 9, null, 15],     missingIndex: 3, answer: 12,  rule: 'Add 3 each time' },
+        { sequence: [10, 20, 30, null, 50],  missingIndex: 3, answer: 40,  rule: 'Add 10 each time' },
+        { sequence: [4, 8, 12, null, 20],    missingIndex: 3, answer: 16,  rule: 'Add 4 each time' },
+
+        // Level 2 - Subtraction & bigger steps (Spellcaster)
+        { sequence: [100, 90, 80, null, 60],  missingIndex: 3, answer: 70,  rule: 'Subtract 10 each time' },
+        { sequence: [50, 45, 40, null, 30],   missingIndex: 3, answer: 35,  rule: 'Subtract 5 each time' },
+        { sequence: [30, 27, 24, null, 18],   missingIndex: 3, answer: 21,  rule: 'Subtract 3 each time' },
+        { sequence: [null, 16, 20, 24, 28],   missingIndex: 0, answer: 12,  rule: 'Add 4 each time' },
+        { sequence: [7, 14, null, 28, 35],    missingIndex: 2, answer: 21,  rule: 'Add 7 each time' },
+
+        // Level 3 - Multiplication patterns (Enchanter)
+        { sequence: [3, 6, 12, null, 48],     missingIndex: 3, answer: 24,  rule: 'Double each time' },
+        { sequence: [2, 6, 18, null, 162],    missingIndex: 3, answer: 54,  rule: 'Multiply by 3 each time' },
+        { sequence: [1, 2, 4, null, 16],      missingIndex: 3, answer: 8,   rule: 'Double each time' },
+        { sequence: [5, null, 20, 40, 80],    missingIndex: 1, answer: 10,  rule: 'Double each time' },
+        { sequence: [null, 4, 8, 16, 32],     missingIndex: 0, answer: 2,   rule: 'Double each time' },
+
+        // Level 4 - Mixed & tricky (Sorcerer)
+        { sequence: [1, 4, 9, null, 25],      missingIndex: 3, answer: 16,  rule: 'Square numbers: 1, 2, 3, 4, 5 squared' },
+        { sequence: [2, 3, 5, 8, null],       missingIndex: 4, answer: 12,  rule: 'Add 1, then 2, then 3, then 4...' },
+        { sequence: [1, 1, 2, 3, null],       missingIndex: 4, answer: 5,   rule: 'Add the two previous numbers' },
+        { sequence: [null, 10, 8, 11, 9],     missingIndex: 0, answer: 7,   rule: 'Alternating +3, -2' },
+        { sequence: [81, 27, null, 3, 1],     missingIndex: 2, answer: 9,   rule: 'Divide by 3 each time' },
+
+        // Level 5 - Expert (Grand Wizard)
+        { sequence: [1, 8, 27, null, 125],    missingIndex: 3, answer: 64,  rule: 'Cube numbers: 1, 2, 3, 4, 5 cubed' },
+        { sequence: [2, 5, 11, null, 47],     missingIndex: 3, answer: 23,  rule: 'Double and add 1 each time' },
+        { sequence: [null, 3, 7, 15, 31],     missingIndex: 0, answer: 1,   rule: 'Double and add 1 each time' },
+        { sequence: [99, 90, null, 54, 27],   missingIndex: 2, answer: 72,  rule: 'Subtract 9, then 18, then 18, then 27... (subtract increasing 9s)' },
+        { sequence: [1, 2, 6, 24, null],      missingIndex: 4, answer: 120, rule: 'Factorials: multiply by 2, 3, 4, 5' },
+    ];
+
+    // ===== GAME STATE =====
+    let currentPuzzle = 0;
+    let score = 0;
+    let streak = 0;
+    let bestStreak = 0;
+    let correctCount = 0;
+    let attempts = 0;
+    let answered = false;
+    let hintUsed = false;
+
+    // DOM refs
+    const startScreen = document.getElementById('startScreen');
+    const gameScreen = document.getElementById('gameScreen');
+    const completeScreen = document.getElementById('completeScreen');
+    const startBtn = document.getElementById('startBtn');
+    const nextBtn = document.getElementById('nextBtn');
+    const replayBtn = document.getElementById('replayBtn');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const streakDisplay = document.getElementById('streakDisplay');
+    const questionNum = document.getElementById('questionNum');
+    const levelLabel = document.getElementById('levelLabel');
+    const progressFill = document.getElementById('progressFill');
+    const bubblesRow = document.getElementById('bubblesRow');
+    const choicesGrid = document.getElementById('choicesGrid');
+    const feedback = document.getElementById('feedback');
+    const hintText = document.getElementById('hintText');
+    const puzzleTitle = document.getElementById('puzzleTitle');
+    const wandOverlay = document.getElementById('wandOverlay');
+    const levelUpOverlay = document.getElementById('levelUpOverlay');
+
+    // ===== SCREEN SWITCHING =====
+    function showScreen(screen) {
+        [startScreen, gameScreen, completeScreen].forEach(s => s.classList.remove('active'));
+        screen.classList.add('active');
+    }
+
+    // ===== START GAME =====
+    startBtn.addEventListener('click', () => {
+        playClickSound();
+        currentPuzzle = 0;
+        score = 0;
+        streak = 0;
+        bestStreak = 0;
+        correctCount = 0;
+        attempts = 0;
+        showScreen(gameScreen);
+        loadPuzzle();
+    });
+
+    replayBtn.addEventListener('click', () => {
+        playClickSound();
+        currentPuzzle = 0;
+        score = 0;
+        streak = 0;
+        bestStreak = 0;
+        correctCount = 0;
+        attempts = 0;
+        showScreen(gameScreen);
+        loadPuzzle();
+    });
+
+    nextBtn.addEventListener('click', () => {
+        playClickSound();
+        currentPuzzle++;
+        if (currentPuzzle >= PUZZLES.length) {
+            showCompletion();
+        } else {
+            // Check for level transition
+            if (currentPuzzle % 5 === 0) {
+                showLevelUp();
+            } else {
+                loadPuzzle();
+            }
+        }
+    });
+
+    // ===== LEVEL TRANSITION =====
+    function showLevelUp() {
+        const lvl = Math.floor(currentPuzzle / 5);
+        playLevelUpSound();
+
+        document.getElementById('levelUpIcon').textContent = LEVEL_ICONS[lvl];
+        document.getElementById('levelUpText').textContent = 'Level ' + (lvl + 1) + '!';
+        document.getElementById('levelUpSub').textContent = LEVEL_NAMES[lvl] + ' unlocked!';
+        levelUpOverlay.classList.add('active');
+
+        spawnConfetti(30);
+
+        setTimeout(() => {
+            levelUpOverlay.classList.remove('active');
+            loadPuzzle();
+        }, 2000);
+    }
+
+    // ===== LOAD PUZZLE =====
+    function loadPuzzle() {
+        const p = PUZZLES[currentPuzzle];
+        answered = false;
+        hintUsed = false;
+
+        const level = Math.floor(currentPuzzle / 5);
+
+        // Update UI
+        updateStats();
+        levelLabel.textContent = 'Level ' + (level + 1) + ' - ' + LEVEL_NAMES[level];
+        progressFill.style.width = ((currentPuzzle / PUZZLES.length) * 100) + '%';
+        questionNum.textContent = (currentPuzzle + 1);
+        feedback.innerHTML = '&nbsp;';
+        feedback.className = 'feedback';
+        hintText.innerHTML = '&nbsp;';
+        hintText.classList.remove('visible');
+        nextBtn.classList.remove('visible');
+        puzzleTitle.textContent = 'Find the missing number!';
+
+        // Build bubbles
+        bubblesRow.innerHTML = '';
+        p.sequence.forEach((num, i) => {
+            if (i > 0) {
+                const arrow = document.createElement('div');
+                arrow.className = 'bubble-arrow';
+                arrow.innerHTML = '&#x25B6;';
+                bubblesRow.appendChild(arrow);
+            }
+            const bub = document.createElement('div');
+            bub.className = 'bubble';
+            if (num === null) {
+                bub.classList.add('bubble-missing');
+                bub.textContent = '?';
+                bub.id = 'missingBubble';
+            } else {
+                bub.classList.add('bubble-number');
+                bub.textContent = num;
+            }
+            bub.style.animationDelay = (i * 0.12) + 's';
+            bubblesRow.appendChild(bub);
+        });
+
+        // Generate choices
+        const choices = generateChoices(p.answer);
+        choicesGrid.innerHTML = '';
+        choices.forEach(val => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.textContent = val;
+            btn.addEventListener('click', () => handleAnswer(val, btn, p));
+            choicesGrid.appendChild(btn);
+        });
+    }
+
+    // ===== GENERATE CHOICES =====
+    function generateChoices(correct) {
+        const choices = new Set();
+        choices.add(correct);
+
+        // Generate plausible wrong answers
+        const offsets = [1, 2, 3, 4, 5, 6, 8, 10, -1, -2, -3, -4, -5, -6, -8, -10];
+        while (choices.size < 4) {
+            const offset = offsets[Math.floor(Math.random() * offsets.length)];
+            const wrong = correct + offset;
+            if (wrong > 0 && wrong !== correct) {
+                choices.add(wrong);
+            }
+        }
+
+        // Shuffle
+        const arr = Array.from(choices);
+        for (let i = arr.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [arr[i], arr[j]] = [arr[j], arr[i]];
+        }
+        return arr;
+    }
+
+    // ===== HANDLE ANSWER =====
+    function handleAnswer(selected, btnEl, puzzle) {
+        if (answered) return;
+        attempts++;
+
+        const allBtns = choicesGrid.querySelectorAll('.choice-btn');
+
+        if (selected === puzzle.answer) {
+            // CORRECT
+            answered = true;
+            playCorrectSound();
+
+            btnEl.classList.add('correct');
+            allBtns.forEach(b => { b.disabled = true; });
+
+            // Fill the missing bubble
+            const missing = document.getElementById('missingBubble');
+            if (missing) {
+                missing.textContent = puzzle.answer;
+                missing.classList.remove('bubble-missing');
+                missing.classList.add('bubble-solved');
+            }
+
+            // Scoring: base 10 + streak bonus, +5 if no hint
+            const streakBonus = Math.min(streak, 5) * 2;
+            const hintBonus = hintUsed ? 0 : 5;
+            const points = 10 + streakBonus + hintBonus;
+            score += points;
+            streak++;
+            correctCount++;
+            if (streak > bestStreak) bestStreak = streak;
+
+            updateStats();
+
+            const messages = [
+                'Magical!', 'Brilliant!', 'Spectacular!', 'Enchanting!',
+                'Spellbinding!', 'Wonderful!', 'Amazing!', 'Fantastic!'
+            ];
+            feedback.textContent = messages[Math.floor(Math.random() * messages.length)] + ' +' + points;
+            feedback.className = 'feedback correct-msg';
+
+            // Magic wand animation
+            showMagicWand(btnEl);
+
+            nextBtn.classList.add('visible');
+
+        } else {
+            // WRONG
+            playWrongSound();
+            btnEl.classList.add('wrong');
+            btnEl.disabled = true;
+            streak = 0;
+            updateStats();
+
+            // Show hint after wrong answer
+            hintUsed = true;
+            hintText.textContent = 'Hint: ' + puzzle.rule;
+            hintText.classList.add('visible');
+
+            feedback.textContent = 'Not quite... try again!';
+            feedback.className = 'feedback wrong-msg';
+
+            // Re-enable after shake
+            setTimeout(() => {
+                feedback.innerHTML = '&nbsp;';
+                feedback.className = 'feedback';
+            }, 1500);
+        }
+    }
+
+    // ===== UPDATE STATS =====
+    function updateStats() {
+        scoreDisplay.textContent = score;
+        streakDisplay.textContent = streak;
+    }
+
+    // ===== MAGIC WAND EFFECT =====
+    function showMagicWand(targetEl) {
+        const rect = targetEl.getBoundingClientRect();
+        const cx = rect.left + rect.width / 2;
+        const cy = rect.top + rect.height / 2;
+
+        wandOverlay.classList.add('active');
+        wandOverlay.innerHTML = '';
+
+        // Sparkle particles
+        const colors = ['#ffd54f', '#64b5f6', '#7c4dff', '#69f0ae', '#f48fb1', '#fff'];
+        for (let i = 0; i < 24; i++) {
+            const p = document.createElement('div');
+            p.className = 'magic-particle';
+            const angle = (Math.PI * 2 * i) / 24;
+            const dist = 40 + Math.random() * 60;
+            const tx = Math.cos(angle) * dist;
+            const ty = Math.sin(angle) * dist;
+            const size = Math.random() * 8 + 4;
+            p.style.cssText = `
+                left:${cx}px;top:${cy}px;
+                width:${size}px;height:${size}px;
+                background:${colors[Math.floor(Math.random()*colors.length)]};
+                --tx:${tx}px;--ty:${ty}px;
+            `;
+            wandOverlay.appendChild(p);
+        }
+
+        setTimeout(() => {
+            wandOverlay.classList.remove('active');
+            wandOverlay.innerHTML = '';
+        }, 900);
+    }
+
+    // ===== CONFETTI =====
+    function spawnConfetti(count) {
+        const colors = ['#ffd54f','#7c4dff','#64b5f6','#69f0ae','#f48fb1','#ff5252','#fff'];
+        const shapes = ['circle', 'square'];
+        for (let i = 0; i < count; i++) {
+            const el = document.createElement('div');
+            el.className = 'confetti-piece';
+            const size = Math.random() * 8 + 6;
+            const dur = Math.random() * 2 + 2;
+            const rot = Math.floor(Math.random() * 720) + 360;
+            const shape = shapes[Math.floor(Math.random() * shapes.length)];
+            el.style.cssText = `
+                left:${Math.random()*100}vw;
+                top:-20px;
+                width:${size}px;height:${size}px;
+                background:${colors[Math.floor(Math.random()*colors.length)]};
+                border-radius:${shape === 'circle' ? '50%' : '2px'};
+                --dur:${dur}s;--rot:${rot}deg;
+                animation-delay:${Math.random()*0.8}s;
+            `;
+            document.body.appendChild(el);
+            setTimeout(() => el.remove(), (dur + 1) * 1000);
+        }
+    }
+
+    // ===== COMPLETION SCREEN =====
+    function showCompletion() {
+        playCompleteSound();
+        showScreen(completeScreen);
+
+        const accuracy = attempts > 0 ? Math.round((correctCount / attempts) * 100) : 0;
+        const maxScore = 25 * 25; // rough max
+
+        document.getElementById('scoreFinal').textContent = score;
+        document.getElementById('finalAccuracy').textContent = accuracy + '%';
+        document.getElementById('finalBestStreak').textContent = bestStreak;
+
+        // Stars based on score percentage
+        const pct = (score / maxScore) * 100;
+        let stars;
+        if (pct >= 70) stars = 3;
+        else if (pct >= 45) stars = 2;
+        else if (pct >= 20) stars = 1;
+        else stars = 0;
+
+        // Title & subtitle based on stars
+        const titles = [
+            { t: 'Nice Try!', s: 'Practice makes perfect, young wizard.' },
+            { t: 'Good Work!', s: 'Your magic is growing stronger!' },
+            { t: 'Great Job!', s: 'You have real talent for patterns!' },
+            { t: 'Quest Complete!', s: 'You are a true Number Wizard!' },
+        ];
+        document.getElementById('completeTitle').textContent = titles[stars].t;
+        document.getElementById('completeSub').textContent = titles[stars].s;
+
+        // Animate stars
+        const starEls = document.querySelectorAll('#starsDisplay .star-icon');
+        starEls.forEach((el, i) => {
+            el.className = 'star-icon';
+            setTimeout(() => {
+                if (i < stars) {
+                    el.classList.add('earned');
+                } else {
+                    el.classList.add('empty');
+                }
+            }, 400 + i * 350);
+        });
+
+        // Confetti for good scores
+        if (stars >= 2) {
+            setTimeout(() => spawnConfetti(50), 300);
+            setTimeout(() => spawnConfetti(30), 1200);
+        }
+    }
+
+    // ===== KEYBOARD SUPPORT =====
+    document.addEventListener('keydown', (e) => {
+        if (gameScreen.classList.contains('active')) {
+            if (!answered) {
+                const btns = choicesGrid.querySelectorAll('.choice-btn:not(:disabled)');
+                const key = parseInt(e.key);
+                if (key >= 1 && key <= 4) {
+                    const idx = key - 1;
+                    if (btns[idx]) btns[idx].click();
+                }
+            } else {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    nextBtn.click();
+                }
+            }
+        }
+        if (startScreen.classList.contains('active') && (e.key === 'Enter' || e.key === ' ')) {
+            startBtn.click();
+        }
+    });
+
+})();
+</script>
+</body>
+</html>

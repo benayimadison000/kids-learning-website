@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Multiplication Quest - Space Adventure!</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    font-family:'Segoe UI','Comic Sans MS',cursive,sans-serif;
+    min-height:100vh;
+    background:linear-gradient(135deg,#0b0d2e 0%,#1a1050 40%,#2d1b69 70%,#0b0d2e 100%);
+    color:#fff;
+    overflow-x:hidden;
+    position:relative;
+  }
+
+  /* ---- stars background ---- */
+  .stars-layer{
+    position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0;
+  }
+  .star{
+    position:absolute;border-radius:50%;background:#fff;
+    animation:twinkle var(--dur) ease-in-out infinite alternate;
+  }
+  @keyframes twinkle{0%{opacity:.2;transform:scale(.8)}100%{opacity:1;transform:scale(1.2)}}
+
+  /* ---- layout ---- */
+  .game-wrapper{
+    position:relative;z-index:1;
+    max-width:640px;margin:0 auto;padding:16px 16px 40px;
+    display:flex;flex-direction:column;align-items:center;
+    min-height:100vh;
+  }
+
+  /* ---- home button ---- */
+  .home-btn{
+    position:absolute;top:16px;left:16px;z-index:10;
+    background:rgba(255,255,255,.1);backdrop-filter:blur(6px);
+    border:2px solid rgba(255,255,255,.25);border-radius:14px;
+    color:#fff;font-size:15px;padding:10px 18px;cursor:pointer;
+    text-decoration:none;display:flex;align-items:center;gap:8px;
+    transition:all .25s;
+  }
+  .home-btn:hover{background:rgba(255,255,255,.22);transform:translateY(-2px);box-shadow:0 4px 18px rgba(130,100,255,.4)}
+  .home-btn svg{width:18px;height:18px;fill:currentColor}
+
+  /* ---- header ---- */
+  .game-title{
+    font-size:clamp(1.6rem,5vw,2.5rem);font-weight:800;
+    text-align:center;margin:50px 0 4px;
+    background:linear-gradient(90deg,#00e5ff,#aa77ff,#ff6ec7);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+    text-shadow:none;filter:drop-shadow(0 0 18px rgba(170,119,255,.45));
+  }
+  .game-subtitle{font-size:clamp(.85rem,2.5vw,1rem);opacity:.7;text-align:center;margin-bottom:18px}
+
+  /* ---- HUD (score / streak / level) ---- */
+  .hud{
+    display:flex;gap:12px;flex-wrap:wrap;justify-content:center;
+    width:100%;margin-bottom:14px;
+  }
+  .hud-item{
+    background:rgba(255,255,255,.08);backdrop-filter:blur(6px);
+    border:1px solid rgba(255,255,255,.15);border-radius:14px;
+    padding:8px 18px;font-size:clamp(.8rem,2.2vw,.95rem);
+    display:flex;align-items:center;gap:6px;
+    transition:transform .2s;
+  }
+  .hud-item span{font-weight:700;color:#00e5ff}
+
+  /* ---- rocket progress bar ---- */
+  .progress-area{width:100%;margin-bottom:18px}
+  .progress-label{font-size:.8rem;opacity:.6;margin-bottom:6px;text-align:center}
+  .progress-track{
+    width:100%;height:32px;border-radius:16px;
+    background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+    overflow:hidden;position:relative;
+  }
+  .progress-fill{
+    height:100%;border-radius:16px;
+    background:linear-gradient(90deg,#7c3aed,#a855f7,#00e5ff);
+    transition:width .6s cubic-bezier(.22,1,.36,1);
+    position:relative;width:0%;
+  }
+  .progress-fill::after{
+    content:'';position:absolute;right:-2px;top:50%;
+    transform:translateY(-50%);font-size:22px;
+    width:28px;height:28px;
+    background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cpath d='M32 4 L40 28 L56 28 L44 40 L48 56 L32 46 L16 56 L20 40 L8 28 L24 28 Z' fill='%23ff6ec7'/%3E%3Cpath d='M32 2 C32 2 36 18 36 26 L32 60 L28 26 C28 18 32 2 32 2Z' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat;
+    filter:drop-shadow(0 0 6px #ff6ec7);
+  }
+  .rocket-icon{
+    position:absolute;right:-6px;top:50%;transform:translateY(-50%);
+    font-size:26px;filter:drop-shadow(0 0 8px #00e5ff);
+    transition:right .6s cubic-bezier(.22,1,.36,1);
+    z-index:2;
+  }
+
+  /* ---- timer bar ---- */
+  .timer-track{
+    width:100%;height:8px;border-radius:4px;
+    background:rgba(255,255,255,.1);margin-bottom:20px;overflow:hidden;
+  }
+  .timer-fill{
+    height:100%;border-radius:4px;
+    background:linear-gradient(90deg,#00e5ff,#22d3ee);
+    transition:width .25s linear;width:100%;
+  }
+  .timer-fill.warning{background:linear-gradient(90deg,#f59e0b,#f97316)}
+  .timer-fill.danger{background:linear-gradient(90deg,#ef4444,#dc2626)}
+
+  /* ---- question card ---- */
+  .question-card{
+    width:100%;background:rgba(255,255,255,.06);
+    backdrop-filter:blur(10px);
+    border:1px solid rgba(255,255,255,.12);border-radius:24px;
+    padding:clamp(20px,4vw,36px);text-align:center;
+    box-shadow:0 8px 32px rgba(0,0,0,.3);
+    transition:transform .3s,box-shadow .3s;
+  }
+  .question-card:hover{box-shadow:0 12px 48px rgba(130,100,255,.25)}
+
+  .question-text{
+    font-size:clamp(2rem,7vw,3.4rem);font-weight:800;
+    margin-bottom:28px;
+    background:linear-gradient(90deg,#fff,#c4b5fd);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+
+  /* ---- answer grid ---- */
+  .answers-grid{
+    display:grid;grid-template-columns:1fr 1fr;gap:14px;
+    width:100%;max-width:400px;margin:0 auto;
+  }
+  .answer-btn{
+    padding:clamp(14px,3vw,22px) 10px;
+    font-size:clamp(1.1rem,3.5vw,1.5rem);font-weight:700;
+    border:2px solid rgba(255,255,255,.2);border-radius:16px;
+    background:rgba(255,255,255,.07);color:#fff;cursor:pointer;
+    transition:all .2s;position:relative;overflow:hidden;
+  }
+  .answer-btn::before{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.08),transparent);
+    opacity:0;transition:opacity .2s;
+  }
+  .answer-btn:hover:not(.disabled){
+    transform:translateY(-3px);
+    border-color:rgba(170,119,255,.5);
+    box-shadow:0 6px 24px rgba(130,100,255,.3);
+  }
+  .answer-btn:hover:not(.disabled)::before{opacity:1}
+  .answer-btn:active:not(.disabled){transform:translateY(0)}
+  .answer-btn.disabled{pointer-events:none;opacity:.5}
+
+  /* correct / wrong feedback */
+  .answer-btn.correct-choice{
+    background:linear-gradient(135deg,#059669,#10b981)!important;
+    border-color:#34d399!important;
+    animation:popCorrect .4s ease;
+    box-shadow:0 0 30px rgba(16,185,129,.5);
+  }
+  .answer-btn.wrong-choice{
+    background:linear-gradient(135deg,#dc2626,#ef4444)!important;
+    border-color:#f87171!important;
+    animation:shakeWrong .45s ease;
+    box-shadow:0 0 30px rgba(239,68,68,.4);
+  }
+  .answer-btn.reveal-correct{
+    background:linear-gradient(135deg,#059669,#10b981)!important;
+    border-color:#34d399!important;
+    box-shadow:0 0 20px rgba(16,185,129,.35);
+  }
+
+  @keyframes popCorrect{
+    0%{transform:scale(1)}30%{transform:scale(1.1)}60%{transform:scale(.97)}100%{transform:scale(1)}
+  }
+  @keyframes shakeWrong{
+    0%,100%{transform:translateX(0)}15%{transform:translateX(-8px)}30%{transform:translateX(8px)}45%{transform:translateX(-6px)}60%{transform:translateX(6px)}75%{transform:translateX(-3px)}90%{transform:translateX(3px)}
+  }
+
+  /* ---- green / red flash overlay ---- */
+  .flash-overlay{
+    position:fixed;inset:0;z-index:50;pointer-events:none;
+    opacity:0;transition:opacity .15s;
+  }
+  .flash-overlay.flash-green{background:rgba(16,185,129,.18);opacity:1}
+  .flash-overlay.flash-red{background:rgba(239,68,68,.18);opacity:1}
+
+  /* ---- feedback message ---- */
+  .feedback{
+    font-size:clamp(1rem,3vw,1.3rem);font-weight:600;
+    min-height:40px;margin-top:16px;
+    transition:opacity .3s;
+  }
+  .feedback.correct-msg{color:#34d399}
+  .feedback.wrong-msg{color:#f87171}
+  .feedback.timeout-msg{color:#fbbf24}
+
+  /* ---- screens ---- */
+  .screen{
+    display:none;flex-direction:column;align-items:center;
+    width:100%;animation:fadeUp .5s ease;
+  }
+  .screen.active{display:flex}
+  @keyframes fadeUp{0%{opacity:0;transform:translateY(20px)}100%{opacity:1;transform:translateY(0)}}
+
+  /* ---- start screen ---- */
+  .start-rocket{font-size:clamp(4rem,14vw,7rem);margin:20px 0;filter:drop-shadow(0 0 30px rgba(0,229,255,.5));animation:float 3s ease-in-out infinite}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-14px)}}
+
+  .start-desc{
+    font-size:clamp(.9rem,2.5vw,1.1rem);opacity:.8;
+    text-align:center;max-width:420px;line-height:1.7;margin-bottom:24px;
+  }
+
+  .btn-primary{
+    padding:16px 48px;font-size:clamp(1.1rem,3vw,1.3rem);font-weight:700;
+    border:none;border-radius:18px;color:#fff;cursor:pointer;
+    background:linear-gradient(135deg,#7c3aed,#a855f7);
+    box-shadow:0 6px 28px rgba(124,58,237,.45);
+    transition:all .25s;position:relative;overflow:hidden;
+  }
+  .btn-primary::after{
+    content:'';position:absolute;inset:0;
+    background:linear-gradient(135deg,rgba(255,255,255,.15),transparent);
+  }
+  .btn-primary:hover{transform:translateY(-3px);box-shadow:0 10px 36px rgba(124,58,237,.55)}
+  .btn-primary:active{transform:translateY(0)}
+
+  .btn-secondary{
+    padding:12px 32px;font-size:1rem;font-weight:600;
+    border:2px solid rgba(255,255,255,.25);border-radius:14px;
+    background:rgba(255,255,255,.08);color:#fff;cursor:pointer;
+    transition:all .25s;margin-top:12px;
+  }
+  .btn-secondary:hover{background:rgba(255,255,255,.18);transform:translateY(-2px)}
+
+  /* ---- level complete screen ---- */
+  .level-complete-icon{font-size:clamp(3rem,10vw,5rem);margin:10px 0}
+  .level-complete-title{
+    font-size:clamp(1.5rem,5vw,2.2rem);font-weight:800;
+    background:linear-gradient(90deg,#fbbf24,#f59e0b);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+    margin-bottom:8px;
+  }
+  .level-stats{
+    font-size:clamp(.9rem,2.5vw,1.05rem);opacity:.8;
+    line-height:1.8;text-align:center;margin-bottom:20px;
+  }
+
+  /* ---- final screen ---- */
+  .final-stars{font-size:clamp(2.5rem,8vw,4rem);margin:16px 0;letter-spacing:8px}
+  .final-stars .star-empty{opacity:.25}
+  .final-score-big{
+    font-size:clamp(2.5rem,8vw,4rem);font-weight:900;
+    background:linear-gradient(90deg,#00e5ff,#a855f7,#ff6ec7);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+  }
+  .final-score-label{font-size:1rem;opacity:.6;margin-bottom:16px}
+  .final-message{
+    font-size:clamp(1rem,3vw,1.2rem);
+    text-align:center;max-width:360px;line-height:1.6;
+    opacity:.85;margin-bottom:24px;
+  }
+
+  /* ---- confetti ---- */
+  .confetti-container{
+    position:fixed;top:0;left:0;width:100%;height:100%;
+    pointer-events:none;z-index:100;overflow:hidden;
+  }
+  .confetti-piece{
+    position:absolute;top:-20px;
+    width:10px;height:10px;
+    animation:confettiFall var(--fall-dur) linear forwards;
+  }
+  @keyframes confettiFall{
+    0%{transform:translateY(0) rotate(0deg);opacity:1}
+    100%{transform:translateY(110vh) rotate(var(--rot));opacity:0}
+  }
+
+  /* ---- responsive ---- */
+  @media(max-width:480px){
+    .hud{gap:8px}
+    .hud-item{padding:6px 12px;font-size:.78rem}
+    .answers-grid{gap:10px}
+    .game-wrapper{padding:12px 12px 30px}
+  }
+</style>
+</head>
+<body>
+
+<!-- Stars background -->
+<div class="stars-layer" id="starsLayer"></div>
+
+<!-- Flash overlay -->
+<div class="flash-overlay" id="flashOverlay"></div>
+
+<!-- Confetti container -->
+<div class="confetti-container" id="confettiContainer"></div>
+
+<div class="game-wrapper">
+
+  <!-- Home button -->
+  <a href="../../index.html" class="home-btn">
+    <svg viewBox="0 0 20 20"><path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"/></svg>
+    Home
+  </a>
+
+  <h1 class="game-title">Multiplication Quest</h1>
+  <p class="game-subtitle">A Space Math Adventure</p>
+
+  <!-- ============ START SCREEN ============ -->
+  <div class="screen active" id="startScreen">
+    <div class="start-rocket" aria-hidden="true">&#128640;</div>
+    <p class="start-desc">
+      Fuel your rocket by solving multiplication problems!
+      Travel through 5 levels of space, from easy orbits to the
+      farthest galaxies. Answer quickly for bonus points!
+    </p>
+    <button class="btn-primary" onclick="startGame()">Launch Mission</button>
+  </div>
+
+  <!-- ============ GAME SCREEN ============ -->
+  <div class="screen" id="gameScreen">
+    <div class="hud">
+      <div class="hud-item">Level <span id="hudLevel">1</span>/5</div>
+      <div class="hud-item">Score <span id="hudScore">0</span></div>
+      <div class="hud-item">Streak <span id="hudStreak">0</span></div>
+      <div class="hud-item">Q <span id="hudQ">1</span>/5</div>
+    </div>
+
+    <div class="progress-area">
+      <div class="progress-label" id="progressLabel">Rocket Fuel: 0%</div>
+      <div class="progress-track">
+        <div class="progress-fill" id="progressFill"></div>
+        <div class="rocket-icon" id="rocketIcon">&#128640;</div>
+      </div>
+    </div>
+
+    <div class="timer-track"><div class="timer-fill" id="timerFill"></div></div>
+
+    <div class="question-card" id="questionCard">
+      <div class="question-text" id="questionText">6 &times; 7 = ?</div>
+      <div class="answers-grid" id="answersGrid"></div>
+      <div class="feedback" id="feedback">&nbsp;</div>
+    </div>
+  </div>
+
+  <!-- ============ LEVEL COMPLETE SCREEN ============ -->
+  <div class="screen" id="levelScreen">
+    <div class="level-complete-icon">&#127775;</div>
+    <div class="level-complete-title" id="levelTitle">Level 1 Complete!</div>
+    <div class="level-stats" id="levelStats"></div>
+    <button class="btn-primary" id="nextLevelBtn" onclick="nextLevel()">Next Level</button>
+  </div>
+
+  <!-- ============ FINAL SCREEN ============ -->
+  <div class="screen" id="finalScreen">
+    <div class="start-rocket" aria-hidden="true">&#127775;</div>
+    <div class="final-score-big" id="finalScoreNum">0</div>
+    <div class="final-score-label">TOTAL POINTS</div>
+    <div class="final-stars" id="finalStars"></div>
+    <div class="final-message" id="finalMessage"></div>
+    <button class="btn-primary" onclick="startGame()">Play Again</button>
+    <button class="btn-secondary" onclick="goHome()">Back to Home</button>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* =========================================================
+     STAR BACKGROUND
+     ========================================================= */
+  (function createStars(){
+    const layer = document.getElementById('starsLayer');
+    const count = Math.min(Math.floor(window.innerWidth * window.innerHeight / 2400), 180);
+    for(let i=0;i<count;i++){
+      const s = document.createElement('div');
+      s.className='star';
+      const size = Math.random()*3+1;
+      s.style.cssText=`
+        width:${size}px;height:${size}px;
+        left:${Math.random()*100}%;top:${Math.random()*100}%;
+        --dur:${(Math.random()*3+2).toFixed(1)}s;
+        animation-delay:${(Math.random()*4).toFixed(1)}s;
+      `;
+      layer.appendChild(s);
+    }
+  })();
+
+  /* =========================================================
+     GAME STATE
+     ========================================================= */
+  const QUESTIONS_PER_LEVEL = 5;
+  const TIME_LIMIT = 15; // seconds
+  const TOTAL_LEVELS = 5;
+
+  const LEVEL_FACTORS = {
+    1: [1,2,3],
+    2: [4,5,6],
+    3: [7,8,9],
+    4: [10,11,12],
+    5: [1,2,3,4,5,6,7,8,9,10,11,12]
+  };
+
+  const LEVEL_NAMES = {
+    1:'Orbit',
+    2:'Moon',
+    3:'Mars',
+    4:'Jupiter',
+    5:'Galaxy'
+  };
+
+  const ENCOURAGEMENTS_CORRECT = [
+    "Awesome!","Stellar!","Brilliant!","You rock!",
+    "Amazing!","Fantastic!","Super!","Great job!",
+    "Excellent!","Wow!","Nailed it!","Perfect!"
+  ];
+  const ENCOURAGEMENTS_WRONG = [
+    "Keep trying!","Almost!","Don't give up!","You'll get it!",
+    "So close!","Next one!","Stay strong!"
+  ];
+  const ENCOURAGEMENTS_TIMEOUT = [
+    "Time's up! Keep going!","Ran out of time!","Faster next time!","Don't worry, next one!"
+  ];
+
+  let currentLevel = 1;
+  let currentQuestion = 0;
+  let score = 0;
+  let streak = 0;
+  let bestStreak = 0;
+  let levelCorrect = 0;
+  let levelScore = 0;
+  let totalCorrect = 0;
+  let totalQuestions = 0;
+  let timerInterval = null;
+  let timeLeft = TIME_LIMIT;
+  let answered = false;
+  let correctAnswer = 0;
+
+  /* ---- DOM references ---- */
+  const screens = {
+    start: document.getElementById('startScreen'),
+    game: document.getElementById('gameScreen'),
+    level: document.getElementById('levelScreen'),
+    final: document.getElementById('finalScreen')
+  };
+  const hudLevel = document.getElementById('hudLevel');
+  const hudScore = document.getElementById('hudScore');
+  const hudStreak = document.getElementById('hudStreak');
+  const hudQ = document.getElementById('hudQ');
+  const progressFill = document.getElementById('progressFill');
+  const rocketIcon = document.getElementById('rocketIcon');
+  const progressLabel = document.getElementById('progressLabel');
+  const timerFill = document.getElementById('timerFill');
+  const questionText = document.getElementById('questionText');
+  const answersGrid = document.getElementById('answersGrid');
+  const feedback = document.getElementById('feedback');
+  const flashOverlay = document.getElementById('flashOverlay');
+
+  /* =========================================================
+     SCREEN MANAGEMENT
+     ========================================================= */
+  function showScreen(name){
+    Object.values(screens).forEach(s=>s.classList.remove('active'));
+    screens[name].classList.add('active');
+  }
+
+  /* =========================================================
+     START GAME
+     ========================================================= */
+  function startGame(){
+    currentLevel=1; currentQuestion=0; score=0; streak=0; bestStreak=0;
+    totalCorrect=0; totalQuestions=0;
+    showScreen('game');
+    startLevel();
+  }
+  window.startGame = startGame;
+
+  function startLevel(){
+    currentQuestion=0; levelCorrect=0; levelScore=0;
+    updateHUD();
+    updateProgress();
+    loadQuestion();
+  }
+
+  /* =========================================================
+     QUESTION GENERATION
+     ========================================================= */
+  function generateQuestion(){
+    const factors = LEVEL_FACTORS[currentLevel];
+    const a = factors[Math.floor(Math.random()*factors.length)];
+    const b = Math.floor(Math.random()*12)+1;
+    return {a,b,answer:a*b};
+  }
+
+  function generateChoices(correct){
+    const choices = new Set();
+    choices.add(correct);
+    while(choices.size < 4){
+      let offset = Math.floor(Math.random()*20)-10;
+      if(offset===0) offset = Math.random()<.5 ? -1 : 1;
+      let wrong = correct + offset;
+      if(wrong < 0) wrong = correct + Math.abs(offset);
+      if(wrong === correct) wrong = correct + 1;
+      choices.add(wrong);
+    }
+    return shuffle([...choices]);
+  }
+
+  function shuffle(arr){
+    for(let i=arr.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [arr[i],arr[j]]=[arr[j],arr[i]];
+    }
+    return arr;
+  }
+
+  /* =========================================================
+     LOAD QUESTION
+     ========================================================= */
+  function loadQuestion(){
+    answered = false;
+    feedback.innerHTML = '&nbsp;';
+    feedback.className = 'feedback';
+    timerFill.className = 'timer-fill';
+    timerFill.style.width = '100%';
+
+    const q = generateQuestion();
+    correctAnswer = q.answer;
+    questionText.textContent = q.a + ' \u00D7 ' + q.b + ' = ?';
+
+    const choices = generateChoices(q.answer);
+    answersGrid.innerHTML = '';
+    choices.forEach(val=>{
+      const btn = document.createElement('button');
+      btn.className = 'answer-btn';
+      btn.textContent = val;
+      btn.addEventListener('click', ()=>handleAnswer(btn, val));
+      answersGrid.appendChild(btn);
+    });
+
+    currentQuestion++;
+    updateHUD();
+    startTimer();
+  }
+
+  /* =========================================================
+     TIMER
+     ========================================================= */
+  function startTimer(){
+    clearInterval(timerInterval);
+    timeLeft = TIME_LIMIT;
+    timerInterval = setInterval(()=>{
+      timeLeft -= 0.25;
+      const pct = Math.max(0, (timeLeft / TIME_LIMIT) * 100);
+      timerFill.style.width = pct + '%';
+      if(pct < 20) timerFill.className = 'timer-fill danger';
+      else if(pct < 45) timerFill.className = 'timer-fill warning';
+      else timerFill.className = 'timer-fill';
+
+      if(timeLeft <= 0){
+        clearInterval(timerInterval);
+        handleTimeout();
+      }
+    }, 250);
+  }
+
+  function stopTimer(){ clearInterval(timerInterval); }
+
+  /* =========================================================
+     HANDLE ANSWER
+     ========================================================= */
+  function handleAnswer(btn, value){
+    if(answered) return;
+    answered = true;
+    stopTimer();
+
+    const allBtns = answersGrid.querySelectorAll('.answer-btn');
+    allBtns.forEach(b=>b.classList.add('disabled'));
+
+    totalQuestions++;
+
+    if(value === correctAnswer){
+      btn.classList.add('correct-choice');
+      const timeBonus = Math.floor(timeLeft * 2);
+      const pts = 10 + timeBonus;
+      score += pts;
+      levelScore += pts;
+      streak++;
+      if(streak > bestStreak) bestStreak = streak;
+      levelCorrect++;
+      totalCorrect++;
+
+      feedback.textContent = pick(ENCOURAGEMENTS_CORRECT) + ' +' + pts + ' pts';
+      feedback.className = 'feedback correct-msg';
+      flashScreen('green');
+    } else {
+      btn.classList.add('wrong-choice');
+      streak = 0;
+      // reveal correct
+      allBtns.forEach(b=>{
+        if(parseInt(b.textContent)===correctAnswer) b.classList.add('reveal-correct');
+      });
+      feedback.textContent = pick(ENCOURAGEMENTS_WRONG) + ' Answer: ' + correctAnswer;
+      feedback.className = 'feedback wrong-msg';
+      flashScreen('red');
+    }
+
+    updateHUD();
+    updateProgress();
+
+    setTimeout(()=>{
+      if(currentQuestion >= QUESTIONS_PER_LEVEL){
+        onLevelEnd();
+      } else {
+        loadQuestion();
+      }
+    }, 1400);
+  }
+
+  function handleTimeout(){
+    if(answered) return;
+    answered = true;
+    totalQuestions++;
+    streak = 0;
+
+    const allBtns = answersGrid.querySelectorAll('.answer-btn');
+    allBtns.forEach(b=>{
+      b.classList.add('disabled');
+      if(parseInt(b.textContent)===correctAnswer) b.classList.add('reveal-correct');
+    });
+
+    feedback.textContent = pick(ENCOURAGEMENTS_TIMEOUT) + ' Answer: ' + correctAnswer;
+    feedback.className = 'feedback timeout-msg';
+    flashScreen('red');
+    updateHUD();
+
+    setTimeout(()=>{
+      if(currentQuestion >= QUESTIONS_PER_LEVEL){
+        onLevelEnd();
+      } else {
+        loadQuestion();
+      }
+    }, 1600);
+  }
+
+  /* =========================================================
+     LEVEL END
+     ========================================================= */
+  function onLevelEnd(){
+    stopTimer();
+    fireConfetti();
+
+    if(currentLevel >= TOTAL_LEVELS){
+      showFinalScreen();
+      return;
+    }
+
+    document.getElementById('levelTitle').textContent =
+      'Level ' + currentLevel + ' Complete!';
+    document.getElementById('levelStats').innerHTML =
+      'Destination: ' + LEVEL_NAMES[currentLevel] + '<br>' +
+      'Correct: ' + levelCorrect + '/' + QUESTIONS_PER_LEVEL + '<br>' +
+      'Level Points: ' + levelScore + '<br>' +
+      'Streak: ' + bestStreak;
+
+    const nextBtn = document.getElementById('nextLevelBtn');
+    nextBtn.textContent = 'Next Level: ' + LEVEL_NAMES[currentLevel+1];
+    showScreen('level');
+  }
+
+  function nextLevel(){
+    currentLevel++;
+    showScreen('game');
+    startLevel();
+  }
+  window.nextLevel = nextLevel;
+
+  /* =========================================================
+     FINAL SCREEN
+     ========================================================= */
+  function showFinalScreen(){
+    fireConfetti();
+    setTimeout(fireConfetti, 600);
+
+    document.getElementById('finalScoreNum').textContent = score;
+
+    const pct = totalCorrect / totalQuestions;
+    let starCount = 1;
+    if(pct >= .9) starCount = 3;
+    else if(pct >= .7) starCount = 2;
+
+    let starsHTML = '';
+    for(let i=0;i<3;i++){
+      starsHTML += i<starCount
+        ? '<span style="color:#fbbf24">&#11088;</span>'
+        : '<span class="star-empty">&#11088;</span>';
+    }
+    document.getElementById('finalStars').innerHTML = starsHTML;
+
+    let msg = '';
+    if(starCount===3) msg = 'Outstanding, Space Commander! You mastered every level with flying colors!';
+    else if(starCount===2) msg = 'Great work, Space Pilot! You navigated the galaxy with skill. Try again to get 3 stars!';
+    else msg = 'Good effort, Space Cadet! Keep practicing and you will reach the stars!';
+
+    msg += '<br><br>Correct: ' + totalCorrect + '/' + totalQuestions +
+           ' &middot; Best Streak: ' + bestStreak;
+
+    document.getElementById('finalMessage').innerHTML = msg;
+    showScreen('final');
+  }
+
+  /* =========================================================
+     HUD & PROGRESS
+     ========================================================= */
+  function updateHUD(){
+    hudLevel.textContent = currentLevel;
+    hudScore.textContent = score;
+    hudStreak.textContent = streak;
+    hudQ.textContent = Math.min(currentQuestion, QUESTIONS_PER_LEVEL);
+  }
+
+  function updateProgress(){
+    const totalDone = ((currentLevel-1)*QUESTIONS_PER_LEVEL) + Math.min(currentQuestion, QUESTIONS_PER_LEVEL);
+    const total = TOTAL_LEVELS * QUESTIONS_PER_LEVEL;
+    const pct = Math.round((totalDone/total)*100);
+    progressFill.style.width = pct + '%';
+    progressLabel.textContent = 'Rocket Fuel: ' + pct + '%';
+  }
+
+  /* =========================================================
+     FLASH SCREEN
+     ========================================================= */
+  function flashScreen(color){
+    flashOverlay.className = 'flash-overlay flash-' + color;
+    setTimeout(()=>{flashOverlay.className='flash-overlay'},350);
+  }
+
+  /* =========================================================
+     CONFETTI
+     ========================================================= */
+  function fireConfetti(){
+    const container = document.getElementById('confettiContainer');
+    const colors = ['#ff6ec7','#00e5ff','#a855f7','#fbbf24','#34d399','#f87171','#60a5fa','#fff'];
+    const count = 60;
+    for(let i=0;i<count;i++){
+      const piece = document.createElement('div');
+      piece.className = 'confetti-piece';
+      const c = colors[Math.floor(Math.random()*colors.length)];
+      const size = Math.random()*8+6;
+      const left = Math.random()*100;
+      const dur = (Math.random()*2+2).toFixed(1);
+      const rot = Math.floor(Math.random()*1080);
+      const shape = Math.random()>.5 ? '50%' : (Math.random()>.5 ? '0%' : '30%');
+      piece.style.cssText=`
+        left:${left}%;width:${size}px;height:${size}px;
+        background:${c};border-radius:${shape};
+        --fall-dur:${dur}s;--rot:${rot}deg;
+        animation-delay:${(Math.random()*.5).toFixed(2)}s;
+      `;
+      container.appendChild(piece);
+    }
+    setTimeout(()=>{
+      while(container.firstChild) container.removeChild(container.firstChild);
+    }, 4000);
+  }
+
+  /* =========================================================
+     HELPERS
+     ========================================================= */
+  function pick(arr){return arr[Math.floor(Math.random()*arr.length)]}
+  function goHome(){window.location.href='../../index.html'}
+  window.goHome = goHome;
+
+})();
+</script>
+</body>
+</html>

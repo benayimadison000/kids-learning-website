@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sequence Solver - Kids Logic Game</title>
+<style>
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+  :root{
+    --orange:#FF8C42;--teal:#2EC4B6;--pink:#E84393;--green:#27AE60;
+    --red:#E74C3C;--white:#FFFFFF;--bg:#F9F9F9;--dark:#2D3436;
+    --shadow:0 4px 15px rgba(0,0,0,.12);
+    --radius:14px;
+  }
+  body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:var(--bg);color:var(--dark);min-height:100vh;
+    display:flex;flex-direction:column;align-items:center;
+    overflow-x:hidden;
+  }
+
+  /* ─── Top Bar ─── */
+  .top-bar{
+    width:100%;max-width:800px;display:flex;align-items:center;
+    justify-content:space-between;padding:14px 18px 6px;
+  }
+  .home-btn{
+    background:var(--teal);color:#fff;border:none;border-radius:30px;
+    padding:8px 18px;font-size:.95rem;font-weight:700;cursor:pointer;
+    display:flex;align-items:center;gap:6px;transition:transform .15s,box-shadow .15s;
+    box-shadow:var(--shadow);text-decoration:none;
+  }
+  .home-btn:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(46,196,182,.35)}
+  .home-btn svg{width:18px;height:18px;fill:#fff}
+
+  /* ─── Header ─── */
+  .game-header{text-align:center;padding:10px 16px 4px}
+  .game-header h1{
+    font-size:2rem;font-weight:800;
+    background:linear-gradient(135deg,var(--orange),var(--pink),var(--teal));
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .game-header p{font-size:.95rem;color:#636e72;margin-top:2px}
+
+  /* ─── Score / Progress ─── */
+  .info-row{
+    width:100%;max-width:760px;display:flex;flex-wrap:wrap;
+    align-items:center;justify-content:center;gap:14px;
+    padding:8px 18px;
+  }
+  .badge{
+    background:var(--white);border-radius:30px;padding:6px 16px;
+    font-weight:700;font-size:.88rem;box-shadow:var(--shadow);
+    display:flex;align-items:center;gap:6px;
+  }
+  .badge .icon{font-size:1.1rem}
+  .category-badge{border:2px solid var(--teal);color:var(--teal)}
+  .score-badge{border:2px solid var(--orange);color:var(--orange)}
+  .puzzle-badge{border:2px solid var(--pink);color:var(--pink)}
+
+  .progress-wrap{
+    width:100%;max-width:760px;padding:0 18px;margin-bottom:4px;
+  }
+  .progress-bar{
+    width:100%;height:10px;background:#dfe6e9;border-radius:8px;overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;border-radius:8px;
+    background:linear-gradient(90deg,var(--teal),var(--orange));
+    transition:width .5s ease;
+  }
+
+  /* ─── Puzzle Area ─── */
+  .puzzle-area{
+    width:100%;max-width:760px;padding:10px 18px 30px;
+    display:flex;flex-direction:column;align-items:center;
+  }
+  .puzzle-title{
+    font-size:1.2rem;font-weight:700;color:var(--dark);
+    text-align:center;margin-bottom:14px;line-height:1.4;
+  }
+  .puzzle-hint{
+    font-size:.85rem;color:#636e72;margin-bottom:10px;text-align:center;
+  }
+
+  /* ─── Cards Container ─── */
+  .cards-container{
+    display:flex;flex-wrap:wrap;gap:12px;justify-content:center;
+    padding:10px 0 18px;min-height:80px;width:100%;
+  }
+
+  /* ─── Individual Card ─── */
+  .seq-card{
+    position:relative;
+    background:var(--white);border:3px solid #dfe6e9;border-radius:var(--radius);
+    padding:14px 22px;font-size:1.05rem;font-weight:700;
+    cursor:grab;user-select:none;
+    box-shadow:var(--shadow);transition:transform .18s,border-color .25s,box-shadow .25s;
+    display:flex;align-items:center;gap:8px;
+    min-width:100px;justify-content:center;text-align:center;
+  }
+  .seq-card .card-num{
+    position:absolute;top:-10px;left:-10px;width:26px;height:26px;
+    border-radius:50%;background:var(--teal);color:#fff;
+    font-size:.75rem;font-weight:800;display:flex;align-items:center;
+    justify-content:center;box-shadow:0 2px 6px rgba(0,0,0,.15);
+    transition:background .3s;
+  }
+  .seq-card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(0,0,0,.14)}
+  .seq-card.selected{border-color:var(--orange);box-shadow:0 0 0 3px rgba(255,140,66,.35)}
+  .seq-card.dragging{opacity:.5;transform:scale(.95)}
+  .seq-card.drag-over{border-color:var(--pink);background:#fdf2f8}
+
+  /* Correct / Wrong animations */
+  .seq-card.correct{
+    border-color:var(--green);background:#eafaf1;
+    animation:pulseGreen .6s ease;
+  }
+  .seq-card.correct .card-num{background:var(--green)}
+  @keyframes pulseGreen{
+    0%,100%{box-shadow:0 0 0 0 rgba(39,174,96,.4)}
+    50%{box-shadow:0 0 0 12px rgba(39,174,96,0)}
+  }
+  .seq-card.wrong{
+    border-color:var(--red);background:#fdecea;
+    animation:shakeRed .5s ease;
+  }
+  .seq-card.wrong .card-num{background:var(--red)}
+  @keyframes shakeRed{
+    0%,100%{transform:translateX(0)}
+    15%{transform:translateX(-8px)}
+    30%{transform:translateX(8px)}
+    45%{transform:translateX(-6px)}
+    60%{transform:translateX(6px)}
+    75%{transform:translateX(-3px)}
+    90%{transform:translateX(3px)}
+  }
+
+  /* ─── Buttons ─── */
+  .btn-row{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:8px}
+  .btn{
+    border:none;border-radius:30px;padding:12px 32px;font-size:1rem;
+    font-weight:700;cursor:pointer;transition:transform .15s,box-shadow .15s;
+    box-shadow:var(--shadow);color:#fff;
+  }
+  .btn:hover{transform:scale(1.05)}
+  .btn:active{transform:scale(.97)}
+  .btn-check{background:linear-gradient(135deg,var(--teal),#1abc9c)}
+  .btn-skip{background:linear-gradient(135deg,var(--pink),#c0392b)}
+  .btn-next{background:linear-gradient(135deg,var(--orange),#e67e22)}
+  .btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  /* ─── Attempts Counter ─── */
+  .attempts-label{
+    font-size:.85rem;color:#636e72;margin-top:6px;text-align:center;
+  }
+
+  /* ─── Screens ─── */
+  .screen{display:none;flex-direction:column;align-items:center;width:100%}
+  .screen.active{display:flex}
+
+  /* ─── Start Screen ─── */
+  .start-screen{padding:40px 18px;text-align:center}
+  .start-screen h2{font-size:1.8rem;margin-bottom:10px;color:var(--dark)}
+  .start-screen p{font-size:1rem;color:#636e72;max-width:500px;margin:0 auto 24px}
+  .start-categories{
+    display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-bottom:28px;
+  }
+  .cat-chip{
+    padding:10px 20px;border-radius:30px;font-weight:700;font-size:.9rem;
+    color:#fff;box-shadow:var(--shadow);
+  }
+  .cat-chip.c0{background:var(--orange)}
+  .cat-chip.c1{background:var(--teal)}
+  .cat-chip.c2{background:var(--pink)}
+  .cat-chip.c3{background:linear-gradient(135deg,var(--orange),var(--teal))}
+  .btn-start{
+    background:linear-gradient(135deg,var(--orange),var(--pink));
+    padding:14px 50px;font-size:1.15rem;
+  }
+
+  /* ─── Completion Screen ─── */
+  .end-screen{padding:40px 18px;text-align:center}
+  .end-screen h2{font-size:2rem;margin-bottom:6px}
+  .end-screen .rank-icon{font-size:4rem;margin:10px 0}
+  .end-screen .rank-title{font-size:1.4rem;font-weight:800;margin-bottom:4px}
+  .end-screen .rank-desc{font-size:1rem;color:#636e72;margin-bottom:20px;max-width:420px}
+  .stats-grid{
+    display:flex;flex-wrap:wrap;gap:14px;justify-content:center;margin-bottom:26px;
+  }
+  .stat-box{
+    background:var(--white);border-radius:var(--radius);padding:16px 24px;
+    box-shadow:var(--shadow);text-align:center;min-width:120px;
+  }
+  .stat-box .stat-val{font-size:1.6rem;font-weight:800;color:var(--teal)}
+  .stat-box .stat-lbl{font-size:.8rem;color:#636e72;margin-top:2px}
+  .btn-replay{
+    background:linear-gradient(135deg,var(--teal),var(--orange));
+    padding:14px 44px;font-size:1.1rem;
+  }
+
+  /* ─── Responsive ─── */
+  @media(max-width:600px){
+    .game-header h1{font-size:1.5rem}
+    .seq-card{padding:10px 14px;font-size:.92rem;min-width:80px}
+    .btn{padding:10px 22px;font-size:.92rem}
+    .info-row{gap:8px}
+    .badge{padding:5px 12px;font-size:.8rem}
+  }
+  @media(max-width:380px){
+    .seq-card{padding:8px 10px;font-size:.82rem;min-width:60px}
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════ TOP BAR ═══════ -->
+<div class="top-bar">
+  <a href="../../index.html" class="home-btn">
+    <svg viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+    Home
+  </a>
+</div>
+
+<!-- ═══════ START SCREEN ═══════ -->
+<div class="screen start-screen active" id="startScreen">
+  <h2>Sequence Solver</h2>
+  <p>Put the jumbled items into the right order! Drag-and-drop or click two cards to swap them.</p>
+  <div class="start-categories">
+    <span class="cat-chip c0">Daily Life</span>
+    <span class="cat-chip c1">Number Order</span>
+    <span class="cat-chip c2">Time &amp; Calendar</span>
+    <span class="cat-chip c3">Size &amp; Measure</span>
+  </div>
+  <p>20 puzzles across 4 categories. Fewer attempts = higher score!</p>
+  <button class="btn btn-start" id="btnStart">Let's Go!</button>
+</div>
+
+<!-- ═══════ GAME SCREEN ═══════ -->
+<div class="screen" id="gameScreen">
+  <div class="game-header">
+    <h1>Sequence Solver</h1>
+    <p>Arrange the items in the correct order</p>
+  </div>
+
+  <div class="info-row">
+    <div class="badge category-badge"><span class="icon" id="catIcon"></span><span id="catLabel">Daily Life</span></div>
+    <div class="badge score-badge"><span class="icon">&#11088;</span><span id="scoreLabel">0</span></div>
+    <div class="badge puzzle-badge"><span class="icon">&#129513;</span><span id="puzzleLabel">1 / 20</span></div>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="puzzle-area">
+    <div class="puzzle-title" id="puzzleTitle"></div>
+    <div class="puzzle-hint" id="puzzleHint"></div>
+    <div class="cards-container" id="cardsContainer"></div>
+    <div class="attempts-label" id="attemptsLabel">Attempts: 0</div>
+    <div class="btn-row">
+      <button class="btn btn-check" id="btnCheck">Check Order</button>
+      <button class="btn btn-skip" id="btnSkip">Skip</button>
+      <button class="btn btn-next" id="btnNext" style="display:none">Next Puzzle</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ END SCREEN ═══════ -->
+<div class="screen end-screen" id="endScreen">
+  <h2>All Done!</h2>
+  <div class="rank-icon" id="rankIcon"></div>
+  <div class="rank-title" id="rankTitle"></div>
+  <div class="rank-desc" id="rankDesc"></div>
+  <div class="stats-grid" id="statsGrid"></div>
+  <button class="btn btn-replay" id="btnReplay">Play Again</button>
+</div>
+
+<script>
+/* ══════════════════════════════════════════════
+   PUZZLE DATA  (20 puzzles, 5 per category)
+   Each puzzle: { title, hint, items (correct order) }
+   ══════════════════════════════════════════════ */
+const PUZZLES = {
+  "Daily Life": [
+    {
+      title: "How do you make a peanut butter sandwich?",
+      hint: "Think about each step from start to finish.",
+      items: ["Get two slices of bread", "Spread peanut butter on one slice", "Spread jelly on the other slice", "Put the slices together", "Enjoy your sandwich!"]
+    },
+    {
+      title: "What order do you get ready for school?",
+      hint: "Start from when you wake up.",
+      items: ["Wake up", "Brush your teeth", "Get dressed", "Eat breakfast", "Grab your backpack", "Walk to the bus"]
+    },
+    {
+      title: "How do you plant a seed?",
+      hint: "Think about what a seed needs to grow.",
+      items: ["Dig a small hole", "Place the seed in the hole", "Cover the seed with soil", "Water the soil", "Wait for it to sprout"]
+    },
+    {
+      title: "How do you wash your hands?",
+      hint: "Remember what the doctor says!",
+      items: ["Turn on the water", "Wet your hands", "Add soap", "Scrub for 20 seconds", "Rinse off the soap", "Dry your hands"]
+    },
+    {
+      title: "How do you send a letter?",
+      hint: "From writing to the mailbox!",
+      items: ["Write your letter", "Put the letter in an envelope", "Write the address on the envelope", "Stick on a stamp", "Put it in the mailbox"]
+    }
+  ],
+  "Number Order": [
+    {
+      title: "Sort these numbers from smallest to largest.",
+      hint: "Start with the tiniest number.",
+      items: ["3", "17", "42", "89", "150"]
+    },
+    {
+      title: "Put these numbers in order from smallest to largest.",
+      hint: "Watch out for the negative numbers!",
+      items: ["-10", "-2", "0", "5", "13"]
+    },
+    {
+      title: "Order these fractions from smallest to largest.",
+      hint: "Think about how much of a pizza each fraction is.",
+      items: ["1/8", "1/4", "1/3", "1/2", "3/4"]
+    },
+    {
+      title: "Sort these big numbers from smallest to largest.",
+      hint: "Count the digits!",
+      items: ["25", "250", "2,500", "25,000", "250,000"]
+    },
+    {
+      title: "Order these decimals from smallest to largest.",
+      hint: "Think about money: pennies, dimes, dollars.",
+      items: ["0.01", "0.1", "0.5", "1.0", "2.75"]
+    }
+  ],
+  "Time & Calendar": [
+    {
+      title: "Put the four seasons in order, starting with spring.",
+      hint: "After winter the flowers bloom!",
+      items: ["Spring", "Summer", "Autumn", "Winter"]
+    },
+    {
+      title: "Order these months from earliest to latest in the year.",
+      hint: "January is the first month of the year.",
+      items: ["January", "March", "June", "September", "December"]
+    },
+    {
+      title: "Put these times of day in order.",
+      hint: "Start when the sun comes up!",
+      items: ["Sunrise", "Morning", "Noon", "Afternoon", "Evening", "Night"]
+    },
+    {
+      title: "Order the days of the week.",
+      hint: "The week starts on Monday in many countries!",
+      items: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
+    },
+    {
+      title: "Put these clocks in order from earliest to latest.",
+      hint: "Read the times carefully!",
+      items: ["6:00 AM", "9:30 AM", "12:00 PM", "3:15 PM", "7:45 PM"]
+    }
+  ],
+  "Size & Measure": [
+    {
+      title: "Order these animals from smallest to largest.",
+      hint: "Think about how big each animal really is.",
+      items: ["Ant", "Mouse", "Cat", "Horse", "Elephant"]
+    },
+    {
+      title: "Order these lengths from shortest to longest.",
+      hint: "Remember: 100 centimeters = 1 meter.",
+      items: ["1 centimeter", "10 centimeters", "1 meter", "100 meters", "1 kilometer"]
+    },
+    {
+      title: "Order these containers from lightest to heaviest when full.",
+      hint: "Imagine picking each one up.",
+      items: ["Teaspoon of water", "Cup of water", "Bucket of water", "Bathtub of water", "Swimming pool"]
+    },
+    {
+      title: "Order these buildings/things from shortest to tallest.",
+      hint: "Think about how many floors or how high they reach.",
+      items: ["Doghouse", "One-story house", "Church steeple", "Skyscraper", "Mountain"]
+    },
+    {
+      title: "Order these speeds from slowest to fastest.",
+      hint: "Think about how each one moves.",
+      items: ["Snail", "Person walking", "Bicycle", "Car on highway", "Airplane"]
+    }
+  ]
+};
+
+const CATEGORY_ICONS = {
+  "Daily Life": "\u{1F3E0}",
+  "Number Order": "\u{1F522}",
+  "Time & Calendar": "\u{1F552}",
+  "Size & Measure": "\u{1F4CF}"
+};
+const CATEGORY_COLORS = {
+  "Daily Life": "#FF8C42",
+  "Number Order": "#2EC4B6",
+  "Time & Calendar": "#E84393",
+  "Size & Measure": "#e67e22"
+};
+
+/* ── State ── */
+let allPuzzles = [];
+let currentIndex = 0;
+let score = 0;
+let attempts = 0;
+let totalAttempts = 0;
+let selectedCardIndex = null;
+let solved = false;
+let puzzleResults = [];
+
+/* ── DOM Refs ── */
+const $=id=>document.getElementById(id);
+const startScreen=$('startScreen'), gameScreen=$('gameScreen'), endScreen=$('endScreen');
+const cardsContainer=$('cardsContainer');
+const btnStart=$('btnStart'), btnCheck=$('btnCheck'), btnSkip=$('btnSkip'), btnNext=$('btnNext'), btnReplay=$('btnReplay');
+const progressFill=$('progressFill'), catLabel=$('catLabel'), catIcon=$('catIcon');
+const scoreLabel=$('scoreLabel'), puzzleLabel=$('puzzleLabel');
+const puzzleTitle=$('puzzleTitle'), puzzleHint=$('puzzleHint'), attemptsLabel=$('attemptsLabel');
+
+/* ══════════ Build puzzle list (shuffled order) ══════════ */
+function buildPuzzleList(){
+  allPuzzles=[];
+  const cats=Object.keys(PUZZLES);
+  cats.forEach(cat=>{
+    PUZZLES[cat].forEach(p=>{
+      allPuzzles.push({...p, category:cat});
+    });
+  });
+  // shuffle
+  for(let i=allPuzzles.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [allPuzzles[i],allPuzzles[j]]=[allPuzzles[j],allPuzzles[i]];
+  }
+}
+
+/* ══════════ Show Screen Helper ══════════ */
+function showScreen(screen){
+  [startScreen,gameScreen,endScreen].forEach(s=>s.classList.remove('active'));
+  screen.classList.add('active');
+}
+
+/* ══════════ Start Game ══════════ */
+btnStart.addEventListener('click',()=>{
+  buildPuzzleList();
+  currentIndex=0; score=0; totalAttempts=0; puzzleResults=[];
+  showScreen(gameScreen);
+  loadPuzzle();
+});
+
+/* ══════════ Load a Puzzle ══════════ */
+function loadPuzzle(){
+  const pz=allPuzzles[currentIndex];
+  solved=false; attempts=0; selectedCardIndex=null;
+
+  // UI updates
+  catLabel.textContent=pz.category;
+  catIcon.textContent=CATEGORY_ICONS[pz.category];
+  scoreLabel.textContent=score;
+  puzzleLabel.textContent=(currentIndex+1)+' / '+allPuzzles.length;
+  progressFill.style.width=((currentIndex)/allPuzzles.length*100)+'%';
+  puzzleTitle.textContent=pz.title;
+  puzzleHint.textContent=pz.hint;
+  attemptsLabel.textContent='Attempts: 0';
+  btnCheck.style.display=''; btnCheck.disabled=false;
+  btnSkip.style.display=''; btnNext.style.display='none';
+
+  // Build shuffled items
+  let shuffled=[...pz.items];
+  // Shuffle until different from correct
+  let maxTries=50;
+  do{
+    for(let i=shuffled.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];
+    }
+    maxTries--;
+  } while(arraysEqual(shuffled,pz.items) && maxTries>0);
+
+  renderCards(shuffled);
+}
+
+function arraysEqual(a,b){
+  if(a.length!==b.length) return false;
+  return a.every((v,i)=>v===b[i]);
+}
+
+/* ══════════ Render Cards ══════════ */
+function renderCards(items){
+  cardsContainer.innerHTML='';
+  const cat=allPuzzles[currentIndex].category;
+  const color=CATEGORY_COLORS[cat];
+
+  items.forEach((text,i)=>{
+    const card=document.createElement('div');
+    card.className='seq-card';
+    card.setAttribute('draggable','true');
+    card.dataset.index=i;
+
+    const num=document.createElement('span');
+    num.className='card-num';
+    num.textContent=i+1;
+    num.style.background=color;
+
+    const label=document.createElement('span');
+    label.textContent=text;
+
+    card.appendChild(num);
+    card.appendChild(label);
+
+    // ── Click to swap ──
+    card.addEventListener('click',()=>handleCardClick(i));
+
+    // ── Drag events ──
+    card.addEventListener('dragstart',e=>{
+      if(solved) return;
+      e.dataTransfer.setData('text/plain',i);
+      card.classList.add('dragging');
+    });
+    card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+    card.addEventListener('dragover',e=>{if(!solved){e.preventDefault();card.classList.add('drag-over')}});
+    card.addEventListener('dragleave',()=>card.classList.remove('drag-over'));
+    card.addEventListener('drop',e=>{
+      e.preventDefault();
+      card.classList.remove('drag-over');
+      if(solved) return;
+      const fromIdx=parseInt(e.dataTransfer.getData('text/plain'));
+      const toIdx=i;
+      if(fromIdx!==toIdx) swapCards(fromIdx,toIdx);
+    });
+
+    // ── Touch drag support ──
+    let touchStartY=0,touchStartX=0,touchClone=null,touchFrom=-1;
+    card.addEventListener('touchstart',e=>{
+      if(solved) return;
+      touchFrom=i;
+      const t=e.touches[0];
+      touchStartX=t.clientX; touchStartY=t.clientY;
+    },{passive:true});
+
+    cardsContainer.appendChild(card);
+  });
+}
+
+function handleCardClick(index){
+  if(solved) return;
+  const cards=[...cardsContainer.children];
+  if(selectedCardIndex===null){
+    selectedCardIndex=index;
+    cards[index].classList.add('selected');
+  } else if(selectedCardIndex===index){
+    cards[index].classList.remove('selected');
+    selectedCardIndex=null;
+  } else {
+    cards[selectedCardIndex].classList.remove('selected');
+    swapCards(selectedCardIndex,index);
+    selectedCardIndex=null;
+  }
+}
+
+function swapCards(a,b){
+  const cards=[...cardsContainer.children];
+  const parent=cardsContainer;
+  if(a>b)[a,b]=[b,a];
+  const cardA=cards[a], cardB=cards[b];
+  // swap in DOM
+  if(b===a+1){
+    parent.insertBefore(cardB,cardA);
+  } else {
+    const refA=cardA.nextSibling;
+    parent.insertBefore(cardA,cardB);
+    parent.insertBefore(cardB,refA);
+  }
+  // Re-index
+  reIndex();
+}
+
+function reIndex(){
+  const cards=[...cardsContainer.children];
+  const cat=allPuzzles[currentIndex].category;
+  const color=CATEGORY_COLORS[cat];
+  cards.forEach((c,i)=>{
+    c.dataset.index=i;
+    const num=c.querySelector('.card-num');
+    num.textContent=i+1;
+    num.style.background=color;
+    // clear old feedback
+    c.classList.remove('correct','wrong','selected');
+    // rebind click
+    c.onclick=()=>handleCardClick(i);
+    // rebind drag
+    c.setAttribute('draggable','true');
+    c.ondragstart=e=>{if(solved)return;e.dataTransfer.setData('text/plain',i);c.classList.add('dragging')};
+    c.ondragend=()=>c.classList.remove('dragging');
+    c.ondragover=e=>{if(!solved){e.preventDefault();c.classList.add('drag-over')}};
+    c.ondragleave=()=>c.classList.remove('drag-over');
+    c.ondrop=e=>{
+      e.preventDefault();c.classList.remove('drag-over');
+      if(solved)return;
+      const from=parseInt(e.dataTransfer.getData('text/plain'));
+      if(from!==i)swapCards(from,i);
+    };
+  });
+}
+
+/* ══════════ Check Answer ══════════ */
+btnCheck.addEventListener('click',()=>{
+  if(solved) return;
+  attempts++; totalAttempts++;
+  attemptsLabel.textContent='Attempts: '+attempts;
+
+  const correct=allPuzzles[currentIndex].items;
+  const cards=[...cardsContainer.children];
+  let allCorrect=true;
+
+  cards.forEach((c,i)=>{
+    const text=c.querySelector('span:last-child').textContent;
+    c.classList.remove('correct','wrong');
+    if(text===correct[i]){
+      setTimeout(()=>c.classList.add('correct'),i*80);
+    } else {
+      allCorrect=false;
+      setTimeout(()=>c.classList.add('wrong'),i*80);
+    }
+  });
+
+  if(allCorrect){
+    solved=true;
+    // Score: max 100 per puzzle, -15 per extra attempt
+    const puzzleScore=Math.max(10, 100 - (attempts-1)*15);
+    score+=puzzleScore;
+    scoreLabel.textContent=score;
+    puzzleResults.push({category:allPuzzles[currentIndex].category, attempts, score:puzzleScore});
+
+    btnCheck.style.display='none'; btnSkip.style.display='none';
+    if(currentIndex<allPuzzles.length-1){
+      btnNext.style.display='';
+    } else {
+      setTimeout(showEndScreen,900);
+    }
+  }
+});
+
+/* ══════════ Skip ══════════ */
+btnSkip.addEventListener('click',()=>{
+  if(solved) return;
+  // Show correct order, give 0 points
+  puzzleResults.push({category:allPuzzles[currentIndex].category, attempts, score:0});
+  solved=true;
+
+  const correct=allPuzzles[currentIndex].items;
+  renderCards(correct);
+  setTimeout(()=>{
+    [...cardsContainer.children].forEach((c,i)=>{
+      setTimeout(()=>c.classList.add('correct'),i*80);
+    });
+  },50);
+
+  btnCheck.style.display='none'; btnSkip.style.display='none';
+  if(currentIndex<allPuzzles.length-1){
+    btnNext.style.display='';
+  } else {
+    setTimeout(showEndScreen,900);
+  }
+});
+
+/* ══════════ Next Puzzle ══════════ */
+btnNext.addEventListener('click',()=>{
+  currentIndex++;
+  if(currentIndex<allPuzzles.length){
+    loadPuzzle();
+  } else {
+    showEndScreen();
+  }
+});
+
+/* ══════════ End Screen ══════════ */
+function showEndScreen(){
+  showScreen(endScreen);
+  const maxScore=allPuzzles.length*100;
+  const pct=Math.round(score/maxScore*100);
+  let rank, icon, desc;
+
+  if(pct>=90){ rank='Sequence Master'; icon='\u{1F3C6}'; desc='Incredible! You ordered almost everything perfectly!';}
+  else if(pct>=70){ rank='Logic Wizard'; icon='\u{1F31F}'; desc='Great job! You really know your sequences!';}
+  else if(pct>=50){ rank='Smart Sorter'; icon='\u{1F44D}'; desc='Nice work! Keep practicing and you will be a master!';}
+  else if(pct>=30){ rank='Eager Learner'; icon='\u{1F4DA}'; desc='Good effort! Try again to improve your score!';}
+  else { rank='Beginner Explorer'; icon='\u{1F331}'; desc='Everyone starts somewhere! Practice makes perfect!';}
+
+  $('rankIcon').textContent=icon;
+  $('rankTitle').textContent=rank;
+  $('rankDesc').textContent=desc;
+
+  const perfectCount=puzzleResults.filter(r=>r.attempts===1).length;
+  const skippedCount=puzzleResults.filter(r=>r.score===0).length;
+  const avgAttempts=puzzleResults.length? (totalAttempts/puzzleResults.length).toFixed(1) : 0;
+
+  $('statsGrid').innerHTML=`
+    <div class="stat-box"><div class="stat-val">${score}</div><div class="stat-lbl">Total Score</div></div>
+    <div class="stat-box"><div class="stat-val">${pct}%</div><div class="stat-lbl">Accuracy</div></div>
+    <div class="stat-box"><div class="stat-val">${perfectCount}</div><div class="stat-lbl">Perfect (1st Try)</div></div>
+    <div class="stat-box"><div class="stat-val">${avgAttempts}</div><div class="stat-lbl">Avg Attempts</div></div>
+    <div class="stat-box"><div class="stat-val">${totalAttempts}</div><div class="stat-lbl">Total Attempts</div></div>
+    <div class="stat-box"><div class="stat-val">${skippedCount}</div><div class="stat-lbl">Skipped</div></div>
+  `;
+
+  // color the score stat by rank
+  const valEls=$('statsGrid').querySelectorAll('.stat-val');
+  if(pct>=70) valEls.forEach(v=>v.style.color='var(--green)');
+  else if(pct>=50) valEls.forEach(v=>v.style.color='var(--teal)');
+  else valEls.forEach(v=>v.style.color='var(--orange)');
+}
+
+/* ══════════ Replay ══════════ */
+btnReplay.addEventListener('click',()=>{
+  buildPuzzleList();
+  currentIndex=0; score=0; totalAttempts=0; puzzleResults=[];
+  showScreen(gameScreen);
+  loadPuzzle();
+});
+
+/* ══════════ Touch-based reordering (mobile) ══════════ */
+(function initTouchDrag(){
+  let dragEl=null, dragIdx=-1, placeholder=null, lastOverIdx=-1;
+
+  cardsContainer.addEventListener('touchstart',e=>{
+    if(solved) return;
+    const card=e.target.closest('.seq-card');
+    if(!card) return;
+    dragEl=card;
+    dragIdx=parseInt(card.dataset.index);
+    lastOverIdx=dragIdx;
+
+    // visual feedback
+    setTimeout(()=>{if(dragEl)dragEl.classList.add('selected')},120);
+  },{passive:true});
+
+  cardsContainer.addEventListener('touchmove',e=>{
+    if(!dragEl||solved) return;
+    e.preventDefault();
+    const t=e.touches[0];
+    const el=document.elementFromPoint(t.clientX,t.clientY);
+    if(!el) return;
+    const overCard=el.closest('.seq-card');
+    if(!overCard||overCard===dragEl) return;
+    const overIdx=parseInt(overCard.dataset.index);
+    if(overIdx!==lastOverIdx){
+      lastOverIdx=overIdx;
+    }
+  },{passive:false});
+
+  cardsContainer.addEventListener('touchend',e=>{
+    if(!dragEl||solved){dragEl=null;return;}
+    dragEl.classList.remove('selected');
+    if(lastOverIdx!==dragIdx && lastOverIdx>=0){
+      swapCards(dragIdx,lastOverIdx);
+    }
+    dragEl=null; dragIdx=-1; lastOverIdx=-1;
+  },{passive:true});
+})();
+</script>
+</body>
+</html>

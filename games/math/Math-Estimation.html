@@ -1,0 +1,1815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Math Estimation Game - Carnival Edition</title>
+    <style>
+        /* ===== RESET & BASE ===== */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --red: #E63946;
+            --red-dark: #C1121F;
+            --yellow: #FFD166;
+            --yellow-bright: #FFE066;
+            --blue: #118AB2;
+            --blue-dark: #073B4C;
+            --blue-light: #06D6A0;
+            --white: #FFFCF2;
+            --gold: #F4A261;
+            --purple: #7B2D8E;
+            --pink: #FF6B9D;
+            --green: #06D6A0;
+        }
+
+        body {
+            font-family: 'Segoe UI', 'Comic Sans MS', Arial, sans-serif;
+            background: linear-gradient(135deg, #073B4C 0%, #118AB2 40%, #06D6A0 100%);
+            min-height: 100vh;
+            color: #222;
+            overflow-x: hidden;
+        }
+
+        /* ===== CARNIVAL LIGHTS BORDER ===== */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--red) 0px, var(--red) 20px,
+                var(--yellow) 20px, var(--yellow) 40px,
+                var(--blue) 40px, var(--blue) 60px,
+                var(--green) 60px, var(--green) 80px
+            );
+            z-index: 1000;
+            animation: lightsScroll 3s linear infinite;
+        }
+
+        @keyframes lightsScroll {
+            to { background-position: 80px 0; }
+        }
+
+        /* ===== TOP NAV BAR ===== */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px 10px;
+            margin-top: 8px;
+        }
+
+        .home-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: var(--white);
+            color: var(--blue-dark);
+            text-decoration: none;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            transition: all 0.2s;
+            border: 3px solid var(--yellow);
+        }
+
+        .home-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 16px rgba(0,0,0,0.3);
+            background: var(--yellow);
+        }
+
+        .home-btn svg { width: 18px; height: 18px; }
+
+        .score-badge {
+            background: var(--yellow);
+            color: var(--blue-dark);
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-weight: 800;
+            font-size: 1.1rem;
+            box-shadow: 0 3px 12px rgba(0,0,0,0.2);
+            border: 3px solid var(--white);
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .game-container {
+            max-width: 700px;
+            margin: 10px auto 40px;
+            padding: 0 16px;
+        }
+
+        /* ===== HEADER / TITLE ===== */
+        .game-title {
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .game-title h1 {
+            font-size: 2.2rem;
+            color: var(--white);
+            text-shadow: 3px 3px 0 var(--red), 5px 5px 0 rgba(0,0,0,0.2);
+            letter-spacing: 1px;
+            line-height: 1.2;
+        }
+
+        .game-title .subtitle {
+            color: var(--yellow-bright);
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-top: 4px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+        }
+
+        /* ===== PROGRESS BAR ===== */
+        .progress-section {
+            margin: 14px 0 18px;
+        }
+
+        .progress-info {
+            display: flex;
+            justify-content: space-between;
+            color: var(--white);
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+
+        .progress-track {
+            width: 100%;
+            height: 18px;
+            background: rgba(255,255,255,0.25);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--yellow), var(--gold), var(--red));
+            border-radius: 12px;
+            transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+            position: relative;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 2px; left: 4px; right: 4px;
+            height: 6px;
+            background: rgba(255,255,255,0.3);
+            border-radius: 8px;
+        }
+
+        /* ===== ROUND BANNER ===== */
+        .round-banner {
+            text-align: center;
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            color: var(--white);
+            padding: 10px 24px;
+            border-radius: 16px;
+            font-size: 1.05rem;
+            font-weight: 800;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 16px rgba(230,57,70,0.4);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .round-banner .round-icon { margin-right: 6px; }
+
+        /* ===== QUESTION CARD ===== */
+        .question-card {
+            background: var(--white);
+            border-radius: 24px;
+            padding: 28px 24px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border: 4px solid var(--yellow);
+            position: relative;
+            overflow: hidden;
+            animation: cardSlideIn 0.5s ease-out;
+        }
+
+        @keyframes cardSlideIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .question-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: repeating-linear-gradient(
+                90deg,
+                var(--red) 0px, var(--red) 12px,
+                var(--yellow) 12px, var(--yellow) 24px,
+                var(--blue) 24px, var(--blue) 36px
+            );
+        }
+
+        .question-label {
+            display: inline-block;
+            background: var(--blue);
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .question-text {
+            font-size: 1.35rem;
+            font-weight: 700;
+            color: var(--blue-dark);
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
+        /* ===== VISUAL AREAS ===== */
+
+        /* Dot Container */
+        .dot-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            margin-bottom: 18px;
+            border: 2px dashed var(--blue);
+            min-height: 80px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            display: inline-block;
+            animation: dotPop 0.3s ease-out backwards;
+        }
+
+        .dot.red { background: var(--red); box-shadow: 0 2px 6px rgba(230,57,70,0.4); }
+        .dot.blue { background: var(--blue); box-shadow: 0 2px 6px rgba(17,138,178,0.4); }
+        .dot.yellow { background: var(--gold); box-shadow: 0 2px 6px rgba(244,162,97,0.4); }
+        .dot.green { background: var(--green); box-shadow: 0 2px 6px rgba(6,214,160,0.4); }
+        .dot.purple { background: var(--purple); box-shadow: 0 2px 6px rgba(123,45,142,0.4); }
+
+        @keyframes dotPop {
+            from { transform: scale(0); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        /* Number Line */
+        .number-line-container {
+            padding: 30px 20px 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            margin-bottom: 18px;
+            border: 2px dashed var(--blue);
+        }
+
+        .number-line {
+            position: relative;
+            height: 4px;
+            background: var(--blue-dark);
+            border-radius: 2px;
+            margin: 30px 10px 36px;
+        }
+
+        .number-line .tick {
+            position: absolute;
+            top: -8px;
+            width: 3px;
+            height: 20px;
+            background: var(--blue-dark);
+            border-radius: 2px;
+        }
+
+        .number-line .tick-label {
+            position: absolute;
+            top: 18px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--blue-dark);
+            transform: translateX(-50%);
+            white-space: nowrap;
+        }
+
+        .number-line .mystery-marker {
+            position: absolute;
+            top: -22px;
+            width: 28px;
+            height: 28px;
+            background: var(--red);
+            border-radius: 50%;
+            border: 3px solid var(--white);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 900;
+            font-size: 0.85rem;
+            transform: translateX(-50%);
+            animation: markerBounce 1.5s ease-in-out infinite;
+        }
+
+        @keyframes markerBounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(-6px); }
+        }
+
+        /* Comparison Scale */
+        .compare-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 16px;
+            margin-bottom: 18px;
+            border: 2px dashed var(--blue);
+            flex-wrap: wrap;
+        }
+
+        .compare-box {
+            background: white;
+            padding: 14px 22px;
+            border-radius: 14px;
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--blue-dark);
+            box-shadow: 0 3px 12px rgba(0,0,0,0.1);
+            border: 3px solid var(--blue);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .compare-vs {
+            font-size: 1.6rem;
+            font-weight: 900;
+            color: var(--red);
+            text-shadow: 1px 1px 0 var(--yellow);
+        }
+
+        /* ===== ANSWER CHOICES ===== */
+        .choices {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .choices.three-col {
+            grid-template-columns: 1fr 1fr 1fr;
+        }
+
+        .choice-btn {
+            background: white;
+            border: 3px solid #ddd;
+            border-radius: 16px;
+            padding: 14px 10px;
+            font-size: 1.15rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--blue-dark);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .choice-btn:hover {
+            border-color: var(--blue);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 16px rgba(17,138,178,0.25);
+            background: #f0f8ff;
+        }
+
+        .choice-btn:active {
+            transform: translateY(0);
+        }
+
+        .choice-btn.correct {
+            border-color: var(--green);
+            background: #d1fae5;
+            animation: correctPulse 0.5s ease;
+        }
+
+        .choice-btn.wrong {
+            border-color: var(--red);
+            background: #fee2e2;
+            animation: wrongShake 0.5s ease;
+        }
+
+        .choice-btn.reveal-correct {
+            border-color: var(--green);
+            background: #d1fae5;
+        }
+
+        .choice-btn.disabled {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        @keyframes correctPulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes wrongShake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-8px); }
+            40% { transform: translateX(8px); }
+            60% { transform: translateX(-6px); }
+            80% { transform: translateX(6px); }
+        }
+
+        /* ===== FEEDBACK AREA ===== */
+        .feedback {
+            text-align: center;
+            margin-top: 18px;
+            padding: 14px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: none;
+        }
+
+        .feedback.show { display: block; animation: feedbackIn 0.4s ease; }
+
+        .feedback.great {
+            background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+            color: #065f46;
+            border: 2px solid var(--green);
+        }
+
+        .feedback.good {
+            background: linear-gradient(135deg, #fef3c7, #fde68a);
+            color: #92400e;
+            border: 2px solid var(--gold);
+        }
+
+        .feedback.ok {
+            background: linear-gradient(135deg, #fce7f3, #fbcfe8);
+            color: #9d174d;
+            border: 2px solid var(--pink);
+        }
+
+        .feedback.miss {
+            background: linear-gradient(135deg, #fee2e2, #fecaca);
+            color: #991b1b;
+            border: 2px solid var(--red);
+        }
+
+        @keyframes feedbackIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .stars-display {
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+        }
+
+        .next-btn {
+            display: inline-block;
+            margin-top: 14px;
+            background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color: white;
+            border: none;
+            padding: 12px 36px;
+            border-radius: 30px;
+            font-size: 1.05rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(17,138,178,0.4);
+            transition: all 0.2s;
+        }
+
+        .next-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17,138,178,0.5);
+        }
+
+        /* ===== SCREENS ===== */
+        .screen {
+            display: none;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        /* START SCREEN */
+        .start-screen {
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .start-card {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 36px 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border: 4px solid var(--yellow);
+            max-width: 560px;
+            margin: 0 auto;
+        }
+
+        .start-card h2 {
+            font-size: 1.8rem;
+            color: var(--red);
+            margin-bottom: 10px;
+        }
+
+        .start-card p {
+            color: #555;
+            font-size: 1.05rem;
+            line-height: 1.6;
+            margin-bottom: 6px;
+        }
+
+        .round-preview {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .round-preview-item {
+            background: linear-gradient(135deg, #f0f8ff, #e0f2fe);
+            padding: 12px;
+            border-radius: 14px;
+            border: 2px solid var(--blue);
+            text-align: center;
+        }
+
+        .round-preview-item .rp-icon {
+            font-size: 1.8rem;
+            display: block;
+            margin-bottom: 4px;
+        }
+
+        .round-preview-item .rp-title {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--blue-dark);
+        }
+
+        .start-btn {
+            display: inline-block;
+            margin-top: 18px;
+            background: linear-gradient(135deg, var(--red), var(--red-dark));
+            color: white;
+            border: none;
+            padding: 16px 52px;
+            border-radius: 40px;
+            font-size: 1.25rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 6px 20px rgba(230,57,70,0.4);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .start-btn:hover {
+            transform: translateY(-3px) scale(1.03);
+            box-shadow: 0 8px 28px rgba(230,57,70,0.5);
+        }
+
+        /* ===== FINAL SCREEN ===== */
+        .final-screen {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .final-card {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 36px 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border: 4px solid var(--yellow);
+            max-width: 560px;
+            margin: 0 auto;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .final-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 8px;
+            background: repeating-linear-gradient(
+                90deg, var(--red) 0 14px, var(--yellow) 14px 28px,
+                var(--blue) 28px 42px, var(--green) 42px 56px
+            );
+        }
+
+        .final-stars {
+            font-size: 3.5rem;
+            margin: 10px 0;
+            animation: starsBounce 1s ease;
+        }
+
+        @keyframes starsBounce {
+            0% { transform: scale(0); }
+            60% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+
+        .final-score {
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: var(--red);
+            text-shadow: 2px 2px 0 var(--yellow);
+        }
+
+        .final-score-label {
+            font-size: 1.1rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .final-message {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--blue-dark);
+            margin: 16px 0;
+        }
+
+        .final-breakdown {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 8px;
+            margin: 18px 0;
+        }
+
+        .breakdown-item {
+            background: #f0f8ff;
+            padding: 10px 6px;
+            border-radius: 12px;
+            border: 2px solid var(--blue);
+        }
+
+        .breakdown-item .bd-num {
+            font-size: 1.3rem;
+            font-weight: 800;
+            color: var(--blue);
+        }
+
+        .breakdown-item .bd-label {
+            font-size: 0.7rem;
+            color: #666;
+            font-weight: 600;
+        }
+
+        .play-again-btn {
+            display: inline-block;
+            margin-top: 18px;
+            background: linear-gradient(135deg, var(--green), #059669);
+            color: white;
+            border: none;
+            padding: 14px 44px;
+            border-radius: 36px;
+            font-size: 1.15rem;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 5px 18px rgba(6,214,160,0.4);
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .play-again-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 24px rgba(6,214,160,0.5);
+        }
+
+        /* ===== CONFETTI ===== */
+        .confetti-container {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            pointer-events: none;
+            z-index: 9999;
+            overflow: hidden;
+        }
+
+        .confetti-piece {
+            position: absolute;
+            top: -20px;
+            width: 12px;
+            height: 12px;
+            opacity: 0;
+            animation: confettiFall linear forwards;
+        }
+
+        @keyframes confettiFall {
+            0% { opacity: 1; transform: translateY(0) rotate(0deg) scale(1); }
+            80% { opacity: 1; }
+            100% { opacity: 0; transform: translateY(100vh) rotate(720deg) scale(0.5); }
+        }
+
+        /* ===== SPARKLE ===== */
+        .sparkle {
+            position: absolute;
+            pointer-events: none;
+            animation: sparkleAnim 0.8s ease-out forwards;
+        }
+
+        @keyframes sparkleAnim {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1.5) rotate(180deg); opacity: 0; }
+        }
+
+        /* ===== ROUND TRANSITION ===== */
+        .round-transition {
+            display: none;
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .round-transition.active {
+            display: block;
+        }
+
+        .round-transition-card {
+            background: var(--white);
+            border-radius: 28px;
+            padding: 40px 28px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.18);
+            border: 4px solid var(--yellow);
+            max-width: 460px;
+            margin: 0 auto;
+            animation: cardSlideIn 0.5s ease-out;
+        }
+
+        .round-transition-card h2 {
+            font-size: 1.8rem;
+            color: var(--red);
+            margin-bottom: 8px;
+        }
+
+        .round-transition-card p {
+            font-size: 1.05rem;
+            color: #555;
+            margin-bottom: 20px;
+        }
+
+        .round-transition-card .round-score {
+            font-size: 2rem;
+            font-weight: 900;
+            color: var(--blue);
+        }
+
+        .continue-btn {
+            display: inline-block;
+            margin-top: 20px;
+            background: linear-gradient(135deg, var(--blue), var(--blue-dark));
+            color: white;
+            border: none;
+            padding: 14px 44px;
+            border-radius: 36px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(17,138,178,0.4);
+            transition: all 0.2s;
+        }
+
+        .continue-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(17,138,178,0.5);
+        }
+
+        /* ===== TICKET DECORATION ===== */
+        .ticket-decoration {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin: 10px 0;
+        }
+
+        .ticket-star {
+            display: inline-block;
+            color: var(--yellow);
+            font-size: 1.4rem;
+            animation: ticketSpin 3s linear infinite;
+        }
+
+        .ticket-star:nth-child(2) { animation-delay: 0.3s; }
+        .ticket-star:nth-child(3) { animation-delay: 0.6s; }
+
+        @keyframes ticketSpin {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            25% { transform: rotate(10deg) scale(1.15); }
+            50% { transform: rotate(0deg) scale(1); }
+            75% { transform: rotate(-10deg) scale(1.15); }
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            .game-title h1 { font-size: 1.6rem; }
+            .question-text { font-size: 1.15rem; }
+            .choices { grid-template-columns: 1fr 1fr; }
+            .choices.three-col { grid-template-columns: 1fr 1fr 1fr; }
+            .choice-btn { padding: 12px 6px; font-size: 1rem; }
+            .question-card { padding: 22px 16px; }
+            .round-preview { grid-template-columns: 1fr; }
+            .final-breakdown { grid-template-columns: repeat(2, 1fr); }
+            .compare-box { font-size: 1.1rem; padding: 10px 14px; min-width: 80px; }
+            .dot { width: 14px; height: 14px; }
+            .start-card, .final-card { padding: 24px 16px; }
+            .start-btn { padding: 14px 36px; font-size: 1.1rem; }
+            .home-btn { padding: 6px 12px; font-size: 0.85rem; }
+            .score-badge { padding: 6px 14px; font-size: 0.95rem; }
+        }
+
+        @media (max-width: 400px) {
+            .game-title h1 { font-size: 1.35rem; }
+            .choices.three-col { grid-template-columns: 1fr 1fr; }
+            .final-breakdown { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <!-- ===== TOP BAR ===== -->
+    <div class="top-bar">
+        <a href="../../index.html" class="home-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M3 12l9-9 9 9"/><path d="M9 21V9h6v12"/>
+            </svg>
+            Home
+        </a>
+        <div class="score-badge" id="scoreBadge">Score: 0</div>
+    </div>
+
+    <div class="game-container">
+        <!-- ===== TITLE ===== -->
+        <div class="game-title">
+            <h1>Math Estimation Game</h1>
+            <div class="subtitle">Carnival Challenge Edition</div>
+        </div>
+
+        <!-- ===== PROGRESS ===== -->
+        <div class="progress-section" id="progressSection" style="display:none;">
+            <div class="progress-info">
+                <span id="progressLabel">Question 1 of 20</span>
+                <span id="roundLabel">Round 1</span>
+            </div>
+            <div class="progress-track">
+                <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+            </div>
+        </div>
+
+        <!-- ===== START SCREEN ===== -->
+        <div class="screen active" id="startScreen">
+            <div class="start-screen">
+                <div class="start-card">
+                    <div class="ticket-decoration">
+                        <span class="ticket-star">&#9733;</span>
+                        <span class="ticket-star">&#9733;</span>
+                        <span class="ticket-star">&#9733;</span>
+                    </div>
+                    <h2>Welcome to the Carnival!</h2>
+                    <p>Test your estimation superpowers across 4 exciting rounds!</p>
+
+                    <div class="round-preview">
+                        <div class="round-preview-item">
+                            <span class="rp-icon">&#127922;</span>
+                            <span class="rp-title">Round 1: Rounding</span>
+                        </div>
+                        <div class="round-preview-item">
+                            <span class="rp-icon">&#127919;</span>
+                            <span class="rp-title">Round 2: Estimate Sums</span>
+                        </div>
+                        <div class="round-preview-item">
+                            <span class="rp-icon">&#128302;</span>
+                            <span class="rp-title">Round 3: Dots & Lines</span>
+                        </div>
+                        <div class="round-preview-item">
+                            <span class="rp-icon">&#9878;</span>
+                            <span class="rp-title">Round 4: Compare</span>
+                        </div>
+                    </div>
+
+                    <p style="font-size:0.9rem; color:#888;">Closer guesses earn more stars! Get up to 3 stars per question.</p>
+
+                    <button class="start-btn" onclick="startGame()">
+                        Start Playing!
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== GAME SCREEN ===== -->
+        <div class="screen" id="gameScreen">
+            <div class="round-banner" id="roundBanner">
+                <span class="round-icon">&#127922;</span> Round 1: Rounding Rodeo
+            </div>
+            <div class="question-card" id="questionCard">
+                <div class="question-label" id="questionLabel">Rounding</div>
+                <div class="question-text" id="questionText"></div>
+                <div id="visualArea"></div>
+                <div class="choices" id="choicesArea"></div>
+                <div class="feedback" id="feedback"></div>
+            </div>
+        </div>
+
+        <!-- ===== ROUND TRANSITION ===== -->
+        <div class="round-transition" id="roundTransition">
+            <div class="round-transition-card">
+                <div class="ticket-decoration">
+                    <span class="ticket-star">&#9733;</span>
+                    <span class="ticket-star">&#9733;</span>
+                    <span class="ticket-star">&#9733;</span>
+                </div>
+                <h2 id="transitionTitle">Round Complete!</h2>
+                <p id="transitionDesc">Great work on that round!</p>
+                <div class="round-score" id="transitionScore"></div>
+                <br>
+                <button class="continue-btn" onclick="continueToNextRound()">
+                    Next Round &rarr;
+                </button>
+            </div>
+        </div>
+
+        <!-- ===== FINAL SCREEN ===== -->
+        <div class="screen" id="finalScreen">
+            <div class="final-screen">
+                <div class="final-card">
+                    <div class="ticket-decoration">
+                        <span class="ticket-star">&#9733;</span>
+                        <span class="ticket-star">&#9733;</span>
+                        <span class="ticket-star">&#9733;</span>
+                    </div>
+                    <h2 style="color:var(--red); font-size:1.6rem;">Carnival Complete!</h2>
+                    <div class="final-stars" id="finalStars"></div>
+                    <div class="final-score" id="finalScore"></div>
+                    <div class="final-score-label">points earned</div>
+                    <div class="final-message" id="finalMessage"></div>
+
+                    <div class="final-breakdown" id="finalBreakdown"></div>
+
+                    <button class="play-again-btn" onclick="restartGame()">
+                        Play Again!
+                    </button>
+                    <br><br>
+                    <a href="../../index.html" class="home-btn" style="display:inline-flex;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="width:16px;height:16px;">
+                            <path d="M3 12l9-9 9 9"/><path d="M9 21V9h6v12"/>
+                        </svg>
+                        Back Home
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti Container -->
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <script>
+    /* ============================================================
+       MATH ESTIMATION GAME - CARNIVAL EDITION
+       20 challenges across 4 rounds (5 each)
+       ============================================================ */
+
+    // ===== GAME STATE =====
+    let currentQuestion = 0;
+    let totalScore = 0;
+    let roundScores = [0, 0, 0, 0];
+    let questions = [];
+    let answered = false;
+
+    // ===== ROUND DEFINITIONS =====
+    const ROUNDS = [
+        { name: 'Rounding Rodeo', icon: '&#127922;', label: 'Rounding' },
+        { name: 'Sum Circus', icon: '&#127919;', label: 'Estimation' },
+        { name: 'Dot Derby & Number Lines', icon: '&#128302;', label: 'Visual Estimation' },
+        { name: 'Comparison Coaster', icon: '&#9878;', label: 'Comparison' }
+    ];
+
+    // ===== UTILITY FUNCTIONS =====
+    function randInt(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function shuffle(arr) {
+        const a = [...arr];
+        for (let i = a.length - 1; i > 0; i--) {
+            const j = randInt(0, i);
+            [a[i], a[j]] = [a[j], a[i]];
+        }
+        return a;
+    }
+
+    function roundTo(n, place) {
+        return Math.round(n / place) * place;
+    }
+
+    // ===== QUESTION GENERATORS =====
+
+    // -- ROUND 1: ROUNDING (5 questions) --
+    function generateRoundingQuestions() {
+        const qs = [];
+
+        // Q1: Round to nearest 10
+        let n1 = randInt(12, 98);
+        while (n1 % 10 === 0 || n1 % 10 === 5) n1 = randInt(12, 98);
+        const correct1 = roundTo(n1, 10);
+        const options1 = shuffle([correct1, correct1 - 10, correct1 + 10]);
+        qs.push({
+            round: 0,
+            text: `What is ${n1} rounded to the nearest 10?`,
+            choices: options1,
+            correct: correct1,
+            scoring: 'exact',
+            visual: null
+        });
+
+        // Q2: Round to nearest 100
+        let n2 = randInt(120, 980);
+        while (n2 % 100 === 0 || n2 % 100 === 50) n2 = randInt(120, 980);
+        const correct2 = roundTo(n2, 100);
+        const opts2 = [correct2 - 100, correct2, correct2 + 100].filter(x => x >= 0);
+        if (opts2.length < 3) opts2.push(correct2 + 200);
+        qs.push({
+            round: 0,
+            text: `What is ${n2} rounded to the nearest 100?`,
+            choices: shuffle(opts2),
+            correct: correct2,
+            scoring: 'exact',
+            visual: null
+        });
+
+        // Q3: Round to nearest 10 (larger number)
+        let n3 = randInt(102, 498);
+        while (n3 % 10 === 0 || n3 % 10 === 5) n3 = randInt(102, 498);
+        const correct3 = roundTo(n3, 10);
+        qs.push({
+            round: 0,
+            text: `Round ${n3} to the nearest 10.`,
+            choices: shuffle([correct3, correct3 - 10, correct3 + 10]),
+            correct: correct3,
+            scoring: 'exact',
+            visual: null
+        });
+
+        // Q4: "Is X closer to A or B?"
+        const baseN = randInt(2, 8) * 10;
+        const offset = randInt(1, 4);
+        const side = Math.random() < 0.5 ? 1 : -1;
+        const n4 = baseN + side * offset;
+        const low = baseN - 10;
+        const high = baseN + 10;
+        const correct4 = (side === 1) ? (offset > 5 ? high : baseN) : (offset > 5 ? low : baseN);
+        const realCorrect4 = roundTo(n4, 10);
+        qs.push({
+            round: 0,
+            text: `Is ${n4} closer to ${realCorrect4 - 10}, ${realCorrect4}, or ${realCorrect4 + 10}?`,
+            choices: [realCorrect4 - 10, realCorrect4, realCorrect4 + 10],
+            correct: realCorrect4,
+            scoring: 'proximity',
+            visual: null
+        });
+
+        // Q5: Round to nearest 100 (different range)
+        let n5 = randInt(1020, 4980);
+        while (n5 % 100 === 0 || n5 % 100 === 50) n5 = randInt(1020, 4980);
+        const correct5 = roundTo(n5, 100);
+        qs.push({
+            round: 0,
+            text: `What is ${n5.toLocaleString()} rounded to the nearest 100?`,
+            choices: shuffle([correct5 - 100, correct5, correct5 + 100].map(x => x)),
+            correct: correct5,
+            scoring: 'exact',
+            visual: null
+        });
+
+        return qs;
+    }
+
+    // -- ROUND 2: ESTIMATE SUMS (5 questions) --
+    function generateSumQuestions() {
+        const qs = [];
+
+        // Q1: two-digit sum, estimate to nearest 10
+        let a1 = randInt(23, 67);
+        let b1 = randInt(14, 49);
+        let sum1 = a1 + b1;
+        let est1 = roundTo(sum1, 10);
+        qs.push({
+            round: 1,
+            text: `Is ${a1} + ${b1} closer to ${est1 - 10}, ${est1}, or ${est1 + 10}?`,
+            choices: [est1 - 10, est1, est1 + 10],
+            correct: est1,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: null
+        });
+
+        // Q2: three numbers
+        let a2 = randInt(18, 35);
+        let b2 = randInt(12, 28);
+        let c2 = randInt(15, 32);
+        let sum2 = a2 + b2 + c2;
+        let est2 = roundTo(sum2, 10);
+        qs.push({
+            round: 1,
+            text: `Estimate: ${a2} + ${b2} + ${c2}. Is it closest to ${est2 - 10}, ${est2}, or ${est2 + 10}?`,
+            choices: [est2 - 10, est2, est2 + 10],
+            correct: est2,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: null
+        });
+
+        // Q3: subtraction estimate
+        let a3 = randInt(60, 99);
+        let b3 = randInt(15, 45);
+        let diff3 = a3 - b3;
+        let est3 = roundTo(diff3, 10);
+        const opts3 = shuffle([est3 - 10, est3, est3 + 10].filter(x => x >= 0));
+        qs.push({
+            round: 1,
+            text: `Estimate ${a3} - ${b3}. Which is closest?`,
+            choices: opts3.length >= 3 ? opts3 : [est3, est3 + 10, est3 + 20],
+            correct: est3,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: null
+        });
+
+        // Q4: bigger sum estimation
+        let a4 = randInt(110, 350);
+        let b4 = randInt(120, 340);
+        let sum4 = a4 + b4;
+        let est4 = roundTo(sum4, 100);
+        qs.push({
+            round: 1,
+            text: `About how much is ${a4} + ${b4}? Estimate to the nearest 100.`,
+            choices: shuffle([est4 - 100, est4, est4 + 100]),
+            correct: est4,
+            scoring: 'proximity',
+            visual: null
+        });
+
+        // Q5: money estimation
+        let dollars = randInt(3, 8);
+        let cents = randInt(25, 95);
+        let d2 = randInt(2, 7);
+        let c2val = randInt(10, 85);
+        let totalCents = dollars * 100 + cents + d2 * 100 + c2val;
+        let totalDollars = Math.round(totalCents / 100);
+        qs.push({
+            round: 1,
+            text: `You buy items for $${dollars}.${cents.toString().padStart(2,'0')} and $${d2}.${c2val.toString().padStart(2,'0')}. About how many dollars total?`,
+            choices: shuffle([totalDollars - 1, totalDollars, totalDollars + 1]),
+            correct: totalDollars,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: null,
+            displayPrefix: '$'
+        });
+
+        return qs;
+    }
+
+    // -- ROUND 3: DOTS & NUMBER LINES (5 questions) --
+    function generateVisualQuestions() {
+        const qs = [];
+        const dotColors = ['red', 'blue', 'yellow', 'green', 'purple'];
+
+        // Q1: Count dots (small group)
+        let dotCount1 = randInt(12, 25);
+        let est1 = roundTo(dotCount1, 5);
+        const wrongOpts1 = shuffle([est1 - 5, est1, est1 + 5, est1 + 10].filter(x => x > 0));
+        qs.push({
+            round: 2,
+            text: `About how many dots are there? Pick the closest estimate!`,
+            choices: wrongOpts1.slice(0, 3),
+            correct: est1,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: { type: 'dots', count: dotCount1, colors: dotColors }
+        });
+
+        // Q2: Count dots (larger group)
+        let dotCount2 = randInt(28, 48);
+        let est2 = roundTo(dotCount2, 10);
+        qs.push({
+            round: 2,
+            text: `Estimate the number of dots!`,
+            choices: shuffle([est2 - 10, est2, est2 + 10]),
+            correct: est2,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: { type: 'dots', count: dotCount2, colors: dotColors }
+        });
+
+        // Q3: Number line placement
+        let nlMax3 = 100;
+        let nlTarget3 = randInt(15, 85);
+        while (nlTarget3 % 10 === 0) nlTarget3 = randInt(15, 85);
+        let nlRound3 = roundTo(nlTarget3, 10);
+        qs.push({
+            round: 2,
+            text: `The red dot is closest to which number?`,
+            choices: shuffle([nlRound3 - 10, nlRound3, nlRound3 + 10].filter(x => x >= 0 && x <= 100)),
+            correct: nlRound3,
+            scoring: 'proximity',
+            visual: { type: 'numberline', min: 0, max: nlMax3, target: nlTarget3, ticks: 6 }
+        });
+
+        // Q4: Number line placement (bigger range)
+        let nlMax4 = 1000;
+        let nlTarget4 = randInt(100, 900);
+        while (nlTarget4 % 100 === 0) nlTarget4 = randInt(100, 900);
+        let nlRound4 = roundTo(nlTarget4, 100);
+        qs.push({
+            round: 2,
+            text: `Where is the red dot? Pick the closest value.`,
+            choices: shuffle([nlRound4 - 100, nlRound4, nlRound4 + 100].filter(x => x >= 0 && x <= 1000)),
+            correct: nlRound4,
+            scoring: 'proximity',
+            visual: { type: 'numberline', min: 0, max: nlMax4, target: nlTarget4, ticks: 6 }
+        });
+
+        // Q5: Mixed dots (two colors, estimate total)
+        let red5 = randInt(8, 18);
+        let blue5 = randInt(7, 16);
+        let total5 = red5 + blue5;
+        let est5 = roundTo(total5, 5);
+        const opts5 = shuffle([est5 - 5, est5, est5 + 5, est5 + 10].filter(x => x > 0));
+        qs.push({
+            round: 2,
+            text: `Estimate the TOTAL number of red and blue dots together!`,
+            choices: opts5.slice(0, 3),
+            correct: est5,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: { type: 'dots', count: total5, colors: ['red', 'blue'] }
+        });
+
+        return qs;
+    }
+
+    // -- ROUND 4: COMPARISONS (5 questions) --
+    function generateCompareQuestions() {
+        const qs = [];
+
+        // Q1: Which multiplication is bigger?
+        let ma1 = randInt(5, 9), mb1 = randInt(5, 9);
+        let ma2 = randInt(5, 9), mb2 = randInt(5, 9);
+        while (ma1 * mb1 === ma2 * mb2) { ma2 = randInt(5, 9); mb2 = randInt(5, 9); }
+        let prod1 = ma1 * mb1, prod2 = ma2 * mb2;
+        let bigger1 = prod1 > prod2 ? `${ma1} x ${mb1}` : `${ma2} x ${mb2}`;
+        qs.push({
+            round: 3,
+            text: `Which is bigger?`,
+            choices: [`${ma1} x ${mb1}`, `${ma2} x ${mb2}`, 'They are equal'],
+            correct: bigger1,
+            scoring: 'exact',
+            visual: { type: 'compare', left: `${ma1} x ${mb1}`, right: `${ma2} x ${mb2}` }
+        });
+
+        // Q2: Compare sums
+        let sa1 = randInt(30, 70), sb1 = randInt(20, 60);
+        let sa2 = randInt(30, 70), sb2 = randInt(20, 60);
+        while (sa1 + sb1 === sa2 + sb2) { sa2 = randInt(30, 70); sb2 = randInt(20, 60); }
+        let sum1 = sa1 + sb1, sum2 = sa2 + sb2;
+        let bigger2 = sum1 > sum2 ? `${sa1} + ${sb1}` : `${sa2} + ${sb2}`;
+        qs.push({
+            round: 3,
+            text: `Without calculating exactly, which sum is larger?`,
+            choices: [`${sa1} + ${sb1}`, `${sa2} + ${sb2}`, 'About the same'],
+            correct: bigger2,
+            scoring: 'compare',
+            compareValues: [sum1, sum2],
+            visual: { type: 'compare', left: `${sa1} + ${sb1}`, right: `${sa2} + ${sb2}` }
+        });
+
+        // Q3: Compare with multiplication vs addition
+        let mult3 = randInt(4, 8);
+        let multB3 = randInt(6, 12);
+        let addA3 = randInt(20, 50);
+        let addB3 = randInt(15, 45);
+        let val3a = mult3 * multB3, val3b = addA3 + addB3;
+        while (val3a === val3b) { addB3 = randInt(15, 45); val3b = addA3 + addB3; }
+        let bigger3 = val3a > val3b ? `${mult3} x ${multB3}` : `${addA3} + ${addB3}`;
+        qs.push({
+            round: 3,
+            text: `Which expression gives a bigger result?`,
+            choices: [`${mult3} x ${multB3}`, `${addA3} + ${addB3}`],
+            correct: bigger3,
+            scoring: 'exact',
+            visual: { type: 'compare', left: `${mult3} x ${multB3}`, right: `${addA3} + ${addB3}` }
+        });
+
+        // Q4: Estimate which is closest
+        let target4 = randInt(3, 8) * 10;
+        let optA4 = target4 + randInt(-15, -5);
+        let optB4 = target4 + randInt(6, 15);
+        let optC4 = target4 + randInt(-3, 3);
+        let closest4 = [optA4, optB4, optC4].reduce((a, b) =>
+            Math.abs(a - target4) <= Math.abs(b - target4) ? a : b
+        );
+        qs.push({
+            round: 3,
+            text: `Which number is closest to ${target4}?`,
+            choices: shuffle([optA4, optB4, optC4]),
+            correct: closest4,
+            scoring: 'proximity',
+            threeCol: true,
+            visual: null
+        });
+
+        // Q5: Compare products
+        let pa5 = randInt(3, 9), pb5 = randInt(6, 12);
+        let pc5 = randInt(3, 9), pd5 = randInt(6, 12);
+        while (pa5 * pb5 === pc5 * pd5) { pd5 = randInt(6, 12); }
+        let prodA5 = pa5 * pb5, prodB5 = pc5 * pd5;
+        let bigger5 = prodA5 > prodB5 ? `${pa5} x ${pb5}` : `${pc5} x ${pd5}`;
+        qs.push({
+            round: 3,
+            text: `Which product is greater?`,
+            choices: [`${pa5} x ${pb5}`, `${pc5} x ${pd5}`, 'They are equal'],
+            correct: bigger5,
+            scoring: 'exact',
+            visual: { type: 'compare', left: `${pa5} x ${pb5}`, right: `${pc5} x ${pd5}` }
+        });
+
+        return qs;
+    }
+
+    // ===== BUILD ALL QUESTIONS =====
+    function buildQuestions() {
+        questions = [
+            ...generateRoundingQuestions(),
+            ...generateSumQuestions(),
+            ...generateVisualQuestions(),
+            ...generateCompareQuestions()
+        ];
+    }
+
+    // ===== RENDER VISUALS =====
+    function renderVisual(visual) {
+        const area = document.getElementById('visualArea');
+        area.innerHTML = '';
+
+        if (!visual) return;
+
+        if (visual.type === 'dots') {
+            const container = document.createElement('div');
+            container.className = 'dot-container';
+            const colors = visual.colors;
+            for (let i = 0; i < visual.count; i++) {
+                const dot = document.createElement('span');
+                dot.className = 'dot ' + colors[i % colors.length];
+                dot.style.animationDelay = (i * 0.02) + 's';
+                container.appendChild(dot);
+            }
+            area.appendChild(container);
+        }
+
+        if (visual.type === 'numberline') {
+            const wrapper = document.createElement('div');
+            wrapper.className = 'number-line-container';
+
+            const line = document.createElement('div');
+            line.className = 'number-line';
+
+            const range = visual.max - visual.min;
+            const tickCount = visual.ticks;
+
+            for (let i = 0; i <= tickCount; i++) {
+                const pct = (i / tickCount) * 100;
+                const val = visual.min + (range * i / tickCount);
+
+                const tick = document.createElement('div');
+                tick.className = 'tick';
+                tick.style.left = pct + '%';
+
+                const label = document.createElement('div');
+                label.className = 'tick-label';
+                label.style.left = pct + '%';
+                label.textContent = Math.round(val).toLocaleString();
+
+                line.appendChild(tick);
+                line.appendChild(label);
+            }
+
+            // Mystery marker
+            const markerPct = ((visual.target - visual.min) / range) * 100;
+            const marker = document.createElement('div');
+            marker.className = 'mystery-marker';
+            marker.style.left = markerPct + '%';
+            marker.textContent = '?';
+            line.appendChild(marker);
+
+            wrapper.appendChild(line);
+            area.appendChild(wrapper);
+        }
+
+        if (visual.type === 'compare') {
+            const container = document.createElement('div');
+            container.className = 'compare-container';
+
+            const leftBox = document.createElement('div');
+            leftBox.className = 'compare-box';
+            leftBox.textContent = visual.left;
+
+            const vs = document.createElement('div');
+            vs.className = 'compare-vs';
+            vs.textContent = 'VS';
+
+            const rightBox = document.createElement('div');
+            rightBox.className = 'compare-box';
+            rightBox.textContent = visual.right;
+
+            container.appendChild(leftBox);
+            container.appendChild(vs);
+            container.appendChild(rightBox);
+            area.appendChild(container);
+        }
+    }
+
+    // ===== DISPLAY QUESTION =====
+    function showQuestion() {
+        if (currentQuestion >= questions.length) {
+            showFinalScreen();
+            return;
+        }
+
+        // Check for round transition
+        if (currentQuestion > 0 && currentQuestion % 5 === 0) {
+            showRoundTransition();
+            return;
+        }
+
+        answered = false;
+        const q = questions[currentQuestion];
+        const roundIdx = Math.floor(currentQuestion / 5);
+        const qInRound = (currentQuestion % 5) + 1;
+
+        // Update UI
+        document.getElementById('progressSection').style.display = 'block';
+        document.getElementById('progressLabel').textContent = `Question ${currentQuestion + 1} of 20`;
+        document.getElementById('roundLabel').textContent = `Round ${roundIdx + 1}`;
+        document.getElementById('progressFill').style.width = ((currentQuestion / 20) * 100) + '%';
+
+        const round = ROUNDS[roundIdx];
+        document.getElementById('roundBanner').innerHTML =
+            `<span class="round-icon">${round.icon}</span> Round ${roundIdx + 1}: ${round.name}`;
+        document.getElementById('questionLabel').textContent = round.label;
+        document.getElementById('questionText').textContent = q.text;
+
+        // Visual
+        renderVisual(q.visual);
+
+        // Choices
+        const choicesArea = document.getElementById('choicesArea');
+        choicesArea.innerHTML = '';
+        choicesArea.className = 'choices' + (q.threeCol ? ' three-col' : '');
+
+        q.choices.forEach((choice, idx) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            const prefix = q.displayPrefix || '';
+            btn.textContent = prefix + (typeof choice === 'number' ? choice.toLocaleString() : choice);
+            btn.addEventListener('click', () => handleAnswer(choice, idx));
+            choicesArea.appendChild(btn);
+        });
+
+        // Hide feedback
+        const fb = document.getElementById('feedback');
+        fb.className = 'feedback';
+        fb.style.display = 'none';
+
+        // Show game screen
+        showScreen('gameScreen');
+
+        // Re-trigger card animation
+        const card = document.getElementById('questionCard');
+        card.style.animation = 'none';
+        card.offsetHeight; // reflow
+        card.style.animation = 'cardSlideIn 0.5s ease-out';
+    }
+
+    // ===== HANDLE ANSWER =====
+    function handleAnswer(chosen, chosenIdx) {
+        if (answered) return;
+        answered = true;
+
+        const q = questions[currentQuestion];
+        const roundIdx = Math.floor(currentQuestion / 5);
+        const btns = document.querySelectorAll('.choice-btn');
+        let stars = 0;
+        let feedbackText = '';
+        let feedbackClass = '';
+
+        // Disable all buttons
+        btns.forEach(b => b.classList.add('disabled'));
+
+        if (q.scoring === 'exact') {
+            if (chosen === q.correct) {
+                stars = 3;
+                feedbackText = 'Perfect! Exact answer!';
+                feedbackClass = 'great';
+                btns[chosenIdx].classList.add('correct');
+            } else {
+                stars = 0;
+                feedbackText = `Not quite! The answer is ${typeof q.correct === 'number' ? q.correct.toLocaleString() : q.correct}.`;
+                feedbackClass = 'miss';
+                btns[chosenIdx].classList.add('wrong');
+                // Reveal correct
+                btns.forEach((b, i) => {
+                    if (q.choices[i] === q.correct) b.classList.add('reveal-correct');
+                });
+            }
+        } else if (q.scoring === 'proximity') {
+            const correctVal = typeof q.correct === 'number' ? q.correct : 0;
+            const chosenVal = typeof chosen === 'number' ? chosen : 0;
+            const diff = Math.abs(chosenVal - correctVal);
+
+            // Determine step size based on choices
+            const sortedChoices = [...q.choices].filter(c => typeof c === 'number').sort((a, b) => a - b);
+            const step = sortedChoices.length >= 2 ? Math.abs(sortedChoices[1] - sortedChoices[0]) : 10;
+
+            if (diff === 0) {
+                stars = 3;
+                feedbackText = 'Spot on! Perfect estimate!';
+                feedbackClass = 'great';
+                btns[chosenIdx].classList.add('correct');
+            } else if (diff <= step) {
+                stars = 1;
+                feedbackText = `Close! The best answer is ${q.displayPrefix || ''}${correctVal.toLocaleString()}.`;
+                feedbackClass = 'ok';
+                btns[chosenIdx].classList.add('wrong');
+                btns.forEach((b, i) => {
+                    if (q.choices[i] === q.correct) b.classList.add('reveal-correct');
+                });
+            } else {
+                stars = 0;
+                feedbackText = `Not quite. The closest is ${q.displayPrefix || ''}${correctVal.toLocaleString()}.`;
+                feedbackClass = 'miss';
+                btns[chosenIdx].classList.add('wrong');
+                btns.forEach((b, i) => {
+                    if (q.choices[i] === q.correct) b.classList.add('reveal-correct');
+                });
+            }
+        } else if (q.scoring === 'compare') {
+            // For comparison where "about the same" might be valid
+            const [v1, v2] = q.compareValues;
+            const diff = Math.abs(v1 - v2);
+
+            if (chosen === q.correct) {
+                stars = 3;
+                feedbackText = 'Great estimation!';
+                feedbackClass = 'great';
+                btns[chosenIdx].classList.add('correct');
+            } else if (chosen === 'About the same' && diff <= 5) {
+                stars = 2;
+                feedbackText = `They are very close! ${q.correct} is technically bigger.`;
+                feedbackClass = 'good';
+                btns[chosenIdx].classList.add('wrong');
+                btns.forEach((b, i) => {
+                    if (q.choices[i] === q.correct) b.classList.add('reveal-correct');
+                });
+            } else {
+                stars = 0;
+                feedbackText = `Not quite! ${q.correct} is larger.`;
+                feedbackClass = 'miss';
+                btns[chosenIdx].classList.add('wrong');
+                btns.forEach((b, i) => {
+                    if (q.choices[i] === q.correct) b.classList.add('reveal-correct');
+                });
+            }
+        }
+
+        // Score
+        const points = stars * 5;
+        totalScore += points;
+        roundScores[roundIdx] += points;
+        document.getElementById('scoreBadge').textContent = `Score: ${totalScore}`;
+
+        // Show feedback
+        const starsHtml = (stars >= 1 ? '&#11088;' : '&#9734;') +
+                          (stars >= 2 ? '&#11088;' : '&#9734;') +
+                          (stars >= 3 ? '&#11088;' : '&#9734;');
+
+        const fb = document.getElementById('feedback');
+        fb.innerHTML = `
+            <div class="stars-display">${starsHtml}</div>
+            <div>${feedbackText} ${points > 0 ? `(+${points} points)` : ''}</div>
+            <button class="next-btn" onclick="nextQuestion()">
+                ${currentQuestion < 19 ? 'Next &rarr;' : 'See Results!'}
+            </button>
+        `;
+        fb.className = `feedback show ${feedbackClass}`;
+
+        // Confetti for 3 stars
+        if (stars === 3) {
+            launchConfetti();
+        }
+
+        // Sparkle on correct
+        if (stars > 0) {
+            createSparkle(btns[chosenIdx]);
+        }
+    }
+
+    // ===== NEXT QUESTION =====
+    function nextQuestion() {
+        currentQuestion++;
+        showQuestion();
+    }
+
+    // ===== ROUND TRANSITION =====
+    function showRoundTransition() {
+        const prevRound = Math.floor(currentQuestion / 5) - 1;
+        const maxRoundScore = 5 * 15; // 5 questions * 15 max points
+
+        document.getElementById('transitionTitle').textContent =
+            `Round ${prevRound + 1} Complete!`;
+        document.getElementById('transitionDesc').textContent =
+            `${ROUNDS[prevRound].name} is done!`;
+        document.getElementById('transitionScore').textContent =
+            `${roundScores[prevRound]} / ${maxRoundScore} points`;
+
+        showScreen('roundTransition');
+        document.getElementById('roundTransition').classList.add('active');
+
+        launchConfetti();
+    }
+
+    function continueToNextRound() {
+        document.getElementById('roundTransition').classList.remove('active');
+        showQuestion();
+    }
+
+    // ===== FINAL SCREEN =====
+    function showFinalScreen() {
+        const maxScore = 20 * 15; // 20 questions * 15 max points
+        const pct = totalScore / maxScore;
+
+        // Stars rating (out of 5)
+        let totalStars;
+        if (pct >= 0.9) totalStars = 5;
+        else if (pct >= 0.75) totalStars = 4;
+        else if (pct >= 0.55) totalStars = 3;
+        else if (pct >= 0.35) totalStars = 2;
+        else if (pct >= 0.15) totalStars = 1;
+        else totalStars = 0;
+
+        let starsHtml = '';
+        for (let i = 0; i < 5; i++) {
+            starsHtml += i < totalStars ? '&#11088;' : '&#9734;';
+        }
+
+        document.getElementById('finalStars').innerHTML = starsHtml;
+        document.getElementById('finalScore').textContent = totalScore;
+
+        // Message
+        let message;
+        if (pct >= 0.9) message = 'Estimation Superstar! Amazing!';
+        else if (pct >= 0.75) message = 'Fantastic Estimator! Great job!';
+        else if (pct >= 0.55) message = 'Good Estimation Skills!';
+        else if (pct >= 0.35) message = 'Nice Try! Keep Practicing!';
+        else message = 'Keep Going! Practice Makes Perfect!';
+        document.getElementById('finalMessage').textContent = message;
+
+        // Breakdown
+        const bd = document.getElementById('finalBreakdown');
+        bd.innerHTML = '';
+        ROUNDS.forEach((r, i) => {
+            const item = document.createElement('div');
+            item.className = 'breakdown-item';
+            item.innerHTML = `
+                <div class="bd-num">${roundScores[i]}</div>
+                <div class="bd-label">R${i + 1}: ${r.name.split(' ')[0]}</div>
+            `;
+            bd.appendChild(item);
+        });
+
+        document.getElementById('progressFill').style.width = '100%';
+        document.getElementById('progressLabel').textContent = 'Complete!';
+
+        showScreen('finalScreen');
+        launchConfetti();
+        setTimeout(launchConfetti, 600);
+        setTimeout(launchConfetti, 1200);
+    }
+
+    // ===== SCREEN MANAGEMENT =====
+    function showScreen(id) {
+        document.querySelectorAll('.screen, .round-transition').forEach(s => {
+            s.classList.remove('active');
+        });
+        document.getElementById(id).classList.add('active');
+    }
+
+    // ===== START GAME =====
+    function startGame() {
+        currentQuestion = 0;
+        totalScore = 0;
+        roundScores = [0, 0, 0, 0];
+        buildQuestions();
+        document.getElementById('scoreBadge').textContent = 'Score: 0';
+        showQuestion();
+    }
+
+    function restartGame() {
+        startGame();
+    }
+
+    // ===== CONFETTI =====
+    function launchConfetti() {
+        const container = document.getElementById('confettiContainer');
+        const colors = ['#E63946', '#FFD166', '#118AB2', '#06D6A0', '#F4A261', '#7B2D8E', '#FF6B9D'];
+        const shapes = ['square', 'circle'];
+
+        for (let i = 0; i < 40; i++) {
+            const piece = document.createElement('div');
+            piece.className = 'confetti-piece';
+            const color = colors[randInt(0, colors.length - 1)];
+            const shape = shapes[randInt(0, 1)];
+            const left = randInt(5, 95);
+            const size = randInt(8, 14);
+            const duration = (randInt(20, 40) / 10);
+            const delay = (randInt(0, 15) / 10);
+
+            piece.style.left = left + '%';
+            piece.style.width = size + 'px';
+            piece.style.height = size + 'px';
+            piece.style.background = color;
+            piece.style.borderRadius = shape === 'circle' ? '50%' : '2px';
+            piece.style.animationDuration = duration + 's';
+            piece.style.animationDelay = delay + 's';
+
+            container.appendChild(piece);
+
+            setTimeout(() => piece.remove(), (duration + delay) * 1000 + 200);
+        }
+    }
+
+    // ===== SPARKLE EFFECT =====
+    function createSparkle(element) {
+        const rect = element.getBoundingClientRect();
+        const colors = ['#FFD166', '#E63946', '#06D6A0', '#118AB2'];
+
+        for (let i = 0; i < 6; i++) {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = (rect.left + randInt(10, rect.width - 10)) + 'px';
+            sparkle.style.top = (rect.top + randInt(5, rect.height - 5)) + 'px';
+            sparkle.style.position = 'fixed';
+            sparkle.style.zIndex = '10000';
+
+            const size = randInt(12, 24);
+            const color = colors[randInt(0, colors.length - 1)];
+            sparkle.innerHTML = `<svg width="${size}" height="${size}" viewBox="0 0 24 24">
+                <path d="M12 0L14.5 9.5L24 12L14.5 14.5L12 24L9.5 14.5L0 12L9.5 9.5Z" fill="${color}"/>
+            </svg>`;
+
+            document.body.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 800);
+        }
+    }
+
+    // ===== KEYBOARD SUPPORT =====
+    document.addEventListener('keydown', (e) => {
+        if (answered && (e.key === 'Enter' || e.key === ' ')) {
+            e.preventDefault();
+            nextQuestion();
+        }
+        // Number keys for choices
+        if (!answered) {
+            const btns = document.querySelectorAll('.choice-btn:not(.disabled)');
+            const num = parseInt(e.key);
+            if (num >= 1 && num <= btns.length) {
+                btns[num - 1].click();
+            }
+        }
+    });
+
+    // ===== INIT =====
+    buildQuestions();
+    </script>
+</body>
+</html>

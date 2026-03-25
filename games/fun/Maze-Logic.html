@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Maze Logic - Program Your Robot!</title>
+<style>
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  :root {
+    --bg-dark: #1a1a2e;
+    --bg-mid: #16213e;
+    --bg-light: #0f3460;
+    --accent: #e94560;
+    --accent-glow: #ff6b81;
+    --path-color: #a8d8ea;
+    --path-border: #6bb7d4;
+    --wall-color: #2c3e6b;
+    --wall-border: #1a2744;
+    --gold: #ffd700;
+    --green: #2ecc71;
+    --gem-color: #e056fd;
+    --text-light: #ecf0f1;
+    --text-muted: #95a5a6;
+    --btn-up: #3498db;
+    --btn-down: #e67e22;
+    --btn-left: #9b59b6;
+    --btn-right: #2ecc71;
+    --btn-go: #27ae60;
+    --btn-clear: #e74c3c;
+  }
+
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-light);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    overflow-x: hidden;
+  }
+
+  /* Header */
+  .header {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    position: relative;
+  }
+
+  .home-btn {
+    background: var(--bg-light);
+    border: 2px solid var(--accent);
+    color: var(--text-light);
+    padding: 8px 16px;
+    border-radius: 25px;
+    font-size: 14px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .home-btn:hover {
+    background: var(--accent);
+    transform: scale(1.05);
+  }
+
+  .title {
+    text-align: center;
+    flex: 1;
+  }
+  .title h1 {
+    font-size: 1.6rem;
+    background: linear-gradient(135deg, var(--accent-glow), var(--gold));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    text-shadow: none;
+  }
+  .title .subtitle {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-top: 2px;
+  }
+
+  /* Level & Stats */
+  .stats-bar {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    padding: 6px 20px;
+    font-size: 0.9rem;
+    flex-wrap: wrap;
+  }
+  .stat {
+    background: var(--bg-mid);
+    padding: 5px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--bg-light);
+  }
+  .stat span {
+    color: var(--gold);
+    font-weight: bold;
+  }
+
+  /* Game Area */
+  .game-area {
+    width: 100%;
+    max-width: 800px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px 20px;
+    gap: 14px;
+  }
+
+  /* Maze Grid */
+  .maze-container {
+    position: relative;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  .maze-grid {
+    display: grid;
+    gap: 2px;
+    background: var(--wall-border);
+    border: 3px solid var(--bg-light);
+    border-radius: 10px;
+    padding: 3px;
+    box-shadow: 0 0 25px rgba(233, 69, 96, 0.15), inset 0 0 15px rgba(0,0,0,0.3);
+  }
+
+  .cell {
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    position: relative;
+    transition: background 0.3s;
+  }
+  .cell.path {
+    background: var(--path-color);
+    border: 1px solid var(--path-border);
+  }
+  .cell.wall {
+    background: var(--wall-color);
+    border: 1px solid var(--wall-border);
+    box-shadow: inset 0 2px 6px rgba(0,0,0,0.4);
+  }
+  .cell.wall::after {
+    content: '';
+    width: 60%;
+    height: 60%;
+    border-radius: 3px;
+    background: repeating-linear-gradient(
+      45deg,
+      transparent,
+      transparent 3px,
+      rgba(0,0,0,0.15) 3px,
+      rgba(0,0,0,0.15) 6px
+    );
+  }
+
+  /* Robot */
+  .robot {
+    position: absolute;
+    transition: top 0.25s ease-in-out, left 0.25s ease-in-out;
+    z-index: 10;
+    font-size: 1.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.5));
+  }
+  .robot.bonk {
+    animation: bonk 0.4s ease;
+  }
+  @keyframes bonk {
+    0% { transform: scale(1); }
+    20% { transform: scale(1.3) rotate(10deg); }
+    40% { transform: scale(0.9) rotate(-10deg); }
+    60% { transform: scale(1.1); }
+    100% { transform: scale(1); }
+  }
+
+  .robot.celebrate {
+    animation: celebrate 0.8s ease;
+  }
+  @keyframes celebrate {
+    0% { transform: scale(1) rotate(0deg); }
+    25% { transform: scale(1.4) rotate(15deg); }
+    50% { transform: scale(1.2) rotate(-15deg); }
+    75% { transform: scale(1.5) rotate(10deg); }
+    100% { transform: scale(1) rotate(0deg); }
+  }
+
+  /* Gem collect animation */
+  .gem-collect {
+    animation: gemPop 0.4s ease forwards;
+  }
+  @keyframes gemPop {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.8); opacity: 0.6; }
+    100% { transform: scale(0); opacity: 0; }
+  }
+
+  /* Command Queue */
+  .command-section {
+    width: 100%;
+    max-width: 500px;
+  }
+
+  .command-queue-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+    text-align: center;
+  }
+
+  .command-queue {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    min-height: 44px;
+    padding: 8px 10px;
+    background: var(--bg-mid);
+    border: 2px solid var(--bg-light);
+    border-radius: 10px;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .cmd-icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    font-weight: bold;
+    color: #fff;
+    transition: transform 0.15s, opacity 0.3s;
+  }
+  .cmd-icon.up { background: var(--btn-up); }
+  .cmd-icon.down { background: var(--btn-down); }
+  .cmd-icon.left { background: var(--btn-left); }
+  .cmd-icon.right { background: var(--btn-right); }
+
+  .cmd-icon.executing {
+    transform: scale(1.25);
+    box-shadow: 0 0 10px rgba(255,255,255,0.6);
+  }
+  .cmd-icon.done {
+    opacity: 0.35;
+  }
+
+  .queue-placeholder {
+    color: var(--text-muted);
+    font-size: 0.85rem;
+    font-style: italic;
+  }
+
+  /* Controls */
+  .controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .arrow-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 6px;
+    width: fit-content;
+  }
+
+  .arrow-btn {
+    width: 60px;
+    height: 60px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.1s, box-shadow 0.2s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+    position: relative;
+  }
+  .arrow-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .arrow-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .arrow-btn.up { background: var(--btn-up); grid-column: 2; grid-row: 1; }
+  .arrow-btn.left { background: var(--btn-left); grid-column: 1; grid-row: 2; }
+  .arrow-btn.right { background: var(--btn-right); grid-column: 3; grid-row: 2; }
+  .arrow-btn.down { background: var(--btn-down); grid-column: 2; grid-row: 3; }
+
+  .action-btns {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .action-btn {
+    padding: 12px 28px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    transition: transform 0.15s, box-shadow 0.2s;
+    box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+  }
+  .action-btn:active {
+    transform: translateY(3px);
+    box-shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+  .action-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+  .go-btn { background: var(--btn-go); }
+  .clear-btn { background: var(--btn-clear); }
+  .reset-btn { background: var(--bg-light); border: 2px solid var(--accent); }
+
+  /* Messages */
+  .message {
+    text-align: center;
+    min-height: 28px;
+    font-size: 1rem;
+    font-weight: bold;
+    padding: 4px;
+  }
+  .message.success { color: var(--gold); }
+  .message.fail { color: var(--accent); }
+  .message.info { color: var(--path-color); }
+
+  /* Level complete overlay */
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.75);
+    z-index: 100;
+    justify-content: center;
+    align-items: center;
+  }
+  .overlay.show {
+    display: flex;
+  }
+
+  .overlay-box {
+    background: var(--bg-mid);
+    border: 3px solid var(--gold);
+    border-radius: 20px;
+    padding: 30px 40px;
+    text-align: center;
+    max-width: 380px;
+    width: 90%;
+    animation: popIn 0.4s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(0.5); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .overlay-box h2 {
+    font-size: 1.8rem;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+  .overlay-box .stars {
+    font-size: 2rem;
+    margin: 8px 0;
+  }
+  .overlay-box p {
+    margin: 6px 0;
+    color: var(--text-muted);
+    font-size: 0.95rem;
+  }
+  .overlay-box p span {
+    color: var(--gold);
+    font-weight: bold;
+  }
+
+  .overlay-btn {
+    margin-top: 16px;
+    padding: 12px 30px;
+    border: none;
+    border-radius: 25px;
+    font-size: 1.05rem;
+    font-weight: bold;
+    cursor: pointer;
+    color: #fff;
+    background: var(--btn-go);
+    transition: transform 0.15s;
+  }
+  .overlay-btn:hover {
+    transform: scale(1.06);
+  }
+
+  .all-complete-msg {
+    font-size: 1.1rem;
+    color: var(--green);
+    margin-top: 10px;
+  }
+
+  /* Level select */
+  .level-select {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 4px;
+  }
+  .level-dot {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-light);
+    background: var(--bg-mid);
+    color: var(--text-muted);
+    font-size: 0.75rem;
+    font-weight: bold;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .level-dot.current {
+    border-color: var(--accent);
+    background: var(--accent);
+    color: #fff;
+  }
+  .level-dot.completed {
+    border-color: var(--green);
+    background: var(--green);
+    color: #fff;
+  }
+  .level-dot:hover {
+    transform: scale(1.15);
+  }
+
+  /* Responsive */
+  @media (max-width: 500px) {
+    .title h1 { font-size: 1.2rem; }
+    .arrow-btn { width: 52px; height: 52px; font-size: 1.3rem; }
+    .cell { font-size: 1.1rem; }
+    .robot { font-size: 1.3rem; }
+    .action-btn { padding: 10px 22px; font-size: 0.9rem; }
+    .home-btn { padding: 6px 12px; font-size: 12px; }
+    .stats-bar { font-size: 0.8rem; gap: 8px; }
+    .stat { padding: 4px 10px; }
+    .overlay-box { padding: 22px 24px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Header -->
+<div class="header">
+  <a href="../../index.html" class="home-btn">&#127968; Home</a>
+  <div class="title">
+    <h1>&#129302; Maze Logic</h1>
+    <div class="subtitle">Program your robot to reach the star!</div>
+  </div>
+  <div style="width:80px"></div>
+</div>
+
+<!-- Level Select -->
+<div class="level-select" id="levelSelect"></div>
+
+<!-- Stats -->
+<div class="stats-bar">
+  <div class="stat">Level: <span id="levelNum">1</span>/10</div>
+  <div class="stat">Moves: <span id="moveCount">0</span></div>
+  <div class="stat">Par: <span id="parCount">0</span></div>
+  <div class="stat" id="gemStat" style="display:none">Gems: <span id="gemCount">0</span>/<span id="gemTotal">0</span></div>
+</div>
+
+<!-- Game Area -->
+<div class="game-area">
+  <!-- Message -->
+  <div class="message" id="message">Plan your path, then hit Go!</div>
+
+  <!-- Maze -->
+  <div class="maze-container" id="mazeContainer">
+    <div class="maze-grid" id="mazeGrid"></div>
+    <div class="robot" id="robot">&#129302;</div>
+  </div>
+
+  <!-- Command Queue -->
+  <div class="command-section">
+    <div class="command-queue-label">Your Commands:</div>
+    <div class="command-queue" id="commandQueue">
+      <span class="queue-placeholder">Click arrows to add commands...</span>
+    </div>
+  </div>
+
+  <!-- Controls -->
+  <div class="controls">
+    <div class="arrow-pad">
+      <button class="arrow-btn up" onclick="addCommand('up')" id="btnUp">&#9650;</button>
+      <button class="arrow-btn left" onclick="addCommand('left')" id="btnLeft">&#9664;</button>
+      <button class="arrow-btn right" onclick="addCommand('right')" id="btnRight">&#9654;</button>
+      <button class="arrow-btn down" onclick="addCommand('down')" id="btnDown">&#9660;</button>
+    </div>
+    <div class="action-btns">
+      <button class="action-btn clear-btn" onclick="clearCommands()" id="btnClear">&#128465; Clear</button>
+      <button class="action-btn go-btn" onclick="executeCommands()" id="btnGo">&#9654; Go!</button>
+      <button class="action-btn reset-btn" onclick="resetLevel()">&#128260; Reset</button>
+    </div>
+  </div>
+</div>
+
+<!-- Level Complete Overlay -->
+<div class="overlay" id="overlay">
+  <div class="overlay-box">
+    <h2 id="overlayTitle">&#127775; Level Complete!</h2>
+    <div class="stars" id="overlayStars"></div>
+    <p>You used <span id="overlayMoves">0</span> moves (par: <span id="overlayPar">0</span>)</p>
+    <p id="overlayGems" style="display:none">Gems collected: <span id="overlayGemCount">0</span>/<span id="overlayGemTotal">0</span></p>
+    <div id="allCompleteMsg" class="all-complete-msg" style="display:none">
+      &#127942; You completed ALL levels! Amazing programmer! &#127942;
+    </div>
+    <button class="overlay-btn" id="overlayBtn" onclick="nextLevel()">Next Level &#10145;</button>
+  </div>
+</div>
+
+<script>
+  // ===== LEVEL DATA =====
+  // 0 = path, 1 = wall, 2 = start, 3 = goal, 4 = gem
+  const LEVELS = [
+    // Level 1: 4x4, simple straight path right
+    {
+      size: 4, par: 3,
+      grid: [
+        [2, 0, 0, 3],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0]
+      ]
+    },
+    // Level 2: 4x4, L-shape
+    {
+      size: 4, par: 5,
+      grid: [
+        [2, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 3]
+      ]
+    },
+    // Level 3: 4x4, zigzag
+    {
+      size: 4, par: 6,
+      grid: [
+        [2, 0, 0, 0],
+        [0, 0, 0, 0],
+        [0, 0, 0, 0],
+        [3, 0, 0, 0]
+      ]
+    },
+    // Level 4: 5x5 with walls
+    {
+      size: 5, par: 6,
+      grid: [
+        [2, 0, 1, 0, 0],
+        [0, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1],
+        [0, 1, 1, 0, 0],
+        [0, 0, 0, 0, 3]
+      ]
+    },
+    // Level 5: 5x5 maze
+    {
+      size: 5, par: 8,
+      grid: [
+        [2, 0, 0, 1, 0],
+        [1, 1, 0, 1, 0],
+        [0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0],
+        [0, 0, 0, 0, 3]
+      ]
+    },
+    // Level 6: 5x5 winding
+    {
+      size: 5, par: 10,
+      grid: [
+        [2, 0, 1, 0, 0],
+        [1, 0, 1, 0, 1],
+        [0, 0, 0, 0, 0],
+        [0, 1, 0, 1, 0],
+        [0, 0, 0, 1, 3]
+      ]
+    },
+    // Level 7: 6x6 with gems
+    {
+      size: 6, par: 10,
+      grid: [
+        [2, 0, 0, 1, 0, 0],
+        [0, 1, 0, 1, 4, 0],
+        [0, 1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0],
+        [1, 1, 4, 0, 0, 0],
+        [0, 0, 0, 0, 1, 3]
+      ]
+    },
+    // Level 8: 6x6 trickier
+    {
+      size: 6, par: 12,
+      grid: [
+        [0, 0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 1, 0],
+        [2, 0, 0, 0, 1, 4],
+        [1, 1, 0, 1, 0, 0],
+        [0, 4, 0, 0, 0, 1],
+        [0, 0, 0, 1, 0, 3]
+      ]
+    },
+    // Level 9: 6x6 complex
+    {
+      size: 6, par: 14,
+      grid: [
+        [2, 0, 1, 4, 0, 0],
+        [0, 0, 1, 0, 1, 0],
+        [1, 0, 0, 0, 1, 0],
+        [0, 0, 1, 0, 0, 0],
+        [0, 1, 1, 0, 1, 4],
+        [0, 0, 0, 0, 1, 3]
+      ]
+    },
+    // Level 10: 7x7 boss maze
+    {
+      size: 7, par: 16,
+      grid: [
+        [2, 0, 1, 0, 0, 4, 0],
+        [0, 0, 1, 0, 1, 0, 0],
+        [1, 0, 0, 0, 1, 0, 1],
+        [0, 0, 1, 0, 0, 0, 0],
+        [0, 1, 1, 0, 1, 1, 0],
+        [0, 4, 0, 0, 0, 4, 0],
+        [0, 0, 0, 1, 0, 0, 3]
+      ]
+    }
+  ];
+
+  // ===== GAME STATE =====
+  let currentLevel = 0;
+  let commands = [];
+  let robotPos = { row: 0, col: 0 };
+  let startPos = { row: 0, col: 0 };
+  let goalPos = { row: 0, col: 0 };
+  let isExecuting = false;
+  let gridData = [];
+  let gemsCollected = 0;
+  let totalGems = 0;
+  let completedLevels = new Set();
+  let cellSize = 0;
+  let gridPadding = 3;
+  let gridGap = 2;
+
+  // ===== DOM REFS =====
+  const mazeGrid = document.getElementById('mazeGrid');
+  const robotEl = document.getElementById('robot');
+  const commandQueue = document.getElementById('commandQueue');
+  const messageEl = document.getElementById('message');
+  const levelNumEl = document.getElementById('levelNum');
+  const moveCountEl = document.getElementById('moveCount');
+  const parCountEl = document.getElementById('parCount');
+  const gemCountEl = document.getElementById('gemCount');
+  const gemTotalEl = document.getElementById('gemTotal');
+  const gemStat = document.getElementById('gemStat');
+  const overlay = document.getElementById('overlay');
+  const levelSelect = document.getElementById('levelSelect');
+
+  // ===== INIT =====
+  function init() {
+    buildLevelSelect();
+    loadLevel(currentLevel);
+  }
+
+  function buildLevelSelect() {
+    levelSelect.innerHTML = '';
+    for (let i = 0; i < LEVELS.length; i++) {
+      const dot = document.createElement('div');
+      dot.className = 'level-dot';
+      if (i === currentLevel) dot.classList.add('current');
+      if (completedLevels.has(i)) dot.classList.add('completed');
+      dot.textContent = i + 1;
+      dot.onclick = () => {
+        if (!isExecuting) {
+          currentLevel = i;
+          loadLevel(currentLevel);
+          buildLevelSelect();
+        }
+      };
+      levelSelect.appendChild(dot);
+    }
+  }
+
+  function loadLevel(idx) {
+    const level = LEVELS[idx];
+    const size = level.size;
+
+    // Calculate cell size based on viewport
+    const maxGridWidth = Math.min(window.innerWidth - 60, 420);
+    cellSize = Math.floor((maxGridWidth - (size - 1) * gridGap - gridPadding * 2) / size);
+    cellSize = Math.min(cellSize, 70);
+    cellSize = Math.max(cellSize, 36);
+
+    // Deep copy grid
+    gridData = level.grid.map(row => [...row]);
+
+    // Find start, goal, gems
+    totalGems = 0;
+    gemsCollected = 0;
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        if (gridData[r][c] === 2) {
+          startPos = { row: r, col: c };
+          robotPos = { row: r, col: c };
+        }
+        if (gridData[r][c] === 3) {
+          goalPos = { row: r, col: c };
+        }
+        if (gridData[r][c] === 4) {
+          totalGems++;
+        }
+      }
+    }
+
+    // Update UI
+    levelNumEl.textContent = idx + 1;
+    parCountEl.textContent = level.par;
+    moveCountEl.textContent = '0';
+    gemCountEl.textContent = '0';
+    gemTotalEl.textContent = totalGems;
+    gemStat.style.display = totalGems > 0 ? '' : 'none';
+
+    commands = [];
+    renderCommandQueue();
+    setMessage('Plan your path, then hit Go!', 'info');
+
+    // Build grid
+    mazeGrid.style.gridTemplateColumns = `repeat(${size}, ${cellSize}px)`;
+    mazeGrid.style.gridTemplateRows = `repeat(${size}, ${cellSize}px)`;
+    mazeGrid.innerHTML = '';
+
+    for (let r = 0; r < size; r++) {
+      for (let c = 0; c < size; c++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.id = `cell-${r}-${c}`;
+
+        const val = gridData[r][c];
+        if (val === 1) {
+          cell.classList.add('wall');
+        } else {
+          cell.classList.add('path');
+          if (val === 3) {
+            cell.textContent = '\u2B50';
+          } else if (val === 4) {
+            cell.textContent = '\uD83D\uDC8E';
+          }
+        }
+        mazeGrid.appendChild(cell);
+      }
+    }
+
+    // Position robot
+    positionRobot(robotPos.row, robotPos.col, false);
+    setControlsEnabled(true);
+    overlay.classList.remove('show');
+  }
+
+  // ===== ROBOT POSITIONING =====
+  function positionRobot(row, col, animate) {
+    const top = gridPadding + row * (cellSize + gridGap) + cellSize / 2;
+    const left = gridPadding + col * (cellSize + gridGap) + cellSize / 2;
+
+    if (!animate) {
+      robotEl.style.transition = 'none';
+    } else {
+      robotEl.style.transition = 'top 0.25s ease-in-out, left 0.25s ease-in-out';
+    }
+
+    robotEl.style.top = top + 'px';
+    robotEl.style.left = left + 'px';
+    robotEl.style.width = cellSize + 'px';
+    robotEl.style.height = cellSize + 'px';
+    robotEl.style.marginTop = (-cellSize / 2) + 'px';
+    robotEl.style.marginLeft = (-cellSize / 2) + 'px';
+    robotEl.style.fontSize = (cellSize * 0.65) + 'px';
+  }
+
+  // ===== COMMANDS =====
+  const DIR_MAP = {
+    up: { dr: -1, dc: 0, arrow: '\u25B2', label: 'U' },
+    down: { dr: 1, dc: 0, arrow: '\u25BC', label: 'D' },
+    left: { dr: 0, dc: -1, arrow: '\u25C0', label: 'L' },
+    right: { dr: 0, dc: 1, arrow: '\u25B6', label: 'R' }
+  };
+
+  function addCommand(dir) {
+    if (isExecuting) return;
+    if (commands.length >= 30) {
+      setMessage('Max 30 commands! Hit Go or Clear.', 'fail');
+      return;
+    }
+    commands.push(dir);
+    renderCommandQueue();
+    moveCountEl.textContent = commands.length;
+  }
+
+  function clearCommands() {
+    if (isExecuting) return;
+    commands = [];
+    renderCommandQueue();
+    moveCountEl.textContent = '0';
+    setMessage('Commands cleared. Try again!', 'info');
+  }
+
+  function renderCommandQueue() {
+    commandQueue.innerHTML = '';
+    if (commands.length === 0) {
+      commandQueue.innerHTML = '<span class="queue-placeholder">Click arrows to add commands...</span>';
+      return;
+    }
+    commands.forEach((dir, i) => {
+      const icon = document.createElement('div');
+      icon.className = `cmd-icon ${dir}`;
+      icon.id = `cmd-${i}`;
+      icon.textContent = DIR_MAP[dir].arrow;
+      commandQueue.appendChild(icon);
+    });
+  }
+
+  // ===== EXECUTE =====
+  async function executeCommands() {
+    if (isExecuting || commands.length === 0) return;
+    isExecuting = true;
+    setControlsEnabled(false);
+    setMessage('Running program...', 'info');
+
+    // Reset robot to start
+    robotPos = { ...startPos };
+    // Reset grid gems
+    const level = LEVELS[currentLevel];
+    gridData = level.grid.map(row => [...row]);
+    gemsCollected = 0;
+    gemCountEl.textContent = '0';
+
+    // Re-render gem cells
+    for (let r = 0; r < level.size; r++) {
+      for (let c = 0; c < level.size; c++) {
+        const cell = document.getElementById(`cell-${r}-${c}`);
+        if (gridData[r][c] === 4) {
+          cell.textContent = '\uD83D\uDC8E';
+          cell.style.opacity = '1';
+          cell.classList.remove('gem-collect');
+        }
+      }
+    }
+
+    positionRobot(robotPos.row, robotPos.col, false);
+    await sleep(300);
+
+    let hitWall = false;
+
+    for (let i = 0; i < commands.length; i++) {
+      const dir = commands[i];
+      const d = DIR_MAP[dir];
+      const newRow = robotPos.row + d.dr;
+      const newCol = robotPos.col + d.dc;
+
+      // Highlight current command
+      const cmdEl = document.getElementById(`cmd-${i}`);
+      if (cmdEl) cmdEl.classList.add('executing');
+
+      // Check bounds and walls
+      if (
+        newRow < 0 || newRow >= level.size ||
+        newCol < 0 || newCol >= level.size ||
+        gridData[newRow][newCol] === 1
+      ) {
+        // Bonk!
+        robotEl.classList.add('bonk');
+        setMessage('Bonk! Hit a wall! Try different commands.', 'fail');
+        await sleep(500);
+        robotEl.classList.remove('bonk');
+        hitWall = true;
+
+        if (cmdEl) {
+          cmdEl.classList.remove('executing');
+          cmdEl.classList.add('done');
+        }
+        break;
+      }
+
+      // Move robot
+      robotPos.row = newRow;
+      robotPos.col = newCol;
+      positionRobot(robotPos.row, robotPos.col, true);
+      await sleep(300);
+
+      // Check for gem
+      if (gridData[newRow][newCol] === 4) {
+        gemsCollected++;
+        gemCountEl.textContent = gemsCollected;
+        gridData[newRow][newCol] = 0;
+        const gemCell = document.getElementById(`cell-${newRow}-${newCol}`);
+        gemCell.classList.add('gem-collect');
+        await sleep(200);
+        gemCell.textContent = '';
+      }
+
+      if (cmdEl) {
+        cmdEl.classList.remove('executing');
+        cmdEl.classList.add('done');
+      }
+
+      // Check if reached goal
+      if (robotPos.row === goalPos.row && robotPos.col === goalPos.col) {
+        await levelComplete();
+        return;
+      }
+    }
+
+    if (!hitWall && !(robotPos.row === goalPos.row && robotPos.col === goalPos.col)) {
+      setMessage('Didn\'t reach the star. Add more commands!', 'fail');
+    }
+
+    isExecuting = false;
+    setControlsEnabled(true);
+  }
+
+  async function levelComplete() {
+    robotEl.classList.add('celebrate');
+    setMessage('', 'success');
+    await sleep(900);
+    robotEl.classList.remove('celebrate');
+
+    completedLevels.add(currentLevel);
+    buildLevelSelect();
+
+    const level = LEVELS[currentLevel];
+    const moves = commands.length;
+    const par = level.par;
+
+    // Stars
+    let stars = 1;
+    if (moves <= par) stars = 3;
+    else if (moves <= par + 2) stars = 2;
+
+    let starStr = '';
+    for (let i = 0; i < 3; i++) {
+      starStr += i < stars ? '\u2B50' : '\u2606';
+    }
+
+    // Show overlay
+    document.getElementById('overlayTitle').innerHTML = currentLevel === 9
+      ? '&#127942; BOSS MAZE CLEARED! &#127942;'
+      : '&#127775; Level Complete!';
+    document.getElementById('overlayStars').textContent = starStr;
+    document.getElementById('overlayMoves').textContent = moves;
+    document.getElementById('overlayPar').textContent = par;
+
+    const overlayGems = document.getElementById('overlayGems');
+    if (totalGems > 0) {
+      overlayGems.style.display = '';
+      document.getElementById('overlayGemCount').textContent = gemsCollected;
+      document.getElementById('overlayGemTotal').textContent = totalGems;
+    } else {
+      overlayGems.style.display = 'none';
+    }
+
+    const allComplete = completedLevels.size === LEVELS.length;
+    document.getElementById('allCompleteMsg').style.display = allComplete ? '' : 'none';
+
+    const btn = document.getElementById('overlayBtn');
+    if (currentLevel < LEVELS.length - 1) {
+      btn.textContent = 'Next Level \u27A1';
+      btn.onclick = nextLevel;
+    } else if (allComplete) {
+      btn.textContent = 'Play Again \uD83D\uDD01';
+      btn.onclick = () => {
+        currentLevel = 0;
+        completedLevels.clear();
+        buildLevelSelect();
+        loadLevel(currentLevel);
+        overlay.classList.remove('show');
+        isExecuting = false;
+      };
+    } else {
+      btn.textContent = 'Replay Level \uD83D\uDD01';
+      btn.onclick = () => {
+        loadLevel(currentLevel);
+        overlay.classList.remove('show');
+        isExecuting = false;
+      };
+    }
+
+    overlay.classList.add('show');
+    isExecuting = false;
+  }
+
+  function nextLevel() {
+    if (currentLevel < LEVELS.length - 1) {
+      currentLevel++;
+    }
+    buildLevelSelect();
+    loadLevel(currentLevel);
+    overlay.classList.remove('show');
+    isExecuting = false;
+  }
+
+  function resetLevel() {
+    if (isExecuting) return;
+    loadLevel(currentLevel);
+  }
+
+  // ===== HELPERS =====
+  function setMessage(text, type) {
+    messageEl.textContent = text;
+    messageEl.className = 'message ' + (type || '');
+  }
+
+  function setControlsEnabled(enabled) {
+    document.getElementById('btnUp').disabled = !enabled;
+    document.getElementById('btnDown').disabled = !enabled;
+    document.getElementById('btnLeft').disabled = !enabled;
+    document.getElementById('btnRight').disabled = !enabled;
+    document.getElementById('btnGo').disabled = !enabled;
+    document.getElementById('btnClear').disabled = !enabled;
+  }
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  // ===== KEYBOARD SUPPORT =====
+  document.addEventListener('keydown', (e) => {
+    if (isExecuting) return;
+    switch (e.key) {
+      case 'ArrowUp':
+      case 'w':
+      case 'W':
+        e.preventDefault();
+        addCommand('up');
+        break;
+      case 'ArrowDown':
+      case 's':
+      case 'S':
+        e.preventDefault();
+        addCommand('down');
+        break;
+      case 'ArrowLeft':
+      case 'a':
+      case 'A':
+        e.preventDefault();
+        addCommand('left');
+        break;
+      case 'ArrowRight':
+      case 'd':
+      case 'D':
+        e.preventDefault();
+        addCommand('right');
+        break;
+      case 'Enter':
+        e.preventDefault();
+        executeCommands();
+        break;
+      case 'Escape':
+      case 'Backspace':
+        e.preventDefault();
+        clearCommands();
+        break;
+    }
+  });
+
+  // ===== RESIZE =====
+  window.addEventListener('resize', () => {
+    if (!isExecuting) {
+      loadLevel(currentLevel);
+    }
+  });
+
+  // ===== START =====
+  init();
+</script>
+</body>
+</html>
